@@ -1,0 +1,726 @@
+OPT MODULE, OSVERSION=37
+
+  MODULE 'reaction/reaction_macros',
+        'window','classes/window',
+        'gadgets/layout','layout',
+        'reaction/reaction_lib',
+        'button','gadgets/button',
+        'listbrowser','gadgets/listbrowser',
+        'images/bevel',
+        'string',
+        'gadgets/checkbox','checkbox',
+        'images/label','label',
+        'amigalib/boopsi',
+        'libraries/gadtools',
+        'intuition/intuition',
+        'intuition/imageclass',
+        'intuition/gadgetclass',
+        'exec/lists','exec/nodes'
+
+  MODULE '*reactionObject','*reactionForm','*stringlist','*fileStreamer'
+
+EXPORT ENUM MENUGAD_ITEMLIST, MENUGAD_ITEM_NAME, MENUGAD_ITEM_COMMKEY, MENUGAD_ITEM_MENUBAR, MENUGAD_ITEM_MENUITEM, 
+      MENUGAD_ADD, MENUGAD_DELETE, MENUGAD_MODIFY, MENUGAD_MOVEUP, MENUGAD_MOVEDOWN, 
+      MENUGAD_OK, MENUGAD_CANCEL
+
+CONST NUM_MENU_GADS=MENUGAD_CANCEL+1
+
+EXPORT OBJECT menuItem
+  itemName[80]:ARRAY OF CHAR
+  commKey:CHAR
+  menuBar:CHAR
+  menuItem:CHAR
+ENDOBJECT
+
+EXPORT OBJECT menuObject OF reactionObject
+  menuItems:PTR TO stdlist
+ENDOBJECT
+
+OBJECT menuSettingsForm OF reactionForm
+  menuObject:PTR TO menuObject
+  selectedItem:LONG
+  tempMenuItems:PTR TO stdlist
+  columninfo[4]:ARRAY OF columninfo
+  browserlist:PTR TO mlh
+ENDOBJECT
+
+PROC moveUp(nself,gadget,id,code) OF menuSettingsForm
+  DEF tmp,win
+  DEF str1a[100]:STRING
+  DEF str1b[100]:STRING
+  DEF str1c[100]:STRING
+  DEF str2a[100]:STRING
+  DEF str2b[100]:STRING
+  DEF str2c[100]:STRING
+  DEF node1,node2,strval
+  
+  self:=nself
+  IF self.selectedItem>=0
+    node1:=self.findNode(self.selectedItem-1)
+    node2:=self.findNode(self.selectedItem)
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1a,strval)
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1b,strval)
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1c,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2a,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2b,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2c,strval)
+
+    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
+    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
+    
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, node1,0])
+    tmp:=self.tempMenuItems.item(self.selectedItem-1)
+    self.tempMenuItems.setItem(self.selectedItem-1,self.tempMenuItems.item(self.selectedItem))
+    self.tempMenuItems.setItem(self.selectedItem,tmp)
+
+    self.selectItem(self,0,0,self.selectedItem-1)
+  ENDIF
+ENDPROC
+
+PROC moveDown(nself,gadget,id,code) OF menuSettingsForm
+  DEF tmp,win
+  DEF str1a[100]:STRING
+  DEF str1b[100]:STRING
+  DEF str1c[100]:STRING
+  DEF str2a[100]:STRING
+  DEF str2b[100]:STRING
+  DEF str2c[100]:STRING
+  DEF node1,node2,strval
+  
+  self:=nself
+
+  IF self.selectedItem<(self.tempMenuItems.count()-1)
+    node1:=self.findNode(self.selectedItem)
+    node2:=self.findNode(self.selectedItem+1)
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1a,strval)
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1b,strval)
+    GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str1c,strval)
+
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2a,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2b,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
+    StrCopy(str2c,strval)
+
+    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
+    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
+    
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, node2,0])
+
+    tmp:=self.tempMenuItems.item(self.selectedItem)
+    self.tempMenuItems.setItem(self.selectedItem,self.tempMenuItems.item(self.selectedItem+1))
+    self.tempMenuItems.setItem(self.selectedItem+1,tmp)
+    self.selectItem(self,0,0,self.selectedItem+1)
+  ENDIF
+ENDPROC
+
+PROC deleteItem(nself,gadget,id,code) OF menuSettingsForm
+  DEF win,node
+  self:=nself
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+  IF self.selectedItem>=0
+    self.tempMenuItems.remove(self.selectedItem)
+    node:=Gets(self.gadgetList[MENUGAD_ITEMLIST],LISTBROWSER_SELECTEDNODE)
+    remNode(self.gadgetList[MENUGAD_ITEMLIST],win,0,node)
+    self.selectItem(self,0,0,-1)
+    DoMethod(self.windowObj, WM_RETHINK)
+  ENDIF
+ENDPROC
+
+PROC modifyItem(nself,gadget,id,code) OF menuSettingsForm
+  DEF win,node,strval
+  DEF menuItem:PTR TO menuItem
+  DEF type[20]:STRING
+  DEF commKey[2]:STRING
+
+  self:=nself
+  
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+  IF self.selectedItem>=0
+    menuItem:=self.tempMenuItems.item(self.selectedItem)
+    node:=Gets(self.gadgetList[MENUGAD_ITEMLIST],LISTBROWSER_SELECTEDNODE)
+
+    strval:=Gets(self.gadgetList[ MENUGAD_ITEM_NAME ],STRINGA_TEXTVAL)
+    IF StrLen(strval)
+      AstrCopy(menuItem.itemName,strval,80)
+    ENDIF
+  
+    strval:=Gets(self.gadgetList[ MENUGAD_ITEM_COMMKEY ],STRINGA_TEXTVAL)
+    IF StrLen(strval) THEN menuItem.commKey:=Char(strval)
+    
+    menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.menuItem:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUITEM ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+
+    IF menuItem.menuBar
+      StrCopy(type,'Menubar')
+    ELSEIF menuItem.menuItem
+      StrCopy(type,'Menuitem')
+    ELSE
+      StrCopy(type,'Menu')
+    ENDIF
+
+    StrCopy(commKey,'')
+    StrAddChar(commKey,menuItem.commKey)
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+    SetListBrowserNodeAttrsA(node,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type,TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+  ENDIF
+ENDPROC
+
+PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
+  DEF win,menuItem:PTR TO menuItem
+  DEF commSeq[2]:STRING
+  self:=nself
+
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
+  self.selectedItem:=code
+  menuItem:=self.tempMenuItems.item(code)
+  IF code=-1
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MOVEUP],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MOVEDOWN],win,0,[GA_DISABLED, TRUE, TAG_END])
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUITEM],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+
+  ELSE
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MOVEUP],win,0,[GA_DISABLED, code=0, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_MOVEDOWN],win,0,[GA_DISABLED, code=(self.tempMenuItems.count()-1), TAG_END])
+    
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, menuItem.itemName, TAG_END])
+    StrCopy(commSeq,'')
+    StrAddChar(commSeq,menuItem.commKey)
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, commSeq, TAG_END])
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, menuItem.menuBar , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUITEM],win,0,[CHECKBOX_CHECKED, menuItem.menuItem, TAG_END])
+    DoMethod(self.windowObj, WM_RETHINK)
+  ENDIF
+ENDPROC
+
+PROC addItem(nself,gadget,id,code) OF menuSettingsForm
+  DEF strval
+  DEF n,win
+  DEF menuItem:PTR TO menuItem
+  DEF type[20]:STRING
+  DEF commKey[2]:STRING
+
+  self:=nself
+
+  strval:=Gets(self.gadgetList[ MENUGAD_ITEM_NAME ],STRINGA_TEXTVAL)
+  IF StrLen(strval)
+
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+    NEW menuItem
+    AstrCopy(menuItem.itemName,strval,80)
+  
+    strval:=Gets(self.gadgetList[ MENUGAD_ITEM_COMMKEY ],STRINGA_TEXTVAL)
+    IF StrLen(strval) THEN menuItem.commKey:=Char(strval)
+    
+    menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.menuItem:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUITEM ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    self.tempMenuItems.add(menuItem)
+    
+    IF menuItem.menuBar
+      StrCopy(type,'Menubar')
+    ELSEIF menuItem.menuItem
+      StrCopy(type,'Menuitem')
+    ELSE
+      StrCopy(type,'Menu')
+    ENDIF
+
+    StrCopy(commKey,'')
+    StrAddChar(commKey,menuItem.commKey)
+    
+    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
+      AddTail(self.browserlist, n)
+    ELSE 
+      Raise("MEM")    
+    ENDIF
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
+    self.selectItem(self,0,0,-1)
+  ENDIF
+ENDPROC
+
+PROC findNode(n) OF menuSettingsForm
+  DEF node:PTR TO ln
+  node:=self.browserlist.head
+  WHILE (node)
+    IF n=0 THEN RETURN node
+    n--
+    node:=node.succ
+  ENDWHILE
+ENDPROC 0
+
+PROC create() OF menuSettingsForm
+  DEF gads:PTR TO LONG
+  DEF menuItems:PTR TO stdlist
+  
+  NEW menuItems.stdlist(20)
+  self.tempMenuItems:=menuItems
+  
+  NEW gads[NUM_MENU_GADS]
+  self.gadgetList:=gads
+  NEW gads[NUM_MENU_GADS]
+  self.gadgetActions:=gads
+  
+  self.columninfo[0].width:=3
+  self.columninfo[0].title:='Menu Name'
+  self.columninfo[0].flags:=CIF_WEIGHTED
+
+  self.columninfo[1].width:=1
+  self.columninfo[1].title:='CommKey'
+  self.columninfo[1].flags:=CIF_WEIGHTED
+
+  self.columninfo[2].width:=2
+  self.columninfo[2].title:='Menu Type'
+  self.columninfo[2].flags:=CIF_WEIGHTED
+
+  self.columninfo[3].width:=-1
+  self.columninfo[3].title:=-1
+  self.columninfo[3].flags:=-1
+  self.browserlist:=browserNodesA([0])
+
+  self.windowObj:=WindowObject,
+    WA_TITLE, 'Menu Setup',
+    WA_LEFT, 0,
+    WA_TOP, 0,
+    WA_HEIGHT, 180,
+    WA_WIDTH, 150,
+    WA_MINWIDTH, 150,
+    WA_MAXWIDTH, 8192,
+    WA_MINHEIGHT, 180,
+    WA_MAXHEIGHT, 8192,
+    WA_ACTIVATE, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    WA_PUBSCREEN, 0,
+    ->WA_CustomScreen, gScreen,
+    ->WINDOW_AppPort, gApp_port,
+    WA_CLOSEGADGET, TRUE,
+    WA_DEPTHGADGET, TRUE,
+    WA_SIZEGADGET, TRUE,
+    WA_DRAGBAR, TRUE,
+    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
+
+    WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_DEFERLAYOUT, FALSE,
+        LAYOUT_SPACEOUTER, FALSE,
+        LAYOUT_BOTTOMSPACING, 2,
+        LAYOUT_TOPSPACING, 2,
+        LAYOUT_LEFTSPACING, 2,
+        LAYOUT_RIGHTSPACING, 2,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+        LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+        LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+        LAYOUT_BEVELSTATE, IDS_SELECTED,
+        LAYOUT_FIXEDHORIZ, TRUE,
+        LAYOUT_FIXEDVERT, TRUE,
+        LAYOUT_SHRINKWRAP, TRUE,
+        LAYOUT_SPACEINNER, TRUE,
+
+        LAYOUT_ADDCHILD,self.gadgetList[MENUGAD_ITEMLIST]:=ListBrowserObject,
+              GA_ID, MENUGAD_ITEMLIST,
+              GA_RELVERIFY, TRUE,
+              LISTBROWSER_POSITION, 0,
+              LISTBROWSER_SHOWSELECTED, TRUE,
+              LISTBROWSER_VERTSEPARATORS, TRUE,
+              LISTBROWSER_SEPARATORS, TRUE,
+              LISTBROWSER_COLUMNTITLES, TRUE,
+              LISTBROWSER_COLUMNINFO, self.columninfo,
+              LISTBROWSER_LABELS, self.browserlist,
+        ListBrowserEnd,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_NAME ]:=StringObject,
+            GA_ID, MENUGAD_ITEM_NAME,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_TEXTVAL, '',
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Name',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_COMMKEY ]:=StringObject,
+            GA_ID, MENUGAD_ITEM_COMMKEY,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_TEXTVAL, '',
+            STRINGA_MAXCHARS, 2,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Comm_Key',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_MENUBAR ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_MENUBAR,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Menu _Bar',
+            CHECKBOX_TEXTPEN, 1,
+            CHECKBOX_BACKGROUNDPEN, 0,
+            CHECKBOX_FILLTEXTPEN, 1,
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_MENUITEM ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_MENUITEM,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Menu _Item',
+            CHECKBOX_TEXTPEN, 1,
+            CHECKBOX_BACKGROUNDPEN, 0,
+            CHECKBOX_FILLTEXTPEN, 1,
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+        LayoutEnd,
+        CHILD_WEIGHTEDHEIGHT, 0,
+        
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_ADD ]:=ButtonObject,
+            GA_ID, MENUGAD_ADD,
+            GA_TEXT, '_Add',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_DELETE ]:=ButtonObject,
+            GA_ID, MENUGAD_DELETE,
+            GA_TEXT, '_Delete',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_MODIFY ]:=ButtonObject,
+            GA_ID, MENUGAD_MODIFY,
+            GA_TEXT, '_Modify',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_MOVEUP ]:=ButtonObject,
+            GA_ID, MENUGAD_MOVEUP,
+            GA_TEXT, 'Move _Up',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_MOVEDOWN ]:=ButtonObject,
+            GA_ID, MENUGAD_MOVEDOWN,
+            GA_TEXT, 'Move D_own',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+
+        LayoutEnd,
+        CHILD_WEIGHTEDHEIGHT, 0,
+        
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_OK ]:=ButtonObject,
+            GA_ID, MENUGAD_OK,
+            GA_TEXT, '_OK',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_CANCEL ]:=ButtonObject,
+            GA_ID, MENUGAD_CANCEL,
+            GA_TEXT, '_Cancel',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+        LayoutEnd,
+        CHILD_WEIGHTEDHEIGHT, 0,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd
+
+  self.gadgetActions[MENUGAD_ITEMLIST]:={selectItem}
+  self.gadgetActions[MENUGAD_ADD]:={addItem}
+  self.gadgetActions[MENUGAD_MOVEUP]:={moveUp}
+  self.gadgetActions[MENUGAD_MOVEDOWN]:={moveDown}
+  self.gadgetActions[MENUGAD_DELETE]:={deleteItem}
+  self.gadgetActions[MENUGAD_MODIFY]:={modifyItem}
+  self.gadgetActions[MENUGAD_ITEM_NAME]:={addItem}
+  self.gadgetActions[MENUGAD_CANCEL]:=MR_CANCEL
+  self.gadgetActions[MENUGAD_OK]:=MR_OK
+ENDPROC
+
+PROC end() OF menuSettingsForm
+  DEF i
+  DEF menuItem:PTR TO menuItem
+  FOR i:=0 TO self.tempMenuItems.count()-1
+    menuItem:=self.tempMenuItems.item(i)
+    END menuItem
+  ENDFOR
+  END self.tempMenuItems
+  freeBrowserNodes(self.browserlist)
+  END self.gadgetList[NUM_MENU_GADS]
+  END self.gadgetActions[NUM_MENU_GADS]
+ENDPROC
+
+PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
+  DEF res
+  DEF i,n
+  DEF menuItem:PTR TO menuItem
+  DEF type[20]:STRING
+  DEF commKey[2]:STRING
+
+  self.menuObject:=comp
+  
+  FOR i:=0 TO comp.menuItems.count()-1
+    NEW menuItem
+    AstrCopy(menuItem.itemName,comp.menuItems.item(i)::menuItem.itemName)
+    menuItem.commKey:=comp.menuItems.item(i)::menuItem.commKey
+    menuItem.menuBar:=comp.menuItems.item(i)::menuItem.menuBar
+    menuItem.menuItem:=comp.menuItems.item(i)::menuItem.menuItem
+   
+    self.tempMenuItems.add(menuItem)
+
+    IF menuItem.menuBar
+      StrCopy(type,'Menubar')
+    ELSEIF menuItem.menuItem
+      StrCopy(type,'Menuitem')
+    ELSE
+      StrCopy(type,'Menu')
+    ENDIF
+
+    StrCopy(commKey,'')
+    StrAddChar(commKey,menuItem.commKey)
+    
+    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
+      AddTail(self.browserlist, n)
+    ELSE 
+      Raise("MEM")    
+    ENDIF
+  
+  ENDFOR
+
+  self.selectItem(self,0,0,-1)
+
+  res:=self.showModal()
+  IF res=MR_OK
+    FOR i:=0 TO comp.menuItems.count()-1 
+      menuItem:=comp.menuItems.item(i)
+      END menuItem
+    ENDFOR
+    comp.menuItems.clear()
+    FOR i:=0 TO self.tempMenuItems.count()-1
+      NEW menuItem
+      AstrCopy(menuItem.itemName,self.tempMenuItems.item(i)::menuItem.itemName)
+      menuItem.commKey:=self.tempMenuItems.item(i)::menuItem.commKey
+      menuItem.menuBar:=self.tempMenuItems.item(i)::menuItem.menuBar
+      menuItem.menuItem:=self.tempMenuItems.item(i)::menuItem.menuItem
+      comp.menuItems.add(menuItem)
+    ENDFOR
+
+  ENDIF
+ENDPROC res=MR_OK
+
+EXPORT PROC create(parent) OF menuObject
+  DEF menuItems:PTR TO stdlist
+  
+  SUPER self.create(parent)
+  self.type:=TYPE_MENU
+  NEW menuItems.stdlist(10)
+  self.menuItems:=menuItems
+  
+  self.previewObject:=0
+  self.previewChildAttrs:=0
+ENDPROC
+
+EXPORT PROC end() OF menuObject
+  END self.menuItems
+ENDPROC
+
+EXPORT PROC editSettings() OF menuObject
+  DEF editForm:PTR TO menuSettingsForm
+  DEF res
+  
+  NEW editForm.create()
+  res:=editForm.editSettings(self)
+  END editForm
+ENDPROC res
+
+EXPORT PROC serialise(fser:PTR TO fileStreamer) OF menuObject
+  DEF tempStr[200]:STRING
+  DEF menuItem:PTR TO menuItem
+  DEF i
+
+  SUPER self.serialise(fser)
+
+  FOR i:=0 TO self.menuItems.count()-1
+    menuItem:=self.menuItems.item(i)
+    StringF(tempStr,'ITEMNAME: \s',menuItem.itemName)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'COMMKEY: \s',menuItem.commKey)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'MENUBAR: \d',menuItem.menuBar)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'MENUITEM: \d',menuItem.menuItem)
+    fser.writeLine(tempStr)
+  ENDFOR
+  fser.writeLine('-')
+  self.serialiseChildren(fser)
+ENDPROC
+
+EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF menuObject
+  DEF tempStr[200]:STRING
+  DEF done=FALSE
+  DEF i
+  DEF menuItem:PTR TO menuItem
+
+  SUPER self.deserialise(fser)
+
+  FOR i:=0 TO self.menuItems.count()-1
+    menuItem:=self.menuItems.item(i)
+    END menuItem
+  ENDFOR
+  self.menuItems.clear()
+
+  REPEAT
+    IF fser.readLine(tempStr)
+      IF StrCmp('-',tempStr)
+        done:=TRUE
+      ELSEIF StrCmp('ITEMNAME: ',tempStr,STRLEN)
+        NEW menuItem
+        self.menuItems.add(menuItem)
+        AstrCopy(menuItem.itemName,tempStr+STRLEN,80)
+      ELSEIF StrCmp('COMMKEY: ',tempStr,STRLEN)
+        AstrCopy(menuItem.commKey,tempStr+STRLEN,80)
+      ELSEIF StrCmp('MENUBAR: ',tempStr,STRLEN)
+        menuItem.menuBar:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('MENUITEM: ',tempStr,STRLEN)
+        menuItem.menuItem:=Val(tempStr+STRLEN)
+      ENDIF
+    ELSE
+      done:=TRUE
+    ENDIF
+  UNTIL done  
+ENDPROC
+
+EXPORT PROC getTypeName() OF menuObject
+  RETURN 'Menu'
+ENDPROC
+
+EXPORT PROC createMenuObject(parent)
+  DEF menu:PTR TO menuObject
+  
+  NEW menu.create(parent)
+ENDPROC menu

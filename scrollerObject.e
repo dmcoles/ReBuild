@@ -1,0 +1,371 @@
+OPT MODULE, OSVERSION=37
+
+  MODULE 'reaction/reaction_macros',
+        'window','classes/window',
+        'gadgets/layout','layout',
+        'reaction/reaction_lib',
+        'button','gadgets/button',
+        'images/bevel',
+        'string',
+        'gadgets/scroller','scroller',
+        'gadgets/integer','integer',
+        'gadgets/chooser','chooser',
+        'gadgets/checkbox','checkbox',
+        'images/label','label',
+        'amigalib/boopsi',
+        'libraries/gadtools',
+        'intuition/intuition',
+        'intuition/imageclass',
+        'intuition/gadgetclass'
+
+  MODULE '*reactionObject','*reactionForm'
+
+EXPORT ENUM SCLGAD_NAME, SCLGAD_TOP, SCLGAD_VISIBLE, SCLGAD_TOTAL, SCLGAD_ARROWDELTA,
+      SCLGAD_ARROWS, SCLGAD_ORIENTATION,
+      SCLGAD_OK, SCLGAD_CHILD, SCLGAD_CANCEL
+      
+
+CONST NUM_SCL_GADS=SCLGAD_CANCEL+1
+
+EXPORT OBJECT scrollerObject OF reactionObject
+  top:INT
+  visible:INT
+  total:INT
+  arrowdelta:INT
+  arrows:CHAR
+  orientation:CHAR
+ENDOBJECT
+
+OBJECT scrollerSettingsForm OF reactionForm
+  scrollerObject:PTR TO scrollerObject
+  labels1:PTR TO LONG
+ENDOBJECT
+
+PROC create() OF scrollerSettingsForm
+  DEF gads:PTR TO LONG
+  
+  NEW gads[NUM_SCL_GADS]
+  self.gadgetList:=gads
+  NEW gads[NUM_SCL_GADS]
+  self.gadgetActions:=gads
+  
+  self.windowObj:=WindowObject,
+    WA_TITLE, 'Scroller Attribute Setting',
+    WA_LEFT, 0,
+    WA_TOP, 0,
+    WA_HEIGHT, 80,
+    WA_WIDTH, 150,
+    WA_MINWIDTH, 150,
+    WA_MAXWIDTH, 8192,
+    WA_MINHEIGHT, 80,
+    WA_MAXHEIGHT, 8192,
+    WA_ACTIVATE, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    WA_PUBSCREEN, 0,
+    ->WA_CustomScreen, gScreen,
+    ->WINDOW_AppPort, gApp_port,
+    WA_CLOSEGADGET, TRUE,
+    WA_DEPTHGADGET, TRUE,
+    WA_SIZEGADGET, TRUE,
+    WA_DRAGBAR, TRUE,
+    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
+
+    WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_DEFERLAYOUT, FALSE,
+        LAYOUT_SPACEOUTER, FALSE,
+        LAYOUT_BOTTOMSPACING, 2,
+        LAYOUT_TOPSPACING, 2,
+        LAYOUT_LEFTSPACING, 2,
+        LAYOUT_RIGHTSPACING, 2,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+        LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+        LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+        LAYOUT_BEVELSTATE, IDS_SELECTED,
+        LAYOUT_FIXEDHORIZ, TRUE,
+        LAYOUT_FIXEDVERT, TRUE,
+        LAYOUT_SHRINKWRAP, TRUE,
+        LAYOUT_SPACEINNER, TRUE,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_NAME ]:=StringObject,
+          GA_ID, SCLGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_TEXTVAL, '_Scroller1',
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Name',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_TOP ]:=IntegerObject,
+            GA_ID, SCLGAD_TOP,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            INTEGER_MINIMUM, 0,
+          IntegerEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Top',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_VISIBLE ]:=IntegerObject,
+            GA_ID, SCLGAD_VISIBLE,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            INTEGER_MINIMUM, 0,
+          IntegerEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Visible',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_TOTAL ]:=IntegerObject,
+            GA_ID, SCLGAD_TOTAL,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            INTEGER_MINIMUM, 0,
+          IntegerEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Total',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_ARROWDELTA ]:=IntegerObject,
+            GA_ID, SCLGAD_ARROWDELTA,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            INTEGER_MINIMUM, 0,
+          IntegerEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Visible',
+          LabelEnd,
+
+        LayoutEnd,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_ARROWS ]:=CheckBoxObject,
+            GA_ID, SCLGAD_ARROWS,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, '_Arrows',
+            CHECKBOX_TEXTPEN, 1,
+            CHECKBOX_BACKGROUNDPEN, 0,
+            CHECKBOX_FILLTEXTPEN, 1,
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_ORIENTATION ]:=ChooserObject,
+            GA_ID, SCLGAD_ORIENTATION,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            CHOOSER_POPUP, TRUE,
+            CHOOSER_MAXLABELS, 12,
+            CHOOSER_ACTIVE, 0,
+            CHOOSER_WIDTH, -1,
+            CHOOSER_LABELS, self.labels1:=chooserLabelsA(['SORIENT_HORIZ','SORIENT_VERT',0]),
+          ChooserEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Orientation',
+          LabelEnd,
+        LayoutEnd,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_DEFERLAYOUT, FALSE,
+          LAYOUT_SPACEOUTER, FALSE,
+          LAYOUT_BOTTOMSPACING, 2,
+          LAYOUT_TOPSPACING, 2,
+          LAYOUT_LEFTSPACING, 2,
+          LAYOUT_RIGHTSPACING, 2,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
+          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
+          LAYOUT_BEVELSTATE, IDS_SELECTED,
+          LAYOUT_FIXEDHORIZ, TRUE,
+          LAYOUT_FIXEDVERT, TRUE,
+          LAYOUT_SPACEINNER, TRUE,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_OK ]:=ButtonObject,
+            GA_ID, SCLGAD_OK,
+            GA_TEXT, '_OK',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_CHILD ]:=ButtonObject,
+            GA_ID, SCLGAD_CHILD,
+            GA_TEXT, 'C_hild',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_CANCEL ]:=ButtonObject,
+            GA_ID, SCLGAD_CANCEL,
+            GA_TEXT, '_Cancel',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+            BUTTON_BEVELSTYLE, BVS_BUTTON,
+            BUTTON_JUSTIFICATION, BCJ_CENTER,
+          ButtonEnd,
+        LayoutEnd,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd
+
+  self.gadgetActions[SCLGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[SCLGAD_CANCEL]:=MR_CANCEL
+  self.gadgetActions[SCLGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editChildSettings(nself,gadget,id,code) OF scrollerSettingsForm
+  self:=nself
+  self.scrollerObject.editChildSettings()
+ENDPROC
+
+PROC end() OF scrollerSettingsForm
+  freeChooserLabels( self.labels1 )
+  END self.gadgetList[NUM_SCL_GADS]
+  END self.gadgetActions[NUM_SCL_GADS]
+ENDPROC
+
+PROC editSettings(comp:PTR TO scrollerObject) OF scrollerSettingsForm
+  DEF res
+
+  self.scrollerObject:=comp
+  
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_VISIBLE ],0,0,[INTEGER_NUMBER,comp.visible,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_TOTAL ],0,0,[INTEGER_NUMBER,comp.total,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_ARROWDELTA ],0,0,[INTEGER_NUMBER,comp.arrowdelta,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_ARROWS ],0,0,[CHECKBOX_CHECKED,comp.arrows,0])
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_ORIENTATION ],0,0,[CHOOSER_SELECTED,comp.orientation,0])
+
+  res:=self.showModal()
+  IF res=MR_OK
+    AstrCopy(comp.name,Gets(self.gadgetList[ SCLGAD_NAME ],STRINGA_TEXTVAL))
+    comp.top:=Gets(self.gadgetList[ SCLGAD_TOP ],INTEGER_NUMBER)
+    comp.visible:=Gets(self.gadgetList[ SCLGAD_VISIBLE ],INTEGER_NUMBER)
+    comp.total:=Gets(self.gadgetList[ SCLGAD_TOTAL ],INTEGER_NUMBER)
+    comp.arrowdelta:=Gets(self.gadgetList[ SCLGAD_ARROWDELTA ],INTEGER_NUMBER)
+    comp.arrows:=Gets(self.gadgetList[ SCLGAD_ARROWS ],CHECKBOX_CHECKED)
+    comp.orientation:=Gets(self.gadgetList[ SCLGAD_ORIENTATION ],CHOOSER_SELECTED)
+  ENDIF
+ENDPROC res
+
+EXPORT PROC createPreviewObject() OF scrollerObject
+  self.previewObject:=ScrollerObject, 
+      GA_RELVERIFY, TRUE,
+      GA_TABCYCLE, TRUE,
+      SCROLLER_TOP, self.top,
+      SCROLLER_VISIBLE, self.visible,
+      SCROLLER_TOTAL, self.total,
+      SCROLLER_ARROWDELTA, self.arrowdelta,
+      SCROLLER_ORIENTATION, ListItem([SORIENT_HORIZ,SORIENT_VERT],self.orientation),
+    ScrollerEnd
+
+  self.previewChildAttrs:=[
+    LAYOUT_MODIFYCHILD, self.previewObject,
+    CHILD_LABEL, LabelObject,
+      LABEL_TEXT, self.name,
+    LabelEnd,
+    CHILD_NOMINALSIZE, self.nominalSize,
+    CHILD_NODISPOSE, FALSE,
+    CHILD_MINWIDTH, self.minWidth,
+    CHILD_MINHEIGHT, self.minHeight,
+    CHILD_MAXWIDTH, self.maxWidth,
+    CHILD_MAXHEIGHT, self.maxHeight,
+    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+    CHILD_SCALEWIDTH, self.scaleWidth,
+    CHILD_SCALEHEIGHT, self.scaleHeight,
+    TAG_END]
+ENDPROC
+
+EXPORT PROC create(parent) OF scrollerObject
+  self.type:=TYPE_SCROLLER
+  SUPER self.create(parent)
+  
+  self.top:=0
+  self.visible:=1
+  self.total:=1
+  self.arrowdelta:=1
+  self.arrows:=TRUE
+  self.orientation:=0
+
+  self.libused:=LIB_SCROLLER OR LIB_LABEL
+ENDPROC
+
+EXPORT PROC editSettings() OF scrollerObject
+  DEF editForm:PTR TO scrollerSettingsForm
+  DEF res
+  
+  NEW editForm.create()
+  res:=editForm.editSettings(self)
+  END editForm
+ENDPROC res=MR_OK
+
+#define makeProp(a,b) 'a',{self.a},b
+
+EXPORT PROC serialiseData() OF scrollerObject IS
+[
+  makeProp(top,FIELDTYPE_INT),
+  makeProp(visible,FIELDTYPE_INT),
+  makeProp(total,FIELDTYPE_INT),
+  makeProp(arrowdelta,FIELDTYPE_INT),
+  makeProp(arrows,FIELDTYPE_CHAR),
+  makeProp(orientation,FIELDTYPE_CHAR)
+]
+
+EXPORT PROC getTypeName() OF scrollerObject
+  RETURN 'Scroller'
+ENDPROC
+
+EXPORT PROC createScrollerObject(parent)
+  DEF scroller:PTR TO scrollerObject
+  
+  NEW scroller.create(parent)
+ENDPROC scroller
