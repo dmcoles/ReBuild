@@ -362,7 +362,7 @@ EXPORT PROC serialiseData() OF radioObject IS
 ]
 
 EXPORT PROC getTypeName() OF radioObject
-  RETURN 'Radio'
+  RETURN 'RadioButton'
 ENDPROC
 
 EXPORT PROC createRadioObject(parent)

@@ -761,6 +761,10 @@ EXPORT PROC getTypeName() OF getScreenModeObject
   RETURN 'GetScreenMode'
 ENDPROC
 
+EXPORT PROC getTypeEndName() OF getScreenModeObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createGetScreenModeObject(parent)
   DEF getscreen:PTR TO getScreenModeObject
   

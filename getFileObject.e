@@ -596,6 +596,10 @@ EXPORT PROC getTypeName() OF getFileObject
   RETURN 'GetFile'
 ENDPROC
 
+EXPORT PROC getTypeEndName() OF getFileObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createGetFileObject(parent)
   DEF getfile:PTR TO getFileObject
   

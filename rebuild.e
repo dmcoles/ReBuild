@@ -406,7 +406,7 @@ PROC createForm()
           LISTBROWSER_SEPARATORS, TRUE,
           LISTBROWSER_COLUMNTITLES, TRUE,
           LISTBROWSER_COLUMNINFO, columninfo,
-          LISTBROWSER_VERTICALPROP, FALSE,
+          LISTBROWSER_VERTICALPROP, TRUE,
           LISTBROWSER_HIERARCHICAL, TRUE,
           LISTBROWSER_LABELS, list,
         ListBrowserEnd,
@@ -727,7 +727,11 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
     n++
     genComponentCode(comp.children.item(i),n,srcGen)
   ENDFOR
-  StringF(tempStr,'\sEnd,',comp.getTypeName())
+  StrCopy(tempStr,comp.getTypeEndName())
+  IF EstrLen(tempStr)=0
+    StringF(tempStr,'\sEnd',comp.getTypeName())
+  ENDIF
+  StrAddChar(tempStr,",")
   srcGen.componentEnd(tempStr)
   comp.genCodeChildProperties(srcGen)
 ENDPROC

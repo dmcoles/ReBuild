@@ -521,6 +521,10 @@ EXPORT PROC getTypeName() OF getFontObject
   RETURN 'GetFont'
 ENDPROC
 
+EXPORT PROC getTypeEndName() OF getFontObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createGetFontObject(parent)
   DEF getfont:PTR TO getFontObject
   

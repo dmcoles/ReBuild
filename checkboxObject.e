@@ -403,7 +403,7 @@ EXPORT PROC editSettings() OF checkboxObject
 ENDPROC res
 
 EXPORT PROC getTypeName() OF checkboxObject
-  RETURN 'Checkbox'
+  RETURN 'CheckBox'
 ENDPROC
 
 #define makeProp(a,b) 'a',{self.a},b

@@ -445,6 +445,10 @@ EXPORT PROC getTypeName() OF reactionObject
   RETURN ''
 ENDPROC
 
+EXPORT PROC getTypeEndName() OF reactionObject
+  RETURN ''
+ENDPROC
+
 EXPORT PROC getChildIndex() OF reactionObject
   DEF i
   IF self.parent=0 THEN RETURN -1
