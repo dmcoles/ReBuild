@@ -331,7 +331,7 @@ PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   IF res=MR_OK
     AstrCopy(comp.name,Gets(self.gadgetList[ INTGAD_NAME ],STRINGA_TEXTVAL))
     comp.maxChars:=Gets(self.gadgetList[ INTGAD_MAXCHARS ],INTEGER_NUMBER)
-    AstrCopy(comp.value,Gets(self.gadgetList[ INTGAD_VALUE ],INTEGER_NUMBER))
+    comp.value:=Gets(self.gadgetList[ INTGAD_VALUE ],INTEGER_NUMBER)
     comp.minVisible:=Gets(self.gadgetList[ INTGAD_MINVISIBLE ],INTEGER_NUMBER)
     comp.minimum:=Gets(self.gadgetList[ INTGAD_MINIMUM ],INTEGER_NUMBER)
     comp.maximum:=Gets(self.gadgetList[ INTGAD_MAXIMUM ],INTEGER_NUMBER)

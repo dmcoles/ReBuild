@@ -32,7 +32,7 @@ EXPORT PROC create(parent) OF spaceObject
   self.libused:=LIB_SPACE
 ENDPROC
 
-EXPORT PROC editSettings() OF spaceObject IS FALSE
+EXPORT PROC editSettings() OF spaceObject IS TRUE
 
 EXPORT PROC serialiseData() OF spaceObject IS
 [

@@ -680,52 +680,55 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF layoutObject
 
   IF self.horizAlignment
     srcGen.componentProperty('LAYOUT_HorizAlignment','LALIGN_RIGHT',FALSE)
-  ELSE
-    srcGen.componentProperty('LAYOUT_HorizAlignment','LALIGN_LEFT',FALSE)
   ENDIF
 
   IF self.vertAlignment
     srcGen.componentProperty('LAYOUT_VertAlignment','LALIGN_BOTTOM',FALSE)
-  ELSE
-    srcGen.componentProperty('LAYOUT_VertAlignment','LALIGN_TOP',FALSE)
   ENDIF
 
-  srcGen.componentProperty('LAYOUT_BevelStyle',ListItem(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP', 'BVS_FIELD', 'BVS_DROPBOX', 'BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD'],self.bevelStyle),FALSE)
+  IF self.bevelStyle
+    srcGen.componentProperty('LAYOUT_BevelStyle',ListItem(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP', 'BVS_FIELD', 'BVS_DROPBOX', 'BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD'],self.bevelStyle),FALSE)
+  ENDIF
 
   IF self.bevelState 
     srcGen.componentProperty('LAYOUT_BevelState',ListItem([0,'IDS_SELECTED','IDS_NORMAL'],self.bevelState),FALSE)
   ENDIF
 
-  srcGen.componentProperty('LAYOUT_SpaceOuter',IF self.spaceOuter THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.spaceOuter THEN srcGen.componentProperty('LAYOUT_SpaceOuter','TRUE',FALSE)
 
-  srcGen.componentProperty('LAYOUT_SpaceInner',IF self.spaceInner THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.spaceInner=FALSE THEN srcGen.componentProperty('LAYOUT_SpaceInner','FALSE',FALSE)
 
-  StringF(tempStr,'\d',self.leftSpacing)
-  srcGen.componentProperty('LAYOUT_LeftSpacing',tempStr,FALSE)
+  IF self.leftSpacing
+    StringF(tempStr,'\d',self.leftSpacing)
+    srcGen.componentProperty('LAYOUT_LeftSpacing',tempStr,FALSE)
+  ENDIF
 
-  StringF(tempStr,'\d',self.leftSpacing)
-  srcGen.componentProperty('LAYOUT_LeftSpacing',tempStr,FALSE)
+  IF self.rightSpacing
+    StringF(tempStr,'\d',self.rightSpacing)
+    srcGen.componentProperty('LAYOUT_RightSpacing',tempStr,FALSE)
+  ENDIF
 
-  StringF(tempStr,'\d',self.rightSpacing)
-  srcGen.componentProperty('LAYOUT_RightSpacing',tempStr,FALSE)
+  IF self.topSpacing
+    StringF(tempStr,'\d',self.topSpacing)
+    srcGen.componentProperty('LAYOUT_TopSpacing',tempStr,FALSE)
+  ENDIF
 
-  StringF(tempStr,'\d',self.topSpacing)
-  srcGen.componentProperty('LAYOUT_TopSpacing',tempStr,FALSE)
-
-  StringF(tempStr,'\d',self.bottomSpacing)
-  srcGen.componentProperty('LAYOUT_BottomSpacing',tempStr,FALSE)
+  IF self.bottomSpacing
+    StringF(tempStr,'\d',self.bottomSpacing)
+    srcGen.componentProperty('LAYOUT_BottomSpacing',tempStr,FALSE)
+  ENDIF
 
   srcGen.componentProperty('LAYOUT_Label',self.label,TRUE)
 
   srcGen.componentProperty('LAYOUT_LabelPlace', ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),TRUE)
 
-  srcGen.componentProperty('LAYOUT_FixedHoriz',IF self.fixedHoriz THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.fixedHoriz=FALSE THEN srcGen.componentProperty('LAYOUT_FixedHoriz','FALSE',FALSE)
   
-  srcGen.componentProperty('LAYOUT_FixedVert',IF self.fixedVert THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.fixedVert=FALSE THEN srcGen.componentProperty('LAYOUT_FixedVert','FALSE',FALSE)
 
-  srcGen.componentProperty('LAYOUT_ShrinkWrap',IF self.shrinkWrap THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.shrinkWrap THEN srcGen.componentProperty('LAYOUT_ShrinkWrap','TRUE',FALSE)
 
-  srcGen.componentProperty('LAYOUT_EvenSize',IF self.evenSize THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.evenSize  THEN srcGen.componentProperty('LAYOUT_EvenSize','TRUE',FALSE)
 
   srcGen.componentProperty('LAYOUT_DeferLayout',IF self.deferLayout THEN 'TRUE' ELSE 'FALSE',FALSE)
 ENDPROC

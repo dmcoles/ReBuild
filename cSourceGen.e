@@ -49,7 +49,7 @@ PROC genHeader(count) OF cSrcGen
   IF self.libsused AND LIB_SCROLLER THEN self.writeLine('#include <proto/scroller.h>')
   IF self.libsused AND LIB_STRING THEN self.writeLine('#include <proto/string.h>')
   IF self.libsused AND LIB_SPACE THEN self.writeLine('#include <proto/space.h>')
-  ->IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('#include <proto/textfield.h>')
+  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('#include <proto/textfield.h>')
   IF self.libsused AND LIB_BEVEL THEN self.writeLine('#include <proto/bevel.h>')
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('#include <proto/glyph.h>')
@@ -91,7 +91,7 @@ PROC genHeader(count) OF cSrcGen
   IF self.libsused AND LIB_SCROLLER THEN self.writeLine('               *ScrollerBase = NULL,')
   IF self.libsused AND LIB_STRING THEN self.writeLine('               *StringBase = NULL,')
   IF self.libsused AND LIB_SPACE THEN self.writeLine('               *SpaceBase = NULL,')
-  ->IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('               *ButtonBase = NULL,')
+  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('               *TextFieldBase = NULL,')
   IF self.libsused AND LIB_BEVEL THEN self.writeLine('               *BevelBase = NULL,')
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('               *GlyphBase = NULL,')
@@ -202,11 +202,11 @@ PROC genHeader(count) OF cSrcGen
     self.indent+=2
   ENDIF
 
-/*  IF self.libsused AND LIB_TEXTFIELD
+  IF self.libsused AND LIB_TEXTFIELD
     self.writeLine('if( TextFieldBase = (struct Library*) OpenLibrary("gadgets/textfield.gadget",0L) )')
     self.writeLine('{')
     self.indent+=2
-  ENDIF*/
+  ENDIF
 
   IF self.libsused AND LIB_BEVEL
     self.writeLine('if( BevelBase = (struct Library*) OpenLibrary("images/bevel.image",0L) )')
@@ -309,10 +309,10 @@ PROC genHeader(count) OF cSrcGen
     self.writeLine('}')
   ENDIF
 
-/*  IF self.libsused AND LIB_TEXTFIELD
+  IF self.libsused AND LIB_TEXTFIELD
     self.indent-=2
     self.writeLine('}')
-  ENDIF*/
+  ENDIF
 
   IF self.libsused AND LIB_BEVEL
     self.indent-=2
@@ -429,7 +429,7 @@ PROC genFooter(count) OF cSrcGen
   IF self.libsused AND LIB_SCROLLER THEN self.writeLine('  if (ScrollerBase) CloseLibrary( (struct Library *)ScrollerBase );')
   IF self.libsused AND LIB_STRING THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
   IF self.libsused AND LIB_SPACE THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
-  ->IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );')
+  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)TextFieldBase );')
   IF self.libsused AND LIB_BEVEL THEN self.writeLine('  if (BevelBase) CloseLibrary( (struct Library *)BevelBase );')
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')

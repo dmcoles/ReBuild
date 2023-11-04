@@ -212,11 +212,10 @@ PROC addMembers(comp:PTR TO reactionObject,previewRootLayout)
   ENDIF
 ENDPROC
 
-PROC makeList(newpos=-1,selcomp=0)
+PROC makeList(selcomp=0)
   DEF n,i
   DEF newnode=0
   DEF depth
-  IF newpos=-1 THEN newpos:=Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTED)
   
   IF win THEN SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   IF list THEN freeBrowserNodes( list )
@@ -273,12 +272,12 @@ PROC makeList(newpos=-1,selcomp=0)
 -> Reattach the list
   IF win 
     SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS,list,0])
-    IF newnode=0
-      SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTED, newpos,0])
-      updateSel(win,Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTEDNODE))
-    ELSE
+    IF newnode
       SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newnode,0])
       updateSel(win,newnode)
+    ELSE
+      SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTED, -1,0])
+      updateSel(win,0)
     ENDIF
   ENDIF
   
@@ -291,10 +290,10 @@ PROC menuDisable(win,menu,item,flag)
 ENDPROC
 
 PROC updateSel(win,node)
-  DEF comp:PTR TO reactionObject
+  DEF comp=0:PTR TO reactionObject
   DEF dis,idx
   
-  GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
+  IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
   IF comp
     selectedComp:=comp
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW))
@@ -585,7 +584,7 @@ PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
     previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
     removeMembers(mainRootLayout,previewRootLayout)
     parent.addChild(newobj)
-    makeList(-1,newobj)
+    makeList(newobj)
     addMembers(mainRootLayout,previewRootLayout)
     rethinkPreviews()
   ENDIF
@@ -619,7 +618,7 @@ PROC doGenUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     parent.removeChild(child)
     parent.parent.addChild(child)
     child.parent:=parent.parent
-    makeList()
+    makeList(child)
     addMembers(mainRootLayout,previewRootLayout)
     rethinkPreviews()
   ENDIF
@@ -638,7 +637,7 @@ PROC doGenDown(parent:PTR TO reactionObject, child:PTR TO reactionObject)
   newparent:=parent.children.item(idx+1)
   parent.removeChild(child)
   newparent.addChild(child)
-  makeList()
+  makeList(child)
   addMembers(mainRootLayout,previewRootLayout)
   rethinkPreviews()
 ENDPROC
@@ -653,7 +652,7 @@ PROC moveUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
     removeMembers(mainRootLayout,previewRootLayout)
     parent.swapChildren(child.getChildIndex(),child.getChildIndex()-1)
-    makeList(Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTED)-1)
+    makeList(child)
     addMembers(mainRootLayout,previewRootLayout)
     rethinkPreviews()
   ENDIF
@@ -669,7 +668,7 @@ PROC moveDown(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
     removeMembers(mainRootLayout,previewRootLayout)
     parent.swapChildren(child.getChildIndex(),child.getChildIndex()+1)
-    makeList(Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTED)+1)
+    makeList(child)
     addMembers(mainRootLayout,previewRootLayout)
     rethinkPreviews()
   ENDIF
@@ -825,12 +824,12 @@ PROC processObjects(obj:PTR TO reactionObject,list:PTR TO stdlist)
   ENDFOR
 ENDPROC
 
-PROC loadFile()
-  DEF fs:PTR TO fileStreamer
+PROC loadFile() HANDLE
+  DEF fs=0:PTR TO fileStreamer
   DEF newObj:PTR TO reactionObject
   DEF tmpObj:PTR TO reactionObject
   DEF tempStr[255]:STRING
-  DEF loadObjectList:PTR TO stdlist
+  DEF loadObjectList=0:PTR TO stdlist
   DEF reactionLists:PTR TO stdlist
   DEF type,i
   DEF ver,newid
@@ -941,7 +940,7 @@ PROC loadFile()
     processObjects(objectList.item(i),loadObjectList)
     i+=3
   ENDWHILE
-  makeList(0)
+  makeList()
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
@@ -953,12 +952,13 @@ PROC loadFile()
   changes:=FALSE
   
   objectInitialise(newid)
+EXCEPT DO
   END loadObjectList
   END fs
 ENDPROC
 
-PROC saveFile()
-  DEF fs:PTR TO fileStreamer
+PROC saveFile() HANDLE
+  DEF fs=0:PTR TO fileStreamer
   DEF i,j
   DEF comp:PTR TO reactionObject
   DEF tempStr[10]:STRING
@@ -989,8 +989,9 @@ PROC saveFile()
     ENDIF
   ENDFOR
   
-  END fs
   changes:=FALSE
+EXCEPT DO
+  END fs 
 ENDPROC
 
 PROC saveFileAs()
@@ -1105,7 +1106,7 @@ PROC doAdd()
     objectList.add(newwin:=createWindowObject(0))  ->extra window
     objectList.add(createMenuObject(0)) ->extra menu
     objectList.add(createLayoutObject(0)) ->extra layout
-    makeList(0)
+    makeList()
     RA_OpenWindow(newwin.previewObject)
     remakePreviewMenus()
     changes:=TRUE
@@ -1142,7 +1143,7 @@ PROC doEdit()
         previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
         removeMembers(mainRootLayout,previewRootLayout)
         IF selectedComp.type=TYPE_WINDOW THEN RA_CloseWindow(selectedComp.previewObject)
-        makeList()
+        makeList(selectedComp)
         addMembers(mainRootLayout,previewRootLayout)
         IF selectedComp.type=TYPE_WINDOW THEN RA_OpenWindow(selectedComp.previewObject)
         rethinkPreviews()
@@ -1200,7 +1201,7 @@ PROC newProject()
   objectList.add(createWindowObject(0))  ->Window
   objectList.add(createMenuObject(0))  ->Menu
   objectList.add(createLayoutObject(0))  ->Layout
-  makeList(0)
+  makeList()
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
@@ -1389,7 +1390,7 @@ PROC editLists()
     mainRootLayout:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_LAYOUT_ITEM)
     previewRootLayout:=objectList.item(idx)::windowObject.previewRootLayout
     removeMembers(mainRootLayout,previewRootLayout)
-    makeList()
+    makeList(selectedComp)
     addMembers(mainRootLayout,previewRootLayout)
     rethinkPreviews()
     idx+=3
