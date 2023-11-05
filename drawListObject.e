@@ -879,6 +879,7 @@ ENDPROC res=MR_OK
 EXPORT PROC createPreviewObject() OF drawListObject
   self.previewObject:=DrawListObject,
       DRAWLIST_DIRECTIVES, self.drawItems,
+      DRAWLIST_DRAWINFO, self.drawInfo,
     DrawListEnd
     
     self.previewChildAttrs:=[

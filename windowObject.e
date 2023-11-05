@@ -69,6 +69,7 @@ EXPORT OBJECT windowObject OF reactionObject
   refreshType:CHAR
   flags:LONG
   idcmp:LONG
+  previewOpen:CHAR
   previewRootLayout:LONG
 ENDOBJECT
 
@@ -1532,6 +1533,7 @@ EXPORT PROC create(parent) OF windowObject
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW
   self.createPreviewObject()
   self.previewChildAttrs:=0
+  self.previewOpen:=TRUE
 ENDPROC
 
 EXPORT PROC editSettings() OF windowObject
@@ -1562,7 +1564,8 @@ EXPORT PROC serialiseData() OF windowObject IS
   makeProp(gadgetHelp,FIELDTYPE_CHAR),
   makeProp(refreshType,FIELDTYPE_CHAR),
   makeProp(flags,FIELDTYPE_LONG),
-  makeProp(idcmp,FIELDTYPE_LONG)
+  makeProp(idcmp,FIELDTYPE_LONG),
+  makeProp(previewOpen,FIELDTYPE_CHAR)
 ]
 
 EXPORT PROC getTypeName() OF windowObject

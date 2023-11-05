@@ -304,6 +304,7 @@ EXPORT PROC createPreviewObject() OF labelObject
       LABEL_DISPOSEIMAGE, FALSE,
       IA_BGPEN, self.bgPen,
       IA_FGPEN, self.fgPen,
+      LABEL_DRAWINFO, self.drawInfo,
       LABEL_JUSTIFICATION,ListItem([LJ_LEFT,LJ_CENTER,LJ_RIGHT],self.justify),
     LabelEnd
 

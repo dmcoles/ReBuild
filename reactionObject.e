@@ -63,6 +63,7 @@ EXPORT OBJECT reactionObject
   noDispose:CHAR
   
   tempParentId:INT
+  drawInfo:LONG
   previewObject:LONG
   previewChildAttrs:LONG
 ENDOBJECT
@@ -400,6 +401,7 @@ ENDPROC res=MR_OK
 EXPORT PROC create(parent) OF reactionObject
   DEF stdlist:PTR TO stdlist
   DEF name[80]:STRING
+  DEF scr
   self.parent:=parent
   self.id:=objCount
   objCount:=objCount+1
@@ -425,10 +427,14 @@ EXPORT PROC create(parent) OF reactionObject
   self.tempParentId:=-1
   self.previewObject:=0
   self.previewChildAttrs:=0
+
+  scr:=LockPubScreen(NIL)
+  self.drawInfo:=GetScreenDrawInfo(scr)
+  UnlockPubScreen(NIL,scr)
 ENDPROC
 
 EXPORT PROC end() OF reactionObject
-  DEF i
+  DEF i,scr
   DEF child:PTR TO reactionObject
   FOR i:=0 TO self.children.count()-1
     child:=self.children.item(i)
@@ -437,6 +443,12 @@ EXPORT PROC end() OF reactionObject
   END self.children
   IF self.previewObject THEN DisposeObject(self.previewObject)
   IF self.previewChildAttrs THEN DisposeObject(self.previewChildAttrs)
+  IF self.drawInfo
+    scr:=LockPubScreen(NIL)
+    FreeScreenDrawInfo(scr,self.drawInfo)
+    UnlockPubScreen(NIL,scr)
+  ENDIF
+    
 ENDPROC
 
 EXPORT PROC createPreviewObject() OF reactionObject IS -1

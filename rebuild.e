@@ -1086,7 +1086,7 @@ PROC doLoad()
   ENDIF
   closePreviews()
   loadFile()
-  openPreviews()
+  restorePreviews()
 ENDPROC
 
 PROC doNew()
@@ -1220,25 +1220,31 @@ ENDPROC
 PROC togglePreview(subitem)
   DEF idx,pwin
   DEF previewWin
+  DEF winObj:PTR TO windowObject
   idx:=(subitem*3)+ROOT_WINDOW_ITEM
-  previewWin:=objectList.item(idx)::windowObject.previewObject
+  winObj:=objectList.item(idx)
+  previewWin:=winObj.previewObject
 
   pwin:=Gets(previewWin,WINDOW_WINDOW)
   IF pwin
+    winObj.previewOpen:=FALSE
     RA_CloseWindow(previewWin)
   ELSE
+    winObj.previewOpen:=TRUE
     RA_OpenWindow(previewWin)
   ENDIF
 ENDPROC
 
 PROC handlePreviewInputs()
   DEF pwin:PTR TO window,previewWin,i,code
+  DEF winObj:PTR TO windowObject
   DEF left,top
   DEF result,tmp
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
-    previewWin:=objectList.item(i)::windowObject.previewObject
+    winObj:=objectList.item(i)
+    previewWin:=winObj.previewObject
     pwin:=Gets(previewWin,WINDOW_WINDOW)
     WHILE ((result:=RA_HandleInput(previewWin,{code})) <> WMHI_LASTMSG)
       tmp:=(result AND WMHI_CLASSMASK)
@@ -1248,6 +1254,7 @@ PROC handlePreviewInputs()
         CASE WMHI_CLOSEWINDOW
           left:=Gets(previewWin,WA_LEFT)
           top:=Gets(previewWin,WA_TOP)
+          winObj.previewOpen:=FALSE
           RA_CloseWindow(previewWin)
           SetGadgetAttrsA(previewWin,0,0,[WA_LEFT,left,WA_TOP,top,TAG_END])
           remakePreviewMenus()
@@ -1375,6 +1382,22 @@ PROC openPreviews()
   WHILE (i<objectList.count())
     previewWin:=objectList.item(i)::windowObject.previewObject
     RA_OpenWindow(previewWin)
+    i+=3
+  ENDWHILE
+  remakePreviewMenus()
+ENDPROC
+
+PROC restorePreviews()
+  DEF previewWin,i
+  DEF winObj:PTR TO windowObject
+  
+  i:=ROOT_WINDOW_ITEM
+  WHILE (i<objectList.count())
+    winObj:=objectList.item(i)
+    previewWin:=winObj.previewObject
+    IF winObj.previewOpen
+      RA_OpenWindow(previewWin)
+    ENDIF
     i+=3
   ENDWHILE
   remakePreviewMenus()
@@ -1629,7 +1652,7 @@ PROC main() HANDLE
             CASE WMHI_UNICONIFY
               IF (win:=RA_OpenWindow(mainWindow))
                 SetMenuStrip(win,menus)
-                openPreviews()
+                restorePreviews()
                 GetAttr( WINDOW_SIGMASK, mainWindow, {wsig} )
               ENDIF
             CASE WMHI_CLOSEWINDOW
