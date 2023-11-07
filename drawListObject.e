@@ -99,7 +99,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD1_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD1_ACTION,
@@ -190,7 +189,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD2_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD2_ACTION,
@@ -281,7 +279,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD3_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD3_ACTION,
@@ -373,7 +370,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD4_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD4_ACTION,
@@ -464,7 +460,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD5_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD5_ACTION,
@@ -555,7 +550,6 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD6_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD6_ACTION,
@@ -647,8 +641,7 @@ PROC create() OF drawListSettingsForm
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_EVENSIZE, FALSE,
         LAYOUT_SHRINKWRAP, TRUE, 
-        LAYOUT_SPACEINNER, TRUE,
-
+        
         LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD7_ACTION ]:=ChooserObject,
           GA_ID, DRAWLISTGAD7_ACTION,
           GA_RELVERIFY, TRUE,
@@ -736,7 +729,6 @@ PROC create() OF drawListSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ DRAWLISTGAD_OK ]:=ButtonObject,
             GA_ID, DRAWLISTGAD_OK,

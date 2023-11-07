@@ -87,7 +87,6 @@ PROC create() OF integerSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -102,7 +101,6 @@ PROC create() OF integerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_NAME ]:=StringObject,
             GA_ID, INTGAD_NAME,
@@ -141,7 +139,6 @@ PROC create() OF integerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_VALUE ]:=IntegerObject,
             GA_ID, INTGAD_VALUE,
@@ -205,7 +202,6 @@ PROC create() OF integerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_DISABLED ]:=CheckBoxObject,
             GA_ID, INTGAD_DISABLED,
@@ -254,7 +250,6 @@ PROC create() OF integerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ INTGAD_OK ]:=ButtonObject,
             GA_ID, INTGAD_OK,

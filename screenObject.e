@@ -92,7 +92,6 @@ PROC create() OF screenSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -108,7 +107,6 @@ PROC create() OF screenSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ SCRGAD_PUBLIC ]:=CheckBoxObject,
             GA_ID, SCRGAD_PUBLIC,
@@ -184,7 +182,6 @@ PROC create() OF screenSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ SCRGAD_LEFTEDGE ]:=IntegerObject,
             GA_ID, SCRGAD_LEFTEDGE,
@@ -260,7 +257,6 @@ PROC create() OF screenSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ SCRGAD_OVERSCANTYPE ]:=ChooserObject,
             GA_ID, SCRGAD_OVERSCANTYPE,
@@ -312,7 +308,6 @@ PROC create() OF screenSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ SCRGAD_OK ]:=ButtonObject,
             GA_ID, SCRGAD_OK,

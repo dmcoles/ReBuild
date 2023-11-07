@@ -85,7 +85,6 @@ PROC create() OF radioSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
        LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -100,7 +99,6 @@ PROC create() OF radioSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
           
           LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_LISTSELECT ]:=ButtonObject,
             GA_ID, RADIOGAD_LISTSELECT,
@@ -143,7 +141,6 @@ PROC create() OF radioSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_SPACING ]:=IntegerObject,
             GA_ID, RADIOGAD_SPACING,
@@ -179,7 +176,6 @@ PROC create() OF radioSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_OK ]:=ButtonObject,
             GA_ID, RADIOGAD_OK,

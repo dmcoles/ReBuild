@@ -181,7 +181,6 @@ PROC create() OF textFieldSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -197,7 +196,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_DELIM ]:=StringObject,
             GA_ID, TEXTFIELDGAD_DELIM,
@@ -250,7 +248,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_BLINKRATE ]:=IntegerObject,
             GA_ID, TEXTFIELDGAD_BLINKRATE,
@@ -306,7 +303,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_DISABLED ]:=CheckBoxObject,
             GA_ID, TEXTFIELDGAD_DISABLED,
@@ -377,7 +373,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_NOGHOST ]:=CheckBoxObject,
             GA_ID, TEXTFIELDGAD_NOGHOST,
@@ -448,7 +443,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_USERALIGN ]:=CheckBoxObject,
             GA_ID, TEXTFIELDGAD_USERALIGN,
@@ -497,7 +491,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_PAPERPEN ]:=ButtonObject,
             GA_ID, TEXTFIELDGAD_PAPERPEN,
@@ -553,7 +546,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_BORDER ]:=ChooserObject,
             GA_ID, TEXTFIELDGAD_BORDER,
@@ -597,7 +589,6 @@ PROC create() OF textFieldSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_OK ]:=ButtonObject,
             GA_ID, TEXTFIELDGAD_OK,

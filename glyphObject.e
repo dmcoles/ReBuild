@@ -80,7 +80,6 @@ PROC create() OF glyphSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GLYGAD_NAME ]:=StringObject,
           GA_ID, GLYGAD_NAME,
@@ -121,7 +120,6 @@ PROC create() OF glyphSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ GLYGAD_OK ]:=ButtonObject,
             GA_ID, GLYGAD_OK,

@@ -91,7 +91,6 @@ PROC create() OF chooserSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -106,7 +105,6 @@ PROC create() OF chooserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHOOSER_GAD_NAME ]:=StringObject,
             GA_ID, CHOOSER_GAD_NAME,
@@ -147,7 +145,6 @@ PROC create() OF chooserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHOOSER_GAD_MAXLABELS ]:=IntegerObject,
             GA_ID, CHOOSER_GAD_MAXLABELS,
@@ -193,7 +190,6 @@ PROC create() OF chooserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHOOSER_GAD_READONLY ]:=CheckBoxObject,
             GA_ID, CHOOSER_GAD_READONLY,
@@ -242,7 +238,6 @@ PROC create() OF chooserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHOOSER_GAD_POPUP ]:=CheckBoxObject,
             GA_ID, CHOOSER_GAD_POPUP,
@@ -280,7 +275,6 @@ PROC create() OF chooserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHOOSER_GAD_OK ]:=ButtonObject,
             GA_ID, CHOOSER_GAD_OK,

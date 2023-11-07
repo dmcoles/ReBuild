@@ -104,7 +104,6 @@ PROC create() OF bevelSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_NAME ]:=StringObject,
           GA_ID, BEVELGAD_NAME,
@@ -133,7 +132,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BEVELGAD_LEFT ]:=IntegerObject,
             GA_ID, BEVELGAD_LEFT,
@@ -190,7 +188,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BEVELGAD_FILLPEN ]:=ButtonObject,
             GA_ID, BEVELGAD_FILLPEN,
@@ -264,7 +261,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_HIGHLIGHTPEN ]:=ChooserObject,
             GA_ID, BEVELGAD_HIGHLIGHTPEN,
@@ -309,7 +305,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_BACKGROUNDPEN ]:=ChooserObject,
             GA_ID, BEVELGAD_BACKGROUNDPEN,
@@ -353,7 +348,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_RECESSED ]:=CheckBoxObject,
             GA_ID, BEVELGAD_RECESSED,
@@ -403,7 +397,6 @@ PROC create() OF bevelSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BEVELGAD_OK ]:=ButtonObject,
             GA_ID, BEVELGAD_OK,

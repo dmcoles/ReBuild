@@ -99,7 +99,6 @@ PROC create() OF getFileSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_NAME ]:=StringObject,
           GA_ID, GETFILEGAD_NAME,
@@ -162,7 +161,6 @@ PROC create() OF getFileSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_PATTERN ]:=StringObject,
             GA_ID, GETFILEGAD_PATTERN,
@@ -214,7 +212,6 @@ PROC create() OF getFileSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETFILEGAD_LEFT ]:=IntegerObject,
             GA_ID, GETFILEGAD_LEFT,
@@ -270,7 +267,6 @@ PROC create() OF getFileSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_FULLEXPAND ]:=CheckBoxObject,
             GA_ID, GETFILEGAD_FULLEXPAND,
@@ -330,7 +326,6 @@ PROC create() OF getFileSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_DRAWERSONLY ]:=CheckBoxObject,
             GA_ID, GETFILEGAD_DRAWERSONLY,
@@ -390,7 +385,6 @@ PROC create() OF getFileSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ GETFILEGAD_OK ]:=ButtonObject,
             GA_ID, GETFILEGAD_OK,

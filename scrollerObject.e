@@ -86,7 +86,6 @@ PROC create() OF scrollerSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_NAME ]:=StringObject,
           GA_ID, SCLGAD_NAME,
@@ -112,7 +111,6 @@ PROC create() OF scrollerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_TOP ]:=IntegerObject,
             GA_ID, SCLGAD_TOP,
@@ -169,7 +167,6 @@ PROC create() OF scrollerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_ARROWS ]:=CheckBoxObject,
             GA_ID, SCLGAD_ARROWS,
@@ -210,7 +207,6 @@ PROC create() OF scrollerSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ SCLGAD_OK ]:=ButtonObject,
             GA_ID, SCLGAD_OK,

@@ -101,7 +101,6 @@ PROC create() OF fuelGaugeSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ FGAUGEGAD_NAME ]:=StringObject,
           GA_ID, FGAUGEGAD_NAME,
@@ -130,7 +129,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ FGAUGEGAD_MIN ]:=IntegerObject,
             GA_ID, FGAUGEGAD_MIN,
@@ -177,7 +175,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ FGAUGEGAD_TICKSIZE ]:=IntegerObject,
             GA_ID, FGAUGEGAD_TICKSIZE,
@@ -214,7 +211,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ FGAUGEGAD_ORIENTATION ]:=ChooserObject,
             GA_ID, FGAUGEGAD_ORIENTATION,
@@ -258,7 +254,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ FGAUGEGAD_SHORTTICKS ]:=CheckBoxObject,
             GA_ID, FGAUGEGAD_SHORTTICKS,
@@ -297,7 +292,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ FGAUGEGAD_TICKPEN ]:=ChooserObject,
             GA_ID, FGAUGEGAD_TICKPEN,
@@ -343,7 +337,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ FGAUGEGAD_EMPTYPEN ]:=ChooserObject,
             GA_ID, FGAUGEGAD_EMPTYPEN,
@@ -387,7 +380,6 @@ PROC create() OF fuelGaugeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ FGAUGEGAD_OK ]:=ButtonObject,
             GA_ID, FGAUGEGAD_OK,

@@ -3,7 +3,10 @@ OPT MODULE
 
   MODULE '*fileStreamer'
 
+EXPORT ENUM NONE, ESOURCE_GEN, CSOURCE_GEN
+
 EXPORT OBJECT srcGen
+  type:INT
   fser:PTR TO fileStreamer
   libsused:LONG
   stringDelimiter:CHAR
@@ -15,6 +18,7 @@ EXPORT OBJECT srcGen
 ENDOBJECT
 
 PROC create(fser:PTR TO fileStreamer,libsused) OF srcGen
+  self.type:=NONE
   self.fser:=fser
   self.libsused:=libsused
   self.stringDelimiter:=34
@@ -149,6 +153,6 @@ PROC addTerminator() OF srcGen
   ENDIF
 ENDPROC
 
-PROC genHeader(count) OF srcGen IS -1
+PROC genHeader(count,menuObject) OF srcGen IS -1
 
-PROC genFooter(count) OF srcGen IS -1
+PROC genFooter(count,menuObject) OF srcGen IS -1

@@ -82,7 +82,6 @@ PROC create() OF paletteSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
        LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -97,7 +96,6 @@ PROC create() OF paletteSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
           
           LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_NAME ]:=StringObject,
             GA_ID, PALGAD_NAME,
@@ -135,7 +133,6 @@ PROC create() OF paletteSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ PALGAD_INITIAL ]:=IntegerObject,
             GA_ID, PALGAD_INITIAL,
@@ -182,7 +179,6 @@ PROC create() OF paletteSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ PALGAD_OK ]:=ButtonObject,
             GA_ID, PALGAD_OK,

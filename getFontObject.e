@@ -95,7 +95,6 @@ PROC create() OF getFontSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETFONTGAD_NAME ]:=StringObject,
           GA_ID, GETFONTGAD_NAME,
@@ -133,7 +132,6 @@ PROC create() OF getFontSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_LEFT ]:=IntegerObject,
             GA_ID, GETFONTGAD_LEFT,
@@ -189,7 +187,6 @@ PROC create() OF getFontSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_MINHEIGHT ]:=IntegerObject,
             GA_ID, GETFONTGAD_MINHEIGHT,
@@ -245,7 +242,6 @@ PROC create() OF getFontSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETFONTGAD_DOFRONTPEN ]:=CheckBoxObject,
             GA_ID, GETFONTGAD_DOFRONTPEN,
@@ -295,7 +291,6 @@ PROC create() OF getFontSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETFONTGAD_DODRAWMODE ]:=CheckBoxObject,
             GA_ID, GETFONTGAD_DODRAWMODE,
@@ -333,7 +328,6 @@ PROC create() OF getFontSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_OK ]:=ButtonObject,
             GA_ID, GETFONTGAD_OK,

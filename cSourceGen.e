@@ -1,13 +1,14 @@
 
 OPT MODULE
 
-  MODULE '*fileStreamer','*sourceGen','*reactionObject'
+  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*stringlist'
 
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
 
 PROC create(fser:PTR TO fileStreamer, libsused) OF cSrcGen
   SUPER self.create(fser,libsused)
+  self.type:=CSOURCE_GEN
   self.stringDelimiter:=34
   self.upperCaseProperties:=FALSE
   AstrCopy(self.assignChars,'=')
@@ -16,8 +17,13 @@ PROC create(fser:PTR TO fileStreamer, libsused) OF cSrcGen
   self.indent:=0
 ENDPROC
 
-PROC genHeader(count) OF cSrcGen
+PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
   DEF tempStr[200]:STRING
+  DEF menuItem:PTR TO menuItem
+  DEF itemName[200]:STRING
+  DEF commKey[10]:STRING
+  DEF itemType
+  DEF i
   self.writeLine('#include <clib/macros.h>')
   self.writeLine('#include <clib/alib_protos.h>')
   self.writeLine('')
@@ -54,6 +60,7 @@ PROC genHeader(count) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('#include <proto/glyph.h>')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('#include <proto/label.h>')
+  IF menuObject.menuItems.count()>0 THEN self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
   self.writeLine('#include <libraries/gadtools.h>')
@@ -65,14 +72,44 @@ PROC genHeader(count) OF cSrcGen
   self.writeLine('int main(int argc, char **argv);')
   self.writeLine('void close_all(void);')
   self.writeLine('')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('struct NewMenu gMenuData[] =')
+    self.writeLine('{')
+    FOR i:=0 TO menuObject.menuItems.count()-1
+      menuItem:=menuObject.menuItems.item(i)
+      StrCopy(commKey,'0')
+      IF menuItem.menuItem 
+        itemType:='NM_ITEM'
+        StringF(itemName,'\q\s\q',menuItem.itemName)
+        IF StrLen(menuItem.commKey) THEN StringF(commKey,'\q\s\q',menuItem.commKey)
+      ELSEIF menuItem.menuBar
+        itemType:='NM_ITEM'
+        StrCopy(itemName,'NM_BARLABEL')
+      ELSE
+        itemType:='NM_TITLE'
+        StringF(itemName,'\q\s\q',menuItem.itemName)      
+      ENDIF
+      StringF(tempStr,'  { \s, \s,\s,0,0,NULL },',itemType,itemName,commKey)
+      self.writeLine(tempStr)
+    ENDFOR
+    self.writeLine('  { NM_END, NULL, 0, 0, 0, (APTR)0 }')
+    self.writeLine('};')
+
+    self.write('')
+    self.writeLine('')
+  ENDIF
+  
   self.writeLine('struct Screen	*gScreen = NULL;')
   self.writeLine('struct DrawInfo	*gDrinfo = NULL;')
   self.writeLine('struct MsgPort	*gApp_port = NULL;')
   self.writeLine('struct Window	*gMain_window = NULL;')
   StringF(tempStr,'struct Gadget	*gMain_Gadgets[ \d ];',count)
   self.writeLine(tempStr)
+  IF menuObject.menuItems.count()>0
+    self.writeLine('struct Menu	*gMenuStrip = NULL;')
+    self.writeLine('APTR gVi = NULL;')
+  ENDIF
   self.writeLine('Object *gWindow_object = NULL;')
-  self.writeLine('APTR gVi;')
   self.writeLine('')
 
   self.writeLine('struct Library *WindowBase = NULL,')
@@ -96,17 +133,33 @@ PROC genHeader(count) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('               *GlyphBase = NULL,')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('               *LabelBase = NULL,')
+  IF menuObject.menuItems.count()>0 THEN self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
+  IF menuObject.menuItems.count()>0  THEN self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
 
+  self.writeLine('')
   self.writeLine('int main(int argc, char **argv)')
   self.writeLine('{')
   self.writeLine('  char initOk=0;')
-  self.writeLine('  gScreen = LockPubScreen( NULL );')
+
+  self.writeLine('  if( IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L) )')
+  self.writeLine('  {')
+  self.writeLine('    gScreen = LockPubScreen( NULL );')
+  self.writeLine('    if ( gScreen ) gDrinfo = GetScreenDrawInfo ( gScreen );')
+  self.writeLine('')
+  self.writeLine('    if( GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) )')
+  self.writeLine('    {')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('      gVi = GetVisualInfo( gScreen, TAG_DONE );')
+  ENDIF
+
+  self.writeLine('    }')
+  self.writeLine('  }')
+  self.writeLine('')
   self.writeLine('  if ( gScreen )')
   self.writeLine('  {')
-  self.writeLine('    gDrinfo = GetScreenDrawInfo ( gScreen );')
-  self.writeLine('    gVi = GetVisualInfo( gScreen, TAG_DONE );')
   self.writeLine('    gApp_port = CreateMsgPort();')
+ 
   self.writeLine('    if( WindowBase = (struct Library*) OpenLibrary("window.class",0L) )')
   self.writeLine('    {')
   self.writeLine('      if( LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) )')
@@ -333,7 +386,7 @@ PROC genHeader(count) OF cSrcGen
     self.indent-=2
     self.writeLine('}')
   ENDIF
-  
+
   self.indent-=2
   self.writeLine('}')
   
@@ -344,13 +397,23 @@ PROC genHeader(count) OF cSrcGen
   self.writeLine('}')
 
   self.writeLine('')
-  self.writeLine('if (initOk)')
+  self.writeLine('if ( initOk )')
   self.writeLine('{')
   self.indent+=2
+  IF menuObject.menuItems.count()>0
+    self.writeLine('if ( gVi )')
+    self.writeLine('{')
+    self.writeLine('  gMenuStrip = CreateMenusA( gMenuData, TAG_END);')
+    self.writeLine('  LayoutMenus( gMenuStrip, gVi,')
+    self.writeLine('    GTMN_NewLookMenus, TRUE,')
+    self.writeLine('    TAG_DONE);')
+    self.writeLine('}')
+    self.writeLine('')
+   ENDIF
   
 ENDPROC
 
-PROC genFooter(count) OF cSrcGen
+PROC genFooter(count,menuObject:PTR TO menuObject) OF cSrcGen
   self.writeLine('}')
   self.indent:=0
   self.writeLine('')
@@ -361,6 +424,10 @@ PROC genFooter(count) OF cSrcGen
   self.writeLine('      WORD Code;')
   self.writeLine('      ULONG wait = 0, signal = 0, result = 0, done = FALSE;')
   self.writeLine('      GetAttr( WINDOW_SigMask, gWindow_object, &signal );')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('      SetMenuStrip( gMain_window, gMenuStrip );')
+  ENDIF
+
   self.writeLine('      while ( !done)')
   self.writeLine('      {')
   self.writeLine('            wait = Wait( signal | SIGBREAKF_CTRL_C );')
@@ -400,6 +467,10 @@ PROC genFooter(count) OF cSrcGen
   
   self.writeLine('void close_all( void )')
   self.writeLine('{')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  if ( gMenuStrip )')
+    self.writeLine('    FreeMenus( gMenuStrip );')
+  ENDIF
   self.writeLine('  if ( gApp_port )')
   self.writeLine('    DeleteMsgPort( gApp_port );')
   self.writeLine('  if ( gDrinfo )')
@@ -434,6 +505,7 @@ PROC genFooter(count) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
+  IF menuObject.menuItems.count()>0 THEN self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
   self.writeLine('  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );')
   self.writeLine('  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );')
   self.writeLine('}')

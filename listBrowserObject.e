@@ -119,7 +119,6 @@ PROC create() OF listBrowserSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -134,7 +133,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
           
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_LISTSELECT ]:=ButtonObject,
             GA_ID, LISTBGAD_LISTSELECT,
@@ -176,7 +174,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_TOP ]:=IntegerObject,
             GA_ID, LISTBGAD_TOP,
@@ -212,7 +209,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_POSITION ]:=IntegerObject,
             GA_ID, LISTBGAD_POSITION,
@@ -258,7 +254,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_LEFT ]:=IntegerObject,
             GA_ID, LISTBGAD_LEFT,
@@ -304,7 +299,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_DISABLED ]:=CheckBoxObject,
             GA_ID, LISTBGAD_DISABLED,
@@ -364,7 +358,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_SEPARATOR ]:=CheckBoxObject,
             GA_ID, LISTBGAD_SEPARATOR,
@@ -424,7 +417,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_COLUMNTITLES ]:=CheckBoxObject,
             GA_ID, LISTBGAD_COLUMNTITLES,
@@ -484,7 +476,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_SCROLLRAST ]:=CheckBoxObject,
             GA_ID, LISTBGAD_SCROLLRAST,
@@ -533,7 +524,6 @@ PROC create() OF listBrowserSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_OK ]:=ButtonObject,
             GA_ID, LISTBGAD_OK,
@@ -749,7 +739,6 @@ PROC create(count) OF editColumnsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, rootLayout:=LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -764,7 +753,6 @@ PROC create(count) OF editColumnsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
@@ -780,7 +768,6 @@ PROC create(count) OF editColumnsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ 0 ]:=ButtonObject,
             GA_ID, 0,
@@ -829,7 +816,6 @@ PROC create(count) OF editColumnsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
           
           LAYOUT_ADDCHILD, self.gadgetList[ n ]:=IntegerObject,
               GA_ID, n++,

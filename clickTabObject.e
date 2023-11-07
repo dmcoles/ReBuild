@@ -87,7 +87,6 @@ PROC create() OF clickTabSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_LISTSELECT ]:=ButtonObject,
           GA_ID, CLICKTAB_GAD_LISTSELECT,
@@ -115,7 +114,6 @@ PROC create() OF clickTabSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_TOP ]:=IntegerObject,
             GA_ID, CLICKTAB_GAD_TOP,
@@ -161,7 +159,6 @@ PROC create() OF clickTabSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_CURRENT ]:=IntegerObject,
             GA_ID, CLICKTAB_GAD_CURRENT,
@@ -199,7 +196,6 @@ PROC create() OF clickTabSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_OK ]:=ButtonObject,
             GA_ID, CLICKTAB_GAD_OK,

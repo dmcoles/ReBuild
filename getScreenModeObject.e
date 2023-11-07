@@ -111,7 +111,6 @@ PROC create() OF getScreenModeSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_NAME ]:=StringObject,
           GA_ID, GETSCREENGAD_NAME,
@@ -149,7 +148,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETSCREENGAD_LEFT ]:=IntegerObject,
             GA_ID, GETSCREENGAD_LEFT,
@@ -205,7 +203,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETSCREENGAD_MINWIDTH ]:=IntegerObject,
             GA_ID, GETSCREENGAD_MINWIDTH,
@@ -261,7 +258,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
         
           LAYOUT_ADDCHILD,  self.gadgetList[ GETSCREENGAD_MINDEPTH ]:=IntegerObject,
             GA_ID, GETSCREENGAD_MINDEPTH,
@@ -317,7 +313,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_OSCANTYPE ]:=ChooserObject,
             GA_ID, GETSCREENGAD_OSCANTYPE,
@@ -369,7 +364,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_PROPFLAGS ]:=ChooserObject,
             GA_ID, GETSCREENGAD_PROPFLAGS,
@@ -417,7 +411,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_AUTOSCROLL ]:=CheckBoxObject,
             GA_ID, GETSCREENGAD_AUTOSCROLL,
@@ -477,7 +470,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_DODEPTH ]:=CheckBoxObject,
             GA_ID, GETSCREENGAD_DODEPTH,
@@ -526,7 +518,6 @@ PROC create() OF getScreenModeSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ GETSCREENGAD_OK ]:=ButtonObject,
             GA_ID, GETSCREENGAD_OK,

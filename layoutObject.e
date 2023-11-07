@@ -169,7 +169,6 @@ PROC create() OF layoutSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_ORIENTATION ]:=ChooserObject,
           GA_ID, LAYOUTGAD_ORIENTATION,
@@ -199,7 +198,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_HORZALIGN ]:=ChooserObject,
             GA_ID, LAYOUTGAD_HORZALIGN,
@@ -243,7 +241,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_BEVELSTYLE ]:=ChooserObject,
             GA_ID, LAYOUTGAD_BEVELSTYLE,
@@ -287,7 +284,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LAYOUTGAD_LEFTSPACING ]:=IntegerObject,
             GA_ID, LAYOUTGAD_LEFTSPACING,
@@ -353,7 +349,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_LABEL ]:=StringObject,
             GA_ID, LAYOUTGAD_LABEL,
@@ -395,7 +390,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_FIXEDHORIZ ]:=CheckBoxObject,
             GA_ID, LAYOUTGAD_FIXEDHORIZ,
@@ -445,7 +439,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_EVENSIZE ]:=CheckBoxObject,
             GA_ID, LAYOUTGAD_EVENSIZE,
@@ -506,7 +499,6 @@ PROC create() OF layoutSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LAYOUTGAD_OK ]:=ButtonObject,
             GA_ID, LAYOUTGAD_OK,

@@ -316,7 +316,6 @@ EXPORT PROC create() OF listManagerForm
         LAYOUT_BEVELSTATE, IDS_SELECTED,
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -331,7 +330,6 @@ EXPORT PROC create() OF listManagerForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, LayoutObject,
             LAYOUT_DEFERLAYOUT, FALSE,
@@ -346,7 +344,6 @@ EXPORT PROC create() OF listManagerForm
             LAYOUT_BEVELSTATE, IDS_SELECTED,
             LAYOUT_FIXEDHORIZ, TRUE,
             LAYOUT_FIXEDVERT, TRUE,
-            LAYOUT_SPACEINNER, TRUE,
 
             LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_LISTLIST ] := ListBrowserObject,
               GA_ID, LISTMANAGER_LISTLIST,
@@ -385,7 +382,6 @@ EXPORT PROC create() OF listManagerForm
             LAYOUT_BEVELSTATE, IDS_SELECTED,
             LAYOUT_FIXEDHORIZ, TRUE,
             LAYOUT_FIXEDVERT, TRUE,
-            LAYOUT_SPACEINNER, TRUE,
 
             LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_ITEMLIST ] := ListBrowserObject,
               GA_ID, LISTMANAGER_ITEMLIST,
@@ -426,7 +422,6 @@ EXPORT PROC create() OF listManagerForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_CHOOSER ] := CheckBoxObject,
             GA_ID, LISTMANAGER_CHOOSER,
@@ -487,7 +482,6 @@ EXPORT PROC create() OF listManagerForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_OK ] := ButtonObject,
             GA_ID, LISTMANAGER_OK,

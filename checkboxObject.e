@@ -87,7 +87,6 @@ PROC create() OF checkboxSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_NAME ]:=StringObject,
           GA_ID, CHKGAD_NAME,
@@ -116,7 +115,6 @@ PROC create() OF checkboxSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHKGAD_TEXTPEN ]:=ButtonObject,
             GA_ID, CHKGAD_TEXTPEN,
@@ -172,7 +170,6 @@ PROC create() OF checkboxSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_DISABLED ]:=CheckBoxObject,
             GA_ID, CHKGAD_DISABLED,
@@ -210,7 +207,6 @@ PROC create() OF checkboxSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_LABELPLACE ]:=ChooserObject,
             GA_ID, CHKGAD_LABELPLACE,
@@ -240,7 +236,6 @@ PROC create() OF checkboxSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHKGAD_OK ]:=ButtonObject,
             GA_ID, CHKGAD_OK,

@@ -15,7 +15,8 @@ OPT MODULE, OSVERSION=37,LARGE
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
-        'intuition/gadgetclass'
+        'intuition/gadgetclass',
+        'exec'
 
   MODULE '*reactionObject','*reactionForm','*sourceGen'
 
@@ -69,6 +70,7 @@ EXPORT OBJECT windowObject OF reactionObject
   refreshType:CHAR
   flags:LONG
   idcmp:LONG
+  appPort:LONG
   previewOpen:CHAR
   previewRootLayout:LONG
 ENDOBJECT
@@ -134,7 +136,6 @@ PROC create() OF windowIDCMPSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -150,7 +151,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDCMP_MOUSEBUTTONS ]:=CheckBoxObject,
             GA_ID, WINGAD_IDCMP_MOUSEBUTTONS,
@@ -211,7 +211,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDCMP_GADGETUP ]:=CheckBoxObject,
             GA_ID, WINGAD_IDCMP_GADGETUP,
@@ -272,7 +271,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDCMP_MENUHELP ]:=CheckBoxObject,
             GA_ID, WINGAD_IDCMP_MENUHELP,
@@ -333,7 +331,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDCMP_VANILLAKEY ]:=CheckBoxObject,
             GA_ID, WINGAD_IDCMP_VANILLAKEY,
@@ -394,7 +391,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDCMP_DISKREMOVE ]:=CheckBoxObject,
             GA_ID, WINGAD_IDCMP_DISKREMOVE,
@@ -454,7 +450,6 @@ PROC create() OF windowIDCMPSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ WINGAD_IDCMP_OK ]:=ButtonObject,
             GA_ID, WINGAD_IDCMP_OK,
@@ -604,7 +599,6 @@ PROC create() OF windowFlagsSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_FLAGS_REFRESH ]:=ChooserObject,
           GA_ID, WINGAD_FLAGS_REFRESH,
@@ -634,7 +628,6 @@ PROC create() OF windowFlagsSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_FLAGS_CLOSE ]:=CheckBoxObject,
             GA_ID, WINGAD_FLAGS_CLOSE,
@@ -695,7 +688,6 @@ PROC create() OF windowFlagsSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_FLAGS_SIZEBBOTTOM ]:=CheckBoxObject,
             GA_ID, WINGAD_FLAGS_SIZEBBOTTOM,
@@ -756,7 +748,6 @@ PROC create() OF windowFlagsSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_FLAGS_ACTIVATE ]:=CheckBoxObject,
             GA_ID, WINGAD_FLAGS_ACTIVATE,
@@ -817,7 +808,6 @@ PROC create() OF windowFlagsSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_FLAGS_ZOOM ]:=CheckBoxObject,
             GA_ID, WINGAD_FLAGS_ZOOM,
@@ -877,7 +867,6 @@ PROC create() OF windowFlagsSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ WINGAD_FLAGS_OK ]:=ButtonObject,
             GA_ID, WINGAD_FLAGS_OK,
@@ -1024,7 +1013,6 @@ PROC create() OF windowSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -1040,7 +1028,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_TITLE ]:=StringObject,
             GA_ID, WINGAD_TITLE,
@@ -1091,7 +1078,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ WINGAD_LEFTEDGE ]:=IntegerObject,
             GA_ID, WINGAD_LEFTEDGE,
@@ -1156,7 +1142,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ WINGAD_MINWIDTH ]:=IntegerObject,
             GA_ID, WINGAD_MINWIDTH,
@@ -1235,7 +1220,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_LOCKWIDTH ]:=CheckBoxObject,
             GA_ID, WINGAD_LOCKWIDTH,
@@ -1285,7 +1269,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_ICONIFYGAD ]:=CheckBoxObject,
             GA_ID, WINGAD_ICONIFYGAD,
@@ -1324,7 +1307,6 @@ PROC create() OF windowSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ WINGAD_OK ]:=ButtonObject,
             GA_ID, WINGAD_OK,
@@ -1480,6 +1462,8 @@ EXPORT PROC createPreviewObject() OF windowObject
   self.refreshType:=0
   self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW*/
+  IF self.previewObject THEN DisposeObject(self.previewObject)
+  
   self.previewObject:=WindowObject,
     WA_TITLE, self.title,
     WA_LEFT, self.leftEdge,
@@ -1492,8 +1476,10 @@ EXPORT PROC createPreviewObject() OF windowObject
     WA_MAXHEIGHT,self.maxHeight,
     WA_PUBSCREEN, 0,
     WA_ACTIVATE, FALSE,
+    WA_NEWLOOKMENUS, TRUE,
     ->WA_CustomScreen, gScreen,
-    ->WINDOW_AppPort, gApp_port,
+    WINDOW_APPPORT, self.appPort,
+    WINDOW_ICONIFYGADGET, IF self.iconifyGadget THEN TRUE ELSE FALSE,
     WA_CLOSEGADGET, TRUE,
     WA_DEPTHGADGET, TRUE,
     WA_SIZEGADGET, TRUE,
@@ -1509,7 +1495,6 @@ ENDPROC
 EXPORT PROC create(parent) OF windowObject
   self.type:=TYPE_WINDOW
   SUPER self.create(parent)
-  AstrCopy(self.name,'')
   
   AstrCopy(self.title,'Application Window')
   AstrCopy(self.iconTitle,'MyApp')
@@ -1531,9 +1516,17 @@ EXPORT PROC create(parent) OF windowObject
   self.refreshType:=0
   self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW
+  
+  self.appPort:=CreateMsgPort()
+  self.previewObject:=0
   self.createPreviewObject()
   self.previewChildAttrs:=0
   self.previewOpen:=TRUE
+ENDPROC
+
+PROC end() OF windowObject
+  IF self.previewObject THEN DisposeObject(self.previewObject)
+  IF self.appPort THEN DeleteMsgPort(self.appPort)
 ENDPROC
 
 EXPORT PROC editSettings() OF windowObject
@@ -1592,6 +1585,13 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   StringF(tempStr,'\d',self.maxHeight)
   srcGen.componentProperty('WA_MaxHeight',tempStr,FALSE)
 
+  IF srcGen.type=ESOURCE_GEN
+    srcGen.componentProperty('WINDOW_AppPort','app_port',FALSE)
+  ELSE
+    srcGen.componentProperty('WINDOW_AppPort','gApp_port',FALSE)
+  ENDIF
+
+  IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
   IF self.flags AND WFLG_CLOSEGADGET THEN srcGen.componentProperty('WA_CloseGadget','TRUE',FALSE)
   IF self.flags AND WFLG_DEPTHGADGET THEN srcGen.componentProperty('WA_DepthGadget','TRUE',FALSE)
   IF self.flags AND WFLG_SIZEGADGET THEN srcGen.componentProperty('WA_SizeGadget','TRUE',FALSE)

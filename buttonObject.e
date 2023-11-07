@@ -97,7 +97,6 @@ PROC create() OF buttonSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_NAME ]:=StringObject,
           GA_ID, BTNGAD_NAME,
@@ -126,7 +125,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BTNGAD_TEXTPEN ]:=ButtonObject,
             GA_ID, BTNGAD_TEXTPEN,
@@ -195,7 +193,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_AUTOBUTTON ]:=ChooserObject,
             GA_ID, BTNGAD_AUTOBUTTON,
@@ -242,7 +239,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_JUSTIFICATION ]:=ChooserObject,
             GA_ID, BTNGAD_JUSTIFICATION,
@@ -284,7 +280,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_DISABLED ]:=CheckBoxObject,
             GA_ID, BTNGAD_DISABLED,
@@ -323,7 +318,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[  BTNGAD_PUSHBUTTON ]:=CheckBoxObject,
             GA_ID, BTNGAD_PUSHBUTTON,
@@ -362,7 +356,6 @@ PROC create() OF buttonSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BTNGAD_OK ]:=ButtonObject,
             GA_ID, BTNGAD_OK,
@@ -580,6 +573,8 @@ EXPORT PROC serialiseData() OF buttonObject IS
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF buttonObject
   DEF tempStr[100]:STRING
   
+    StringF(tempStr,'\d',self.id)
+    srcGen.componentProperty('GA_ID',tempStr,TRUE)
     srcGen.componentProperty('GA_Text',self.name,TRUE)
     srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
     srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)

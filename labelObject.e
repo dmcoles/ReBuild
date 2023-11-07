@@ -82,7 +82,6 @@ PROC create() OF labelSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_NAME ]:=StringObject,
           GA_ID, LBLGAD_NAME,
@@ -109,7 +108,6 @@ PROC create() OF labelSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LBLGAD_FGPEN ]:=ButtonObject,
             GA_ID, LBLGAD_FGPEN,
@@ -152,7 +150,6 @@ PROC create() OF labelSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_DISPOSE ]:=CheckBoxObject,
             GA_ID, LBLGAD_DISPOSE,
@@ -193,7 +190,6 @@ PROC create() OF labelSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ LBLGAD_OK ]:=ButtonObject,
             GA_ID, LBLGAD_OK,

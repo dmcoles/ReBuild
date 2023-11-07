@@ -6,6 +6,7 @@ OPT OSVERSION=37,LARGE
         'reaction/reaction_lib',
         'button','gadgets/button',
         'bevel',
+        'space',
         'string','checkbox','chooser','label','integer','palette',
         'requester','classes/requester',
         'images/bevel',
@@ -27,7 +28,7 @@ OPT OSVERSION=37,LARGE
         'listbrowser','gadgets/listbrowser',
         'intuition/intuition','intuition/imageclass','intuition/gadgetclass','intuition/classusr'
 
-  MODULE '*fileStreamer','*objectPicker','*cSourceGen', '*eSourceGen','*sourceGen','*codeGenForm','*listManagerForm','*reactionLists',
+  MODULE '*fileStreamer','*objectPicker','*cSourceGen', '*eSourceGen','*sourceGen','*codeGenForm','*listManagerForm','*reactionLists','*dialogs',
          '*getScreenModeObject','*getFontObject','*getFileObject','*textFieldObject','*drawListObject','*fuelGaugeObject','*bevelObject','*listBrowserObject','*clickTabObject','*chooserObject','*radioObject','*menuObject','*rexxObject','*reactionListObject','*windowObject','*screenObject','*layoutObject','*paletteObject','*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject','*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm'
 
   CONST ROOT_APPLICATION_ITEM=0
@@ -37,7 +38,7 @@ OPT OSVERSION=37,LARGE
   CONST ROOT_MENU_ITEM=4
   CONST ROOT_LAYOUT_ITEM=5
 
-  ENUM GAD_COMPONENTLIST,GAD_ADD, GAD_GENMINUS, GAD_GENPLUS, GAD_DELETE, GAD_MOVEUP, GAD_MOVEDOWN, 
+  ENUM GAD_COMPONENTLIST,GAD_TEMP_COPYTO, GAD_TEMP_COPYFROM, GAD_TEMP_MOVETO, GAD_TEMP_MOVEFROM, GAD_TEMP_REMOVE, GAD_TEMPLIST, GAD_ADD, GAD_GENMINUS, GAD_GENPLUS, GAD_DELETE, GAD_MOVEUP, GAD_MOVEDOWN, 
        GAD_LISTS, GAD_CODE, GAD_LOAD, GAD_SAVE, GAD_NEW
 
   CONST GAD_COUNT=GAD_NEW+1
@@ -60,18 +61,24 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEUP=4
   CONST MENU_EDIT_MOVEDOWN=5
   CONST MENU_EDIT_LISTS=7
-  CONST MENU_EDIT_PREVIEW=9
+  CONST MENU_EDIT_BUFFER=9
+  CONST MENU_EDIT_PREVIEW=11
 
   CONST FILE_FORMAT_VER=1
 
   DEF columninfo[4]:ARRAY OF columninfo
+  DEF columninfo2[2]:ARRAY OF columninfo
   DEF mainWindow=0
+  DEF mainWindowLayout=0
+  DEF bufferLayout=0
   DEF appPort=0
   DEF win:PTR TO window
   DEF gMain_Gadgets[GAD_COUNT]:ARRAY OF LONG
   DEF objectList:PTR TO stdlist
+  DEF bufferList:PTR TO stdlist
   DEF selectedComp:PTR TO reactionObject
-  DEF list=0
+  DEF selectedBuffComp:PTR TO reactionObject
+  DEF list=0,list2=0
   DEF changes=FALSE
   DEF menus=0
   DEF filename[255]:STRING
@@ -217,7 +224,7 @@ PROC makeList(selcomp=0)
   DEF newnode=0
   DEF depth
   
-  IF win THEN SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+  SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   IF list THEN freeBrowserNodes( list )
   list:=browserNodesA([0])
 
@@ -270,8 +277,8 @@ PROC makeList(selcomp=0)
 
   IF (n:=AllocListBrowserNodeA(3, [LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application End', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
 -> Reattach the list
+  SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS,list,0])
   IF win 
-    SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS,list,0])
     IF newnode
       SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newnode,0])
       updateSel(win,newnode)
@@ -283,27 +290,34 @@ PROC makeList(selcomp=0)
   
 ENDPROC
 
-PROC menuCode(menu,item) IS ((item << 5) OR menu)
+PROC menuCode(menu,item,subitem) IS (subitem<<11) OR ((item << 5) OR menu)
 
-PROC menuDisable(win,menu,item,flag)
-  IF flag THEN OffMenu(win,menuCode(menu,item)) ELSE OnMenu(win,menuCode(menu,item))
+PROC menuDisable(win,menu,item,subitem,flag)
+  IF flag THEN OffMenu(win,menuCode(menu,item,subitem)) ELSE OnMenu(win,menuCode(menu,item,subitem))
 ENDPROC
 
 PROC updateSel(win,node)
   DEF comp=0:PTR TO reactionObject
   DEF dis,idx
+  DEF check,i
   
   IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
   IF comp
     selectedComp:=comp
-    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW))
-    menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,FALSE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,comp.parent=0)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,(comp.parent=0) ORELSE (comp.getChildIndex()=0))
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)))
+    FOR i:=0 TO NUM_OBJECT_TYPES-1
+      check:=(i=1) OR (i=11) OR (i=16) OR (i=17) OR (i=18)
+      menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,((comp.parent=0) AND (comp.type<>TYPE_LAYOUT)) OR check)
+    ENDFOR
+    menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,comp.parent=0)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,(comp.parent=0) ORELSE (comp.getChildIndex()=0))
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)))
     
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
+
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_WINDOW),TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW)) OR comp.children.count()),TAG_END])
     
     dis:=TRUE
     IF comp.parent
@@ -318,13 +332,18 @@ PROC updateSel(win,node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_DELETE],win,0,[GA_DISABLED,comp.parent=0,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=0),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)),TAG_END])
+
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
   ELSE
     selectedComp:=0
-    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,TRUE)
+    FOR i:=0 TO NUM_OBJECT_TYPES-1
+      menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,TRUE)
+    ENDFOR
+    menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,TRUE)
 
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,TRUE,TAG_END])
@@ -332,13 +351,99 @@ PROC updateSel(win,node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_DELETE],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,TRUE,TAG_END])
+
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,TRUE,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,TRUE,TAG_END])
+
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
   ENDIF
+ENDPROC
+
+PROC updateBufferSel(win,node)
+  DEF comp=0:PTR TO reactionObject
+  DEF dis
+  IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
+  IF comp AND selectedComp
+    dis:=(selectedComp.parent=0) AND (selectedComp.type<>TYPE_LAYOUT) AND (selectedComp.type<>TYPE_SCREEN) AND (selectedComp.type<>TYPE_WINDOW)
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,dis,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,dis,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,dis,TAG_END])
+  ELSE
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,TRUE,TAG_END])
+  ENDIF
+  selectedBuffComp:=comp
+ENDPROC
+
+PROC createBufferGads()
+  bufferLayout:=LayoutObject,
+    LAYOUT_DEFERLAYOUT, FALSE,
+    LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+    
+    LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMPLIST]:=ListBrowserObject,
+      GA_ID, GAD_TEMPLIST,
+      GA_RELVERIFY, TRUE,
+      LISTBROWSER_POSITION, 0,
+      LISTBROWSER_SHOWSELECTED, TRUE,
+      LISTBROWSER_VERTSEPARATORS, TRUE,
+      LISTBROWSER_SEPARATORS, TRUE,
+      LISTBROWSER_COLUMNTITLES, TRUE,
+      LISTBROWSER_COLUMNINFO, columninfo2,
+      LISTBROWSER_VERTICALPROP, TRUE,
+      LISTBROWSER_HIERARCHICAL, FALSE,
+      LISTBROWSER_LABELS, list2,
+    ListBrowserEnd,
+    CHILD_WEIGHTEDWIDTH,20,
+    
+    LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_COPYTO]:=ButtonObject,
+        GA_ID, GAD_TEMP_COPYTO,
+        GA_TEXT, '->Copy',
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+      ButtonEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+
+      LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_COPYFROM]:=ButtonObject,
+        GA_ID, GAD_TEMP_COPYFROM,
+        GA_TEXT, '<-Copy',
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+      ButtonEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+
+      LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_MOVETO]:=ButtonObject,
+        GA_ID, GAD_TEMP_MOVETO,
+        GA_TEXT, 'Move->',
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+      ButtonEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+
+      LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_MOVEFROM]:=ButtonObject,
+        GA_ID, GAD_TEMP_MOVEFROM,
+        GA_TEXT, '<-Move',
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+      ButtonEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+      
+      LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_REMOVE]:=ButtonObject,
+        GA_ID, GAD_TEMP_REMOVE,
+        GA_TEXT, 'Remove',
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+      ButtonEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+  LayoutEnd
 ENDPROC
 
 PROC createForm()
   appPort:=CreateMsgPort()
 
   list:=browserNodesA([0])
+  list2:=browserNodesA([0])
   columninfo[0].width:=2
   columninfo[0].title:='Object Name'
   columninfo[0].flags:=CIF_WEIGHTED
@@ -354,6 +459,14 @@ PROC createForm()
   columninfo[3].width:=-1
   columninfo[3].title:=-1
   columninfo[3].flags:=-1
+
+  columninfo2[0].width:=1
+  columninfo2[0].title:='Buffer'
+  columninfo2[0].flags:=CIF_WEIGHTED
+
+  columninfo2[1].width:=-1
+  columninfo2[1].title:=-1
+  columninfo2[1].flags:=-1
 
   remakePreviewMenus()
 
@@ -384,32 +497,29 @@ PROC createForm()
     LAYOUT_DEFERLAYOUT, TRUE,
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_DEFERLAYOUT, FALSE,
-        LAYOUT_SPACEOUTER, FALSE,
         LAYOUT_BOTTOMSPACING, 2,
         LAYOUT_TOPSPACING, 2,
         LAYOUT_LEFTSPACING, 2,
         LAYOUT_RIGHTSPACING, 2,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-        LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-        LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-        LAYOUT_BEVELSTATE, IDS_SELECTED,
-        LAYOUT_FIXEDHORIZ, TRUE,
-        LAYOUT_FIXEDVERT, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
         
-        LAYOUT_ADDCHILD, gMain_Gadgets[GAD_COMPONENTLIST]:=ListBrowserObject,
-          GA_ID, GAD_COMPONENTLIST,
-          GA_RELVERIFY, TRUE,
-          LISTBROWSER_POSITION, 0,
-          LISTBROWSER_SHOWSELECTED, TRUE,
-          LISTBROWSER_VERTSEPARATORS, TRUE,
-          LISTBROWSER_SEPARATORS, TRUE,
-          LISTBROWSER_COLUMNTITLES, TRUE,
-          LISTBROWSER_COLUMNINFO, columninfo,
-          LISTBROWSER_VERTICALPROP, TRUE,
-          LISTBROWSER_HIERARCHICAL, TRUE,
-          LISTBROWSER_LABELS, list,
-        ListBrowserEnd,
+      LAYOUT_ADDCHILD, mainWindowLayout:=LayoutObject,
+        LAYOUT_DEFERLAYOUT, FALSE,
+        
+          LAYOUT_ADDCHILD, gMain_Gadgets[GAD_COMPONENTLIST]:=ListBrowserObject,
+            GA_ID, GAD_COMPONENTLIST,
+            GA_RELVERIFY, TRUE,
+            LISTBROWSER_POSITION, 0,
+            LISTBROWSER_SHOWSELECTED, TRUE,
+            LISTBROWSER_VERTSEPARATORS, TRUE,
+            LISTBROWSER_SEPARATORS, TRUE,
+            LISTBROWSER_COLUMNTITLES, TRUE,
+            LISTBROWSER_COLUMNINFO, columninfo,
+            LISTBROWSER_VERTICALPROP, TRUE,
+            LISTBROWSER_HIERARCHICAL, TRUE,
+            LISTBROWSER_LABELS, list,
+          ListBrowserEnd,
+        LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -418,25 +528,12 @@ PROC createForm()
           LAYOUT_TOPSPACING, 2,
           LAYOUT_LEFTSPACING, 2,
           LAYOUT_RIGHTSPACING, 2,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_ADD]:=ButtonObject,
             GA_ID, GAD_ADD,
             GA_TEXT, '_Add',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENMINUS]:=ButtonObject,
@@ -444,12 +541,6 @@ PROC createForm()
             GA_TEXT, 'Gen _-',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENPLUS]:=ButtonObject,
@@ -457,12 +548,6 @@ PROC createForm()
             GA_TEXT, 'Gen _+',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_DELETE]:=ButtonObject,
@@ -470,12 +555,6 @@ PROC createForm()
             GA_TEXT, '_Delete',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEUP]:=ButtonObject,
@@ -483,12 +562,6 @@ PROC createForm()
             GA_TEXT, '_Up',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEDOWN]:=ButtonObject,
@@ -496,12 +569,6 @@ PROC createForm()
             GA_TEXT, 'Do_wn',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LISTS]:=ButtonObject,
@@ -509,12 +576,6 @@ PROC createForm()
             GA_TEXT, 'L_ists',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_CODE]:=ButtonObject,
@@ -522,25 +583,13 @@ PROC createForm()
             GA_TEXT, '_Code',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LOAD]:=ButtonObject,
             GA_ID, GAD_LOAD,
-            GA_TEXT, '_Load',
+            GA_TEXT, '_Open',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_SAVE]:=ButtonObject,
@@ -548,12 +597,6 @@ PROC createForm()
             GA_TEXT, '_Save',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_NEW]:=ButtonObject,
@@ -561,18 +604,15 @@ PROC createForm()
             GA_TEXT, '_New',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
         LayoutEnd,
           CHILD_WEIGHTEDHEIGHT, 0,
       LayoutEnd,
     LayoutEnd,
   WindowEnd
+  
+  toggleBuffer()
+  
 ENDPROC
 
 PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
@@ -677,7 +717,6 @@ ENDPROC
 PROC findWindowIndex(comp:PTR TO reactionObject)
   DEF res,i
   IF comp.type=TYPE_WINDOW
-  
     i:=ROOT_WINDOW_ITEM
     WHILE i<objectList.count()
       IF objectList.item(i)=comp
@@ -685,8 +724,15 @@ PROC findWindowIndex(comp:PTR TO reactionObject)
       ENDIF
       i+=3
     ENDWHILE
+  ELSEIF comp.type=TYPE_MENU
+    i:=ROOT_WINDOW_ITEM
+    WHILE i<objectList.count()
+      IF objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)=comp
+        RETURN (i-ROOT_WINDOW_ITEM)/3
+      ENDIF
+      i+=3
+    ENDWHILE
   ELSE 
-
     WHILE comp.parent DO comp:=comp.parent
     IF comp.type<>TYPE_LAYOUT
       RETURN -1
@@ -750,6 +796,7 @@ PROC genCode()
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
   DEF langid
+  DEF menuComp:PTR TO reactionObject
   
   NEW codeGenForm.create()
   langid:=codeGenForm.selectLang()
@@ -779,7 +826,7 @@ PROC genCode()
   WriteF('libsused=\d\n',libsused)
   
   IF FileLength(fname)>=0
-    IF warnRequest('Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
+    IF warnRequest(win,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
   ENDIF
 
   NEW fs.create(fname,MODE_NEWFILE)
@@ -792,7 +839,9 @@ PROC genCode()
       NEW cSrcGen.create(fs,libsused)
       srcGen:=cSrcGen
   ENDSELECT
-  srcGen.genHeader(count)
+
+  menuComp:=objectList.item(ROOT_MENU_ITEM)
+  srcGen.genHeader(count,menuComp)
   srcGen.assignWindowVar()
   comp:=objectList.item(ROOT_WINDOW_ITEM)
   StringF(objectCreate,'\sObject,',comp.getTypeName())
@@ -808,7 +857,7 @@ PROC genCode()
   srcGen.componentEnd('LayoutEnd,') 
   srcGen.finalComponentEnd(objectEnd) 
   srcGen.decreaseIndent()
-  srcGen.genFooter(count)
+  srcGen.genFooter(count,menuComp)
   END srcGen
   
   END fs
@@ -866,7 +915,7 @@ PROC loadFile() HANDLE
   
   fs.readLine(tempStr)
   IF StrCmp(tempStr,'-REBUILD-')=FALSE
-    errorRequest('Error','This file is not a valid rebuild file.')
+    errorRequest(win,'Error','This file is not a valid rebuild file.')
     END fs
     RETURN
   ENDIF
@@ -874,13 +923,13 @@ PROC loadFile() HANDLE
   fs.readLine(tempStr)
   ver:=Val(tempStr)
   IF (ver<1)
-    errorRequest('Error','This file is not a valid rebuild file.')
+    errorRequest(win,'Error','This file is not a valid rebuild file.')
     END fs
     RETURN
   ENDIF
   
   IF (ver>FILE_FORMAT_VER)
-    errorRequest('Error','This file is too new for this version of ReBuild.')
+    errorRequest(win,'Error','This file is too new for this version of ReBuild.')
     END fs
     RETURN
   ENDIF
@@ -969,8 +1018,7 @@ PROC saveFile() HANDLE
   DEF reactionLists:PTR TO stdlist
 
   IF EstrLen(filename)=0 
-    saveFileAs()
-    RETURN
+    RETURN saveFileAs()
   ENDIF
 
   NEW fs.create(filename,MODE_NEWFILE)
@@ -996,7 +1044,7 @@ PROC saveFile() HANDLE
   changes:=FALSE
 EXCEPT DO
   END fs 
-ENDPROC
+ENDPROC TRUE
 
 PROC saveFileAs()
   DEF tags
@@ -1012,7 +1060,7 @@ PROC saveFileAs()
   IF(AslRequest(fr,0))=FALSE
     IF tags THEN FastDisposeList(tags)
     IF aslbase THEN CloseLibrary(aslbase)
-    RETURN
+    RETURN FALSE
   ENDIF
 
   StrCopy(fname,fr.drawer)
@@ -1024,13 +1072,11 @@ PROC saveFileAs()
   IF aslbase THEN CloseLibrary(aslbase)
 
   IF FileLength(filename)>=0
-    IF warnRequest('Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
+    IF warnRequest(win,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN FALSE
   ENDIF
+ENDPROC saveFile()
 
-  saveFile()
-ENDPROC
-
-PROC warnRequest(title,bodytext,yesno=FALSE)
+PROC unsavedChangesWarning()
   DEF reqmsg:PTR TO orrequest
   DEF reqobj
   DEF res=0
@@ -1038,7 +1084,7 @@ PROC warnRequest(title,bodytext,yesno=FALSE)
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
   reqmsg.window:=win
-  reqmsg.attrs:=[REQ_TYPE, REQTYPE_INFO, REQ_IMAGE, REQIMAGE_WARNING, REQ_TITLETEXT,title,REQ_BODYTEXT,bodytext,REQ_GADGETTEXT,IF yesno THEN '_Yes|_No' ELSE '_Ok|_Cancel',TAG_END]
+  reqmsg.attrs:=[REQ_TYPE, REQTYPE_INFO, REQ_IMAGE, REQIMAGE_WARNING, REQ_TITLETEXT,'Warning',REQ_BODYTEXT,'You have unsaved changes,\ndo you wish to save them first?',REQ_GADGETTEXT,'_Yes|_No|_Cancel',TAG_END]
   reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])
   IF reqobj
     res:=DoMethodA(reqobj, reqmsg)
@@ -1046,23 +1092,6 @@ PROC warnRequest(title,bodytext,yesno=FALSE)
   ENDIF
   END reqmsg
 ENDPROC res
-
-PROC errorRequest(title,bodytext)
-  DEF reqmsg:PTR TO orrequest
-  DEF reqobj
-  DEF res=0
-  
-  NEW reqmsg
-  reqmsg.methodid:=RM_OPENREQ
-  reqmsg.window:=win
-  reqmsg.attrs:=[REQ_TYPE, REQTYPE_INFO, REQ_IMAGE, REQIMAGE_ERROR, REQ_TITLETEXT,title,REQ_BODYTEXT,bodytext,REQ_GADGETTEXT,'_Ok',TAG_END]
-  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])
-  IF reqobj
-    res:=DoMethodA(reqobj, reqmsg)
-    DisposeObject(reqobj)
-  ENDIF
-  END reqmsg
-ENDPROC
 
 PROC showAbout()
   DEF reqmsg:PTR TO orrequest
@@ -1081,8 +1110,11 @@ PROC showAbout()
 ENDPROC
 
 PROC doLoad()
+  DEF res
   IF changes
-    IF warnRequest('Warning','You have unsaved changes,\ndo you wish to continue?',TRUE)=0 THEN RETURN
+    res:=unsavedChangesWarning()
+    IF res=0 THEN RETURN
+    IF res=1 THEN IF saveFile()=FALSE THEN RETURN
   ENDIF
   closePreviews()
   loadFile()
@@ -1090,66 +1122,91 @@ PROC doLoad()
 ENDPROC
 
 PROC doNew()
+  DEF res
   IF changes
-    IF warnRequest('Warning','You have unsaved changes,\ndo you wish to continue?',TRUE)=0 THEN RETURN
+    res:=unsavedChangesWarning()
+    IF res=0 THEN RETURN
+    IF res=1 THEN IF saveFile()=FALSE THEN RETURN
   ENDIF
   closePreviews()
   newProject()
   openPreviews()
 ENDPROC
 
+PROC doAddWindow()
+  DEF newwin:PTR TO windowObject
+
+  objectList.add(newwin:=createWindowObject(0))  ->extra window
+  objectList.add(createMenuObject(0)) ->extra menu
+  objectList.add(createLayoutObject(0)) ->extra layout
+  makeList()
+  RA_OpenWindow(newwin.previewObject)
+  remakePreviewMenus()
+  changes:=TRUE
+ENDPROC
+
+PROC doAddComp(comp:PTR TO reactionObject, objType)
+  DEF newObj:PTR TO reactionObject
+  changes:=TRUE
+  newObj:=0
+  WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
+  IF comp
+    newObj:=createObjectByObj(objType,comp)
+    IF newObj 
+      IF newObj.editSettings()
+        addObject(comp,newObj)
+      ELSE
+        END newObj
+      ENDIF
+    ENDIF
+  ENDIF
+ENDPROC
+
 PROC doAdd()
   DEF objType
-  DEF newObj:PTR TO reactionObject
   DEF comp:PTR TO reactionObject
   DEF frmObjectPicker:PTR TO objectPickerForm
-  DEF newwin:PTR TO windowObject
 
   comp:=selectedComp
   IF (comp.type=TYPE_SCREEN) OR (comp.type=TYPE_WINDOW)
-    objectList.add(newwin:=createWindowObject(0))  ->extra window
-    objectList.add(createMenuObject(0)) ->extra menu
-    objectList.add(createLayoutObject(0)) ->extra layout
-    makeList()
-    RA_OpenWindow(newwin.previewObject)
-    remakePreviewMenus()
-    changes:=TRUE
+    doAddWindow()
     RETURN
   ENDIF
 
   NEW frmObjectPicker.create()
   IF (objType:=frmObjectPicker.selectItem())<>-1
-    changes:=TRUE
-    newObj:=0
-    WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
-    IF comp
-      newObj:=createObjectByObj(objType,comp)
-      IF newObj 
-        IF newObj.editSettings()
-          addObject(comp,newObj)
-        ELSE
-          END newObj
-        ENDIF
-      ENDIF
-    ENDIF
+    doAddComp(comp,objType)
   ENDIF
   END frmObjectPicker
 ENDPROC
 
 PROC doEdit()
   DEF idx, mainRootLayout, previewRootLayout
+  DEF winObj:PTR TO windowObject
+  DEF pwin
   IF selectedComp
     IF selectedComp.editSettings()
       changes:=TRUE
       idx:=findWindowIndex(selectedComp)
       IF idx<>-1
         mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-        previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
+        winObj:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+        previewRootLayout:=winObj.previewRootLayout
         removeMembers(mainRootLayout,previewRootLayout)
         IF selectedComp.type=TYPE_WINDOW THEN RA_CloseWindow(selectedComp.previewObject)
         makeList(selectedComp)
         addMembers(mainRootLayout,previewRootLayout)
-        IF selectedComp.type=TYPE_WINDOW THEN RA_OpenWindow(selectedComp.previewObject)
+
+        IF selectedComp.type=TYPE_MENU
+          pwin:=Gets(winObj.previewObject,WINDOW_WINDOW)
+          IF pwin THEN ClearMenuStrip(pwin)
+          selectedComp.createPreviewObject()
+        ENDIF
+        
+        IF selectedComp.type=TYPE_WINDOW 
+          selectedComp.createPreviewObject()
+          RA_OpenWindow(selectedComp.previewObject)
+        ENDIF
         rethinkPreviews()
       ENDIF
     ENDIF
@@ -1157,15 +1214,109 @@ PROC doEdit()
 ENDPROC
 
 PROC doDelete()
-  IF warnRequest('Warning','Are you sure you wish\nto delete this item?',TRUE)=1
+  IF warnRequest(win,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1
     changes:=TRUE
     removeObject(selectedComp.parent,selectedComp)
   ENDIF
 ENDPROC
 
 PROC doClose()
-  IF changes ANDALSO (warnRequest('Warning','Exit without saving changes?',TRUE)=0) THEN RETURN FALSE
+  DEF res
+  IF changes
+    res:=unsavedChangesWarning()
+    IF res=0 THEN RETURN FALSE
+    IF res=1 THEN IF saveFile()=FALSE THEN RETURN FALSE
+  ENDIF
 ENDPROC TRUE
+
+PROC copyToBuffer(comp:PTR TO reactionObject)
+  DEF newObj:PTR TO reactionObject
+  DEF fs:PTR TO fileStreamer
+
+  NEW fs.create('t:tempcomp',MODE_NEWFILE)
+  comp.serialise(fs)
+  END fs
+  
+  newObj:=createObjectByType(comp.type,0)
+  NEW fs.create('t:tempcomp',MODE_OLDFILE)
+  newObj.deserialise(fs)
+  END fs
+  bufferList.add(newObj)
+  makeBufferList()
+ENDPROC
+
+PROC moveToBuffer(comp:PTR TO reactionObject)
+  changes:=TRUE
+  copyToBuffer(comp)
+  removeObject(comp.parent,comp)
+ENDPROC
+
+PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
+  DEF newObj:PTR TO reactionObject
+  DEF comp:PTR TO reactionObject
+  DEF fs:PTR TO fileStreamer
+  DEF oldid
+  DEF name[100]:STRING
+
+  NEW fs.create('t:tempcomp',MODE_NEWFILE)
+  bufferComp.serialise(fs)
+  END fs
+  
+  newObj:=createObjectByType(bufferComp.type,0)
+  oldid:=newObj.id
+  NEW fs.create('t:tempcomp',MODE_OLDFILE)
+  newObj.deserialise(fs)
+  newObj.id:=oldid
+
+  StringF(name,'\s_\d',newObj.getTypeName(),oldid)
+  AstrCopy(newObj.name,name)
+  
+  END fs
+
+  comp:=selectedComp
+  WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
+  IF comp THEN addObject(comp,newObj) ELSE END newObj
+  DeleteFile('t:tempcomp')
+  changes:=TRUE
+ENDPROC
+
+PROC moveFromBuffer(bufferComp:PTR TO reactionObject)
+  DEF i
+  copyFromBuffer(bufferComp)
+  removeBufferItem(bufferComp)
+  changes:=TRUE
+ENDPROC
+
+PROC removeBufferItem(bufferComp:PTR TO reactionObject)
+  DEF i
+  FOR i:=bufferList.count()-1 TO 0 STEP -1
+    IF bufferList.item(i)=bufferComp THEN bufferList.remove(i)
+  ENDFOR
+  makeBufferList()
+ENDPROC
+
+PROC makeBufferList()
+  DEF comp:PTR TO reactionObject
+  DEF compStr[100]:STRING
+  DEF i,n
+  
+  SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+  IF list2 THEN freeBrowserNodes( list2 )
+  list2:=browserNodesA([0])
+
+  FOR i:=0 TO bufferList.count()-1
+    comp:=bufferList.item(i)
+    IF StrLen(comp.name)=0
+      StringF(compStr,'\s',comp.getTypeName())
+    ELSE
+      StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
+    ENDIF
+    IF (n:=AllocListBrowserNodeA(1, [LBNA_USERDATA, comp, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr,TAG_END])) THEN AddTail(list2, n) ELSE Raise("MEM")
+  ENDFOR
+  
+  SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, list2, TAG_END])
+  updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
+ENDPROC
 
 PROC disposeObjects()
   DEF comp:PTR TO reactionObject
@@ -1184,6 +1335,16 @@ PROC disposeObjects()
     IF comp THEN END comp
   ENDFOR
   objectList.clear()
+ENDPROC
+
+PROC disposeBufferObjects()
+  DEF comp:PTR TO reactionObject
+  DEF i
+  FOR i:=0 TO bufferList.count()-1
+    comp:=bufferList.item(i)
+    IF comp THEN END comp
+  ENDFOR
+  bufferList.clear()
 ENDPROC
 
 PROC newProject()
@@ -1217,6 +1378,18 @@ PROC newProject()
   changes:=FALSE
 ENDPROC
 
+PROC toggleBuffer()
+  IF bufferLayout
+    SetGadgetAttrsA(mainWindowLayout,win,0,[LAYOUT_REMOVECHILD, bufferLayout,TAG_END])
+    bufferLayout:=0
+  ELSE
+    createBufferGads()
+    SetGadgetAttrsA(mainWindowLayout,win,0,[LAYOUT_ADDCHILD, bufferLayout,CHILD_WEIGHTEDWIDTH,20,TAG_END])
+  ENDIF
+  IF win THEN RethinkLayout(mainWindowLayout, win, 0, TRUE )
+
+ENDPROC
+
 PROC togglePreview(subitem)
   DEF idx,pwin
   DEF previewWin
@@ -1224,7 +1397,6 @@ PROC togglePreview(subitem)
   idx:=(subitem*3)+ROOT_WINDOW_ITEM
   winObj:=objectList.item(idx)
   previewWin:=winObj.previewObject
-
   pwin:=Gets(previewWin,WINDOW_WINDOW)
   IF pwin
     winObj.previewOpen:=FALSE
@@ -1264,12 +1436,21 @@ PROC handlePreviewInputs()
   ENDWHILE
 ENDPROC
 
+PROC setBusy()
+  SetWindowPointerA(win,[WA_BUSYPOINTER,TRUE,TAG_END])
+ENDPROC
+
+PROC clearBusy()
+  SetWindowPointerA(win,[WA_BUSYPOINTER,FALSE,TAG_END])
+ENDPROC
+
 PROC remakePreviewMenus()
   DEF menuData:PTR TO newmenu,scr,visInfo
+  DEF winObj:PTR TO windowObject
   DEF count,n,i
 
   count:=(objectList.count()-ROOT_WINDOW_ITEM)/4
-  count:=count+24
+  count:=count+54
 
   IF menus THEN FreeMenus(menus)
 
@@ -1300,31 +1481,93 @@ PROC remakePreviewMenus()
   menuData[11].label:='Edit'
   menuData[12].type:=NM_ITEM
   menuData[12].label:='Add'
-  menuData[13].type:=NM_ITEM
-  menuData[13].label:='Edit'
-  menuData[14].type:=NM_ITEM
-  menuData[14].label:='Delete'
-  menuData[15].type:=NM_ITEM
-  menuData[15].label:=NM_BARLABEL
-  menuData[16].type:=NM_ITEM
-  menuData[16].label:='Move Up'
-  menuData[17].type:=NM_ITEM
-  menuData[17].label:='Move Down'
-  menuData[18].type:=NM_ITEM
-  menuData[18].label:=NM_BARLABEL
-  menuData[19].type:=NM_ITEM
-  menuData[19].label:='Edit Lists'
-  menuData[20].type:=NM_ITEM
-  menuData[20].label:=NM_BARLABEL
-  menuData[21].type:=NM_ITEM
-  menuData[21].label:='Preview Windows'
-  n:=22
+  menuData[13].type:=NM_SUB
+  menuData[13].label:='Button'
+  menuData[14].type:=NM_SUB
+  menuData[14].label:='Bitmap'
+  menuData[15].type:=NM_SUB
+  menuData[15].label:='CheckBox'
+  menuData[16].type:=NM_SUB
+  menuData[16].label:='Chooser'
+  menuData[17].type:=NM_SUB
+  menuData[17].label:='ClickTab'
+  menuData[18].type:=NM_SUB
+  menuData[18].label:='FuelGauge'
+  menuData[19].type:=NM_SUB
+  menuData[19].label:='GetFile'
+  menuData[20].type:=NM_SUB
+  menuData[20].label:='GetFont'
+  menuData[21].type:=NM_SUB
+  menuData[21].label:='GetScreenMode'
+  menuData[22].type:=NM_SUB
+  menuData[22].label:='Integer'
+  menuData[23].type:=NM_SUB
+  menuData[23].label:='Palette'
+  menuData[24].type:=NM_SUB
+  menuData[24].label:='PenMap'
+  menuData[25].type:=NM_SUB
+  menuData[25].label:='Layout'
+  menuData[26].type:=NM_SUB
+  menuData[26].label:='ListBrowser'
+  menuData[27].type:=NM_SUB
+  menuData[27].label:='RadioButton'
+  menuData[28].type:=NM_SUB
+  menuData[28].label:='Scroller'
+  menuData[29].type:=NM_SUB
+  menuData[29].label:='SpeedBar'
+  menuData[30].type:=NM_SUB
+  menuData[30].label:='Slider'
+  menuData[31].type:=NM_SUB
+  menuData[31].label:='StatusBar'
+  menuData[32].type:=NM_SUB
+  menuData[32].label:='String'
+  menuData[33].type:=NM_SUB
+  menuData[33].label:='Space'
+  menuData[34].type:=NM_SUB
+  menuData[34].label:='TextField'
+  menuData[35].type:=NM_SUB
+  menuData[35].label:='Bevel'
+  menuData[36].type:=NM_SUB
+  menuData[36].label:='DrawList'
+  menuData[37].type:=NM_SUB
+  menuData[37].label:='Glyph'
+  menuData[38].type:=NM_SUB
+  menuData[38].label:='Label'
+  menuData[39].type:=NM_SUB
+  menuData[39].label:=NM_BARLABEL
+  menuData[40].type:=NM_SUB
+  menuData[40].label:='Window'
+  menuData[41].type:=NM_ITEM
+  menuData[41].label:='Edit'
+  menuData[42].type:=NM_ITEM
+  menuData[42].label:='Delete'
+  menuData[43].type:=NM_ITEM
+  menuData[43].label:=NM_BARLABEL
+  menuData[44].type:=NM_ITEM
+  menuData[44].label:='Move Up'
+  menuData[45].type:=NM_ITEM
+  menuData[45].label:='Move Down'
+  menuData[46].type:=NM_ITEM
+  menuData[46].label:=NM_BARLABEL
+  menuData[47].type:=NM_ITEM
+  menuData[47].label:='Edit Lists'
+  menuData[48].type:=NM_ITEM
+  menuData[48].label:=NM_BARLABEL
+  menuData[49].type:=NM_ITEM
+  menuData[49].label:='Show Buffer'
+  menuData[49].flags:=CHECKIT OR MENUTOGGLE OR CHECKED
+  menuData[50].type:=NM_ITEM
+  menuData[50].label:=NM_BARLABEL
+  menuData[51].type:=NM_ITEM
+  menuData[51].label:='Preview Windows'
+  n:=52
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
+    winObj:=objectList.item(i)
     menuData[n].type:=NM_SUB
-    menuData[n].label:='Window'
+    menuData[n].label:=winObj.name
     menuData[n].flags:=CHECKIT OR MENUTOGGLE
-    IF Gets(objectList.item(i)::windowObject.previewObject,WINDOW_WINDOW) THEN menuData[n].flags:=menuData[n].flags OR CHECKED
+    IF Gets(winObj.previewObject,WINDOW_WINDOW) THEN menuData[n].flags:=menuData[n].flags OR CHECKED
     i+=3
     n++
   ENDWHILE
@@ -1336,7 +1579,7 @@ PROC remakePreviewMenus()
   scr:=LockPubScreen(NIL)
   visInfo:=GetVisualInfoA(scr, [TAG_END])
   UnlockPubScreen(NIL,scr)
-  LayoutMenusA(menus,visInfo,[TAG_END])
+  LayoutMenusA(menus,visInfo,[GTMN_NEWLOOKMENUS,TRUE,TAG_END])
   FreeVisualInfo(visInfo)
   IF win 
     SetMenuStrip(win,menus)
@@ -1347,16 +1590,20 @@ ENDPROC
 
 PROC rethinkPreviews()
   DEF pwin,previewWin,previewRootLayout,i
+  DEF menu
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
     previewWin:=objectList.item(i)::windowObject.previewObject
+    menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
     previewRootLayout:=objectList.item(i)::windowObject.previewRootLayout
     IF previewWin
       pwin:=Gets(previewWin,WINDOW_WINDOW)
       IF pwin
         RethinkLayout(previewRootLayout, pwin, 0, TRUE )
         DoMethod(previewWin, WM_RETHINK)
+        IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
+        RefreshWindowFrame(pwin)
       ENDIF
     ENDIF
     i+=3
@@ -1407,11 +1654,13 @@ PROC editLists()
   DEF listManagerForm:PTR TO listManagerForm
   DEF idx,mainRootLayout, previewRootLayout
   
+  setBusy()
   NEW listManagerForm.create()
   listManagerForm.manageLists()
   changes:=TRUE
   END listManagerForm
-
+  clearBusy()
+  
   idx:=ROOT_WINDOW_ITEM
   WHILE idx<objectList.count()
     mainRootLayout:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_LAYOUT_ITEM)
@@ -1554,6 +1803,7 @@ PROC main() HANDLE
 
   openClasses()
   NEW objectList.stdlist(20)
+  NEW bufferList.stdlist(20)
   initReactionLists()
   
   createForm()
@@ -1562,6 +1812,7 @@ PROC main() HANDLE
     SetMenuStrip(win,menus)
     newProject()
     openPreviews()
+    updateBufferSel(win,0)
 
     GetAttr( WINDOW_SIGMASK, mainWindow, {wsig} )
     wsig:=getAllWindowSigs()
@@ -1597,7 +1848,11 @@ PROC main() HANDLE
                 CASE MENU_EDIT
                   SELECT menuitem
                     CASE MENU_EDIT_ADD  ->Add
-                      doAdd()
+                      IF subitem>OBJECT_LABEL
+                        doAddWindow()
+                      ELSE
+                        doAddComp(selectedComp,subitem)
+                      ENDIF
                     CASE MENU_EDIT_EDIT ->Edit
                       doEdit()
                     CASE MENU_EDIT_DELETE  ->Delete
@@ -1608,6 +1863,8 @@ PROC main() HANDLE
                       moveDown(selectedComp.parent,selectedComp)
                     CASE MENU_EDIT_LISTS
                       editLists()
+                    CASE MENU_EDIT_BUFFER
+                      toggleBuffer()
                     CASE MENU_EDIT_PREVIEW
                       togglePreview(subitem)
                   ENDSELECT
@@ -1622,6 +1879,8 @@ PROC main() HANDLE
                   ELSEIF tmp=LBRE_DOUBLECLICK
                     doEdit()
                   ENDIF
+                CASE GAD_TEMPLIST
+                  updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
                 CASE GAD_ADD  ->Add
                   doAdd()
                 CASE GAD_GENMINUS  ->Gen-
@@ -1644,6 +1903,16 @@ PROC main() HANDLE
                   saveFile()
                 CASE GAD_NEW  ->New
                   doNew()
+                CASE GAD_TEMP_COPYTO
+                  copyToBuffer(selectedComp)
+                CASE GAD_TEMP_MOVETO
+                  moveToBuffer(selectedComp)
+                CASE GAD_TEMP_COPYFROM
+                  copyFromBuffer(selectedBuffComp)
+                CASE GAD_TEMP_MOVEFROM
+                  moveFromBuffer(selectedBuffComp)
+                CASE GAD_TEMP_REMOVE
+                  removeBufferItem(selectedBuffComp)
               ENDSELECT
             CASE WMHI_ICONIFY
               RA_Iconify(mainWindow)
@@ -1684,10 +1953,16 @@ EXCEPT DO
   WriteF('objects disposed\n')
   END objectList
   WriteF('objects freed\n')
+  disposeBufferObjects()
+  WriteF('buffer objects disposed\n')
+  END bufferList
+  WriteF('buffer freed\n')
   freeReactionLists()
   WriteF('reactionlists freed\n')
   freeBrowserNodes( list )
   WriteF('browsernodes disposed\n')
+  freeBrowserNodes( list2 )
+  WriteF('browsernodes2 disposed\n')
   DisposeObject(mainWindow)
   WriteF('mainwindow disposed\n')
   IF (appPort) THEN DeleteMsgPort(appPort)

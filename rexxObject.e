@@ -96,7 +96,6 @@ PROC create() OF rexxSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ REXXGAD_HOSTNAME ]:=StringObject,
           GA_ID, REXXGAD_HOSTNAME,
@@ -133,7 +132,6 @@ PROC create() OF rexxSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ REXXGAD_NOSLOT ]:=CheckBoxObject,
             GA_ID, REXXGAD_NOSLOT,
@@ -172,7 +170,6 @@ PROC create() OF rexxSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ REXXGAD_OK ]:=ButtonObject,
             GA_ID, REXXGAD_OK,
@@ -312,7 +309,6 @@ PROC create() OF rexxCommandSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD,self.gadgetList[REXXCMDGAD_CMDLIST]:=ListBrowserObject,
               GA_ID, REXXCMDGAD_CMDLIST,
@@ -350,7 +346,6 @@ PROC create() OF rexxCommandSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ REXXCMDGAD_OK ]:=ButtonObject,
             GA_ID, REXXCMDGAD_OK,
@@ -450,6 +445,7 @@ PROC editCommands(commands:PTR TO stringlist) OF rexxCommandSettingsForm
   DEF node:PTR TO ln
   DEF strval
 
+  SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_CMDLIST],0,0,[LISTBROWSER_LABELS, -1, TAG_END])
   FOR i:=0 TO commands.count()-1
     IF (n:=AllocListBrowserNodeA(1, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, commands.item(i), TAG_END]))
       AddTail(self.browserlist, n)
@@ -457,6 +453,7 @@ PROC editCommands(commands:PTR TO stringlist) OF rexxCommandSettingsForm
       Raise("MEM")    
     ENDIF
   ENDFOR
+  SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_CMDLIST],0,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
   self.selCommand(self,0,0,-1)
 
   res:=self.showModal()

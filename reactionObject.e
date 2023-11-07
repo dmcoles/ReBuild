@@ -10,6 +10,7 @@ OPT MODULE,OSVERSION=37
         'gadgets/checkbox','checkbox',
         'images/label','label',
         'amigalib/boopsi',
+        'gadtools',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
@@ -64,6 +65,7 @@ EXPORT OBJECT reactionObject
   
   tempParentId:INT
   drawInfo:LONG
+  visInfo:LONG
   previewObject:LONG
   previewChildAttrs:LONG
 ENDOBJECT
@@ -118,7 +120,6 @@ PROC create() OF childSettingsForm
         LAYOUT_FIXEDHORIZ, TRUE,
         LAYOUT_FIXEDVERT, TRUE,
         LAYOUT_SHRINKWRAP, TRUE,
-        LAYOUT_SPACEINNER, TRUE,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_DEFERLAYOUT, FALSE,
@@ -134,7 +135,6 @@ PROC create() OF childSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MINWIDTH ]:=IntegerObject,
             GA_ID, CHIGAD_MINWIDTH,
@@ -199,7 +199,6 @@ PROC create() OF childSettingsForm
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
           LAYOUT_EVENSIZE, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_WEIGHTEDWIDTH ]:=IntegerObject,
             GA_ID, CHIGAD_WEIGHTEDWIDTH,
@@ -263,7 +262,6 @@ PROC create() OF childSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_NOMINALSIZE ]:=CheckBoxObject,
             GA_ID, CHIGAD_NOMINALSIZE,
@@ -323,7 +321,6 @@ PROC create() OF childSettingsForm
           LAYOUT_BEVELSTATE, IDS_SELECTED,
           LAYOUT_FIXEDHORIZ, TRUE,
           LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_SPACEINNER, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_OK ]:=ButtonObject,
             GA_ID, CHIGAD_OK,
@@ -430,6 +427,7 @@ EXPORT PROC create(parent) OF reactionObject
 
   scr:=LockPubScreen(NIL)
   self.drawInfo:=GetScreenDrawInfo(scr)
+  self.visInfo:=GetVisualInfoA(scr,[TAG_END])
   UnlockPubScreen(NIL,scr)
 ENDPROC
 
@@ -448,6 +446,7 @@ EXPORT PROC end() OF reactionObject
     FreeScreenDrawInfo(scr,self.drawInfo)
     UnlockPubScreen(NIL,scr)
   ENDIF
+  IF self.visInfo THEN FreeVisualInfo(self.visInfo)
     
 ENDPROC
 
