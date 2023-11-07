@@ -436,7 +436,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF getFileSettingsForm
   self:=nself
+  self.setBusy()
   self.getFileObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF getFileSettingsForm

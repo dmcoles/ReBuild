@@ -451,7 +451,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF bevelSettingsForm
   self:=nself
+  self.setBusy()
   self.bevelObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF bevelSettingsForm
@@ -460,6 +462,8 @@ PROC selectPen(nself,gadget,id,code) OF bevelSettingsForm
   DEF colourProp:PTR TO INT
 
   self:=nself
+
+  self.setBusy()
   SELECT id
     CASE BEVELGAD_TEXTPEN
       colourProp:={self.tmpTextPen}
@@ -472,6 +476,8 @@ PROC selectPen(nself,gadget,id,code) OF bevelSettingsForm
     colourProp[]:=selColour
   ENDIF
   END frmColourPicker
+  self.clearBusy()
+
 ENDPROC
 
 PROC end() OF bevelSettingsForm

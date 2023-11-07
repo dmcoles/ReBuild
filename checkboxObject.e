@@ -290,7 +290,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF checkboxSettingsForm
   self:=nself
+  self.setBusy()
   self.checkboxObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF checkboxSettingsForm
@@ -300,6 +302,7 @@ PROC selectPen(nself,gadget,id,code) OF checkboxSettingsForm
 
   self:=nself
 
+  self.setBusy()
   SELECT id
     CASE CHKGAD_TEXTPEN
       colourProp:={self.tempTextPen}
@@ -314,6 +317,7 @@ PROC selectPen(nself,gadget,id,code) OF checkboxSettingsForm
     colourProp[]:=selColour
   ENDIF
   END frmColourPicker
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF checkboxSettingsForm

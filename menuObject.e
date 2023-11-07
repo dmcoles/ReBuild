@@ -569,7 +569,7 @@ PROC validate(nself,gadget,id,code) OF menuSettingsForm
   IF self.tempMenuItems.count()>0
     menuItem:=self.tempMenuItems.item(0)
     IF menuItem.menuItem OR menuItem.menuBar
-      errorRequest(win,'Error','The first item must always be a menu')
+      errorRequest(self.windowObj,'Error','The first item must always be a menu')
       RETURN
     ENDIF
   ENDIF

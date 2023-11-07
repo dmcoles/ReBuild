@@ -258,7 +258,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF scrollerSettingsForm
   self:=nself
+  self.setBusy()
   self.scrollerObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF scrollerSettingsForm

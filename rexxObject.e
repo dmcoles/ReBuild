@@ -224,10 +224,11 @@ PROC editCommands(nself,gadget,id,code) OF rexxSettingsForm
   DEF editForm:PTR TO rexxCommandSettingsForm
   DEF res
   self:=nself
-  
+  self.setBusy()
   NEW editForm.create()
   res:=editForm.editCommands(self.tempCommands)
   END editForm
+  self.clearBusy()
 ENDPROC res
   
 PROC end() OF rexxSettingsForm

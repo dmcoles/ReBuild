@@ -301,7 +301,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF integerSettingsForm
   self:=nself
+  self.setBusy()
   self.integerObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF integerSettingsForm

@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37,LARGE
         'intuition/gadgetclass',
         'exec'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist'
 
 EXPORT ENUM WINGAD_TITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
       WINGAD_LEFTEDGE, WINGAD_TOPEDGE, WINGAD_WIDTH, WINGAD_HEIGHT,
@@ -73,6 +73,8 @@ EXPORT OBJECT windowObject OF reactionObject
   appPort:LONG
   previewOpen:CHAR
   previewRootLayout:LONG
+  previewLeft:INT
+  previewTop:INT
 ENDOBJECT
 
 OBJECT windowSettingsForm OF reactionForm
@@ -1375,9 +1377,11 @@ PROC editFlags(nself,gadget,id,code) OF windowSettingsForm
   DEF windowFlagsSettingsForm:PTR TO windowFlagsSettingsForm
   self:=nself
 
+  self.setBusy()
   NEW windowFlagsSettingsForm.create()
   windowFlagsSettingsForm.editSettingsFlags({self.tmpRefreshType},{self.tmpFlags})
   END windowFlagsSettingsForm
+  self.clearBusy()
 ENDPROC
 
 PROC editIDCMP(nself,gadget,id,code) OF windowSettingsForm
@@ -1385,9 +1389,11 @@ PROC editIDCMP(nself,gadget,id,code) OF windowSettingsForm
   DEF windowIDCMPSettingsForm:PTR TO windowIDCMPSettingsForm
   self:=nself
 
+  self.setBusy()
   NEW windowIDCMPSettingsForm.create()
   windowIDCMPSettingsForm.editSettingsIDCMP({self.tmpIDCMP})
   END windowIDCMPSettingsForm
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF windowSettingsForm
@@ -1522,6 +1528,8 @@ EXPORT PROC create(parent) OF windowObject
   self.createPreviewObject()
   self.previewChildAttrs:=0
   self.previewOpen:=TRUE
+  self.previewLeft:=-1
+  self.previewTop:=-1
 ENDPROC
 
 PROC end() OF windowObject
@@ -1558,7 +1566,9 @@ EXPORT PROC serialiseData() OF windowObject IS
   makeProp(refreshType,FIELDTYPE_CHAR),
   makeProp(flags,FIELDTYPE_LONG),
   makeProp(idcmp,FIELDTYPE_LONG),
-  makeProp(previewOpen,FIELDTYPE_CHAR)
+  makeProp(previewOpen,FIELDTYPE_CHAR),
+  makeProp(previewLeft,FIELDTYPE_INT),
+  makeProp(previewTop,FIELDTYPE_INT)
 ]
 
 EXPORT PROC getTypeName() OF windowObject
@@ -1567,6 +1577,8 @@ ENDPROC
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   DEF tempStr[100]:STRING
+  DEF idcmpList:PTR TO stringlist
+  
   srcGen.componentProperty('WA_Title',self.title,TRUE)
   StringF(tempStr,'\d',self.leftEdge)
   srcGen.componentProperty('WA_Left',tempStr,FALSE)
@@ -1585,6 +1597,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   StringF(tempStr,'\d',self.maxHeight)
   srcGen.componentProperty('WA_MaxHeight',tempStr,FALSE)
 
+  IF self.lockWidth THEN srcGen.componentProperty('WINDOW_LockWidth','TRUE',FALSE)
+  IF self.lockHeight THEN srcGen.componentProperty('WINDOW_LockHeight','TRUE',FALSE)
+  IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
+  IF self.gadgetHelp THEN srcGen.componentProperty('WINDOW_GadgetHelp','TRUE',FALSE)
+
   IF srcGen.type=ESOURCE_GEN
     srcGen.componentProperty('WINDOW_AppPort','app_port',FALSE)
   ELSE
@@ -1598,6 +1615,18 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   IF self.flags AND WFLG_DRAGBAR THEN srcGen.componentProperty('WA_DragBar','TRUE',FALSE)
   IF self.flags AND WFLG_ACTIVATE THEN srcGen.componentProperty('WA_Activate','TRUE',FALSE)
 
+  IF self.flags AND WFLG_SIZEBRIGHT THEN srcGen.componentProperty('WA_SizeBRight','TRUE',FALSE)
+  IF self.flags AND WFLG_SIZEBBOTTOM THEN srcGen.componentProperty('WA_SizeBBottom','TRUE',FALSE)
+  IF self.flags AND WFLG_GIMMEZEROZERO THEN srcGen.componentProperty('WA_GimmeZeroZero','TRUE',FALSE)
+  IF self.flags AND WFLG_BORDERLESS THEN srcGen.componentProperty('WA_Borderless','TRUE',FALSE)
+  IF self.flags AND WFLG_RMBTRAP THEN srcGen.componentProperty('WA_RMBTrap','TRUE',FALSE)
+  IF self.flags AND WFLG_SUPER_BITMAP THEN srcGen.componentProperty('WA_SuperBitMap','TRUE',FALSE)
+  IF self.flags AND WFLG_BACKDROP THEN srcGen.componentProperty('WA_Backdrop','TRUE',FALSE)
+  IF self.flags AND WFLG_ZOOM THEN srcGen.componentProperty('WA_Zoom','TRUE',FALSE)
+  IF self.flags AND WFLG_NOTIFY_DEPTH THEN srcGen.componentProperty('WA_NotifyDepth','TRUE',FALSE)
+  IF self.flags AND WFLG_MENUHELP THEN srcGen.componentProperty('WA_MenuHelp','TRUE',FALSE)
+  IF self.flags AND WFLG_HELPGROUP THEN srcGen.componentProperty('WA_HelpGroup','TRUE',FALSE)
+
   SELECT self.refreshType
     CASE 0
       srcGen.componentProperty('WA_NoCareRefresh','TRUE',FALSE)
@@ -1609,8 +1638,38 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
       srcGen.componentProperty('WA_SuperBitmap','TRUE',FALSE)
   ENDSELECT
 
-  StringF(tempStr,'\d',self.idcmp)
-  srcGen.componentProperty('WA_IDCMP',tempStr,FALSE)
+  NEW idcmpList.stringlist(20)
+
+  IF self.idcmp AND IDCMP_MOUSEBUTTONS THEN idcmpList.add('IDCMP_MOUSEBUTTONS')
+
+  IF self.idcmp AND IDCMP_MOUSEBUTTONS THEN idcmpList.add('IDCMP_MOUSEBUTTONS')
+  IF self.idcmp AND IDCMP_MOUSEMOVE    THEN idcmpList.add('IDCMP_MOUSEMOVE')
+  IF self.idcmp AND IDCMP_DELTAMOVE    THEN idcmpList.add('IDCMP_DELTAMOVE')
+  IF self.idcmp AND IDCMP_GADGETDOWN   THEN idcmpList.add('IDCMP_GADGETDOWN')
+  
+  IF self.idcmp AND IDCMP_GADGETUP     THEN idcmpList.add('IDCMP_GADGETUP')
+  IF self.idcmp AND IDCMP_CLOSEWINDOW  THEN idcmpList.add('IDCMP_CLOSEWINDOW')
+  IF self.idcmp AND IDCMP_MENUPICK     THEN idcmpList.add('IDCMP_MENUPICK')
+  IF self.idcmp AND IDCMP_MENUVERIFY   THEN idcmpList.add('IDCMP_MENUVERIFY')
+                                       
+  IF self.idcmp AND IDCMP_MENUHELP      THEN idcmpList.add('IDCMP_MENUHELP')
+  IF self.idcmp AND IDCMP_NEWSIZE       THEN idcmpList.add('IDCMP_NEWSIZE')
+  IF self.idcmp AND IDCMP_REFRESHWINDOW THEN idcmpList.add('IDCMP_REFRESHWINDOW')
+  IF self.idcmp AND IDCMP_SIZEVERIFY    THEN idcmpList.add('IDCMP_SIZEVERIFY')
+  
+  IF self.idcmp AND IDCMP_VANILLAKEY     THEN idcmpList.add('IDCMP_VANILLAKEY')
+  IF self.idcmp AND IDCMP_RAWKEY         THEN idcmpList.add('IDCMP_RAWKEY')
+  IF self.idcmp AND IDCMP_NEWPREFS       THEN idcmpList.add('IDCMP_NEWPREFS')
+  IF self.idcmp AND IDCMP_DISKINSERTED   THEN idcmpList.add('IDCMP_DISKINSERTED')
+  
+  IF self.idcmp AND IDCMP_DISKREMOVED     THEN idcmpList.add('IDCMP_DISKREMOVED')
+  IF self.idcmp AND IDCMP_INTUITICKS      THEN idcmpList.add('IDCMP_INTUITICKS')
+  IF self.idcmp AND IDCMP_IDCMPUPDATE     THEN idcmpList.add('IDCMP_IDCMPUPDATE')
+  IF self.idcmp AND IDCMP_CHANGEWINDOW    THEN idcmpList.add('IDCMP_CHANGEWINDOW')
+
+  srcGen.componentPropertyListOr('WA_IDCMP',idcmpList)
+  END idcmpList
+  
 ENDPROC
 
 EXPORT PROC createWindowObject(parent)

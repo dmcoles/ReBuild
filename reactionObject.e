@@ -68,6 +68,7 @@ EXPORT OBJECT reactionObject
   visInfo:LONG
   previewObject:LONG
   previewChildAttrs:LONG
+  node:LONG
 ENDOBJECT
 
 OBJECT childSettingsForm OF reactionForm
@@ -729,7 +730,5 @@ EXPORT PROC objectInitialise(n=1)
   objCount:=n
 ENDPROC
 
-EXPORT PROC getObjId()
-  objCount:=1
-ENDPROC
+EXPORT PROC getObjId() IS objCount
 

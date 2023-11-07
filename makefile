@@ -30,7 +30,7 @@ paletteObject.m:			paletteObject.e reactionObject.m reactionForm.m
 screenObject.m:			screenObject.e reactionObject.m reactionForm.m
 							$(compiler) screenObject $(options)
 
-windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m
+windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m
 							$(compiler) windowObject $(options)
 
 glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m
@@ -45,7 +45,7 @@ eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringl
 cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m
 							$(compiler) cSourceGen $(options)
 
-sourceGen.m:			sourceGen.e fileStreamer.m menuObject.m
+sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m
 							$(compiler) sourceGen $(options)
 
 layoutObject.m:			layoutObject.e reactionObject.m reactionForm.m sourceGen.m
@@ -126,13 +126,13 @@ listManagerForm.m:			listManagerForm.e reactionListObject.m stringlist.m reactio
 codeGenForm.m:			codeGenForm.e 
 							$(compiler) codeGenForm $(options)
 
-objectPicker.m:			objectPicker.e 
+objectPicker.m:			objectPicker.e reactionForm.m
 							$(compiler) objectPicker $(options)
 
 listPicker.m:			listPicker.e  stringlist.m reactionListObject.m reactionLists.m
 							$(compiler) listPicker $(options)
 
-reactionObject.m:			reactionObject.e  stringlist.m reactionForm.m fileStreamer.m sourcegen.m
+reactionObject.m:			reactionObject.e  stringlist.m reactionForm.m fileStreamer.m sourceGen.m
 							$(compiler) reactionObject $(options)
 
 reactionForm.m:			reactionForm.e 

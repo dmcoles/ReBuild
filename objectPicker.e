@@ -33,6 +33,7 @@ ENDOBJECT
 
 PROC gadgetClick(nself,gadget,id,code) OF objectPickerForm
   self:=nself
+
   self.modalResult:=MR_OK
   self.selectedItem:=id
 ENDPROC

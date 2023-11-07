@@ -62,7 +62,8 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEDOWN=5
   CONST MENU_EDIT_LISTS=7
   CONST MENU_EDIT_BUFFER=9
-  CONST MENU_EDIT_PREVIEW=11
+  CONST MENU_SHOW_ADD_SETTINGS=10
+  CONST MENU_EDIT_PREVIEW=12
 
   CONST FILE_FORMAT_VER=1
 
@@ -153,6 +154,7 @@ PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newn
   StringF(idStr,'\d',comp.id)
   StringF(typeStr,'\s Object',comp.getTypeName())
   IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.type=TYPE_LAYOUT) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+  comp.node:=n
   
   IF comp=selcomp THEN newnode[]:=n
   
@@ -223,6 +225,7 @@ PROC makeList(selcomp=0)
   DEF n,i
   DEF newnode=0
   DEF depth
+  DEF comp:PTR TO reactionObject
   
   SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   IF list THEN freeBrowserNodes( list )
@@ -316,8 +319,11 @@ PROC updateSel(win,node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
 
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_WINDOW),TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW)) OR comp.children.count()),TAG_END])
+    IF bufferLayout
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_WINDOW),TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW)) OR comp.children.count()),TAG_END])
+    ENDIF
+
     
     dis:=TRUE
     IF comp.parent
@@ -333,8 +339,10 @@ PROC updateSel(win,node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=0),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)),TAG_END])
 
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
+    IF bufferLayout
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
+    ENDIF
   ELSE
     selectedComp:=0
     FOR i:=0 TO NUM_OBJECT_TYPES-1
@@ -352,29 +360,35 @@ PROC updateSel(win,node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,TRUE,TAG_END])
 
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,TRUE,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,TRUE,TAG_END])
+    IF bufferLayout
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,TRUE,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,TRUE,TAG_END])
 
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+    ENDIF
   ENDIF
 ENDPROC
 
 PROC updateBufferSel(win,node)
   DEF comp=0:PTR TO reactionObject
   DEF dis
-  IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
-  IF comp AND selectedComp
-    dis:=(selectedComp.parent=0) AND (selectedComp.type<>TYPE_LAYOUT) AND (selectedComp.type<>TYPE_SCREEN) AND (selectedComp.type<>TYPE_WINDOW)
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,dis,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,dis,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,dis,TAG_END])
+  IF bufferLayout
+    IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
+    IF comp AND selectedComp
+      dis:=(selectedComp.parent=0) AND (selectedComp.type<>TYPE_LAYOUT) AND (selectedComp.type<>TYPE_SCREEN) AND (selectedComp.type<>TYPE_WINDOW)
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,dis,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,dis,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,dis,TAG_END])
+    ELSE
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,TRUE,TAG_END])
+    ENDIF
+    selectedBuffComp:=comp
   ELSE
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,TRUE,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,TRUE,TAG_END])
+    selectedBuffComp:=0
   ENDIF
-  selectedBuffComp:=comp
 ENDPROC
 
 PROC createBufferGads()
@@ -630,19 +644,28 @@ PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
   ENDIF
 ENDPROC
 
-PROC removeObject(parent:PTR TO reactionObject,child)
+PROC removeObject(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   DEF idx, mainRootLayout, previewRootLayout
-
+  DEF comp2:PTR TO reactionObject
+  
   IF parent.type=TYPE_LAYOUT
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
     removeMembers(objectList.item(ROOT_LAYOUT_ITEM),previewRootLayout)
+    idx:=child.getChildIndex()
     parent.removeChild(child)
     END child
     makeList()
     addMembers(objectList.item(ROOT_LAYOUT_ITEM),previewRootLayout)
     rethinkPreviews()
+    IF (idx<parent.children.count())
+      comp2:=parent.children.item(idx)
+    ELSE
+      comp2:=parent
+    ENDIF
+    SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, comp2.node, TAG_END])
+    updateSel(win,comp2.node)
   ENDIF
 ENDPROC
 
@@ -798,9 +821,11 @@ PROC genCode()
   DEF langid
   DEF menuComp:PTR TO reactionObject
   
+  setBusy()
   NEW codeGenForm.create()
   langid:=codeGenForm.selectLang()
   END codeGenForm
+  clearBusy()
   IF langid=-1 THEN RETURN
   
   aslbase:=OpenLibrary('asl.library',37)
@@ -809,11 +834,14 @@ PROC genCode()
      ASL_WINDOW, win,
      TAG_DONE]
   fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
+  setBusy()
   IF(AslRequest(fr,0))=FALSE
     IF tags THEN FastDisposeList(tags)
     IF aslbase THEN CloseLibrary(aslbase)
+    clearBusy()
     RETURN
   ENDIF
+  clearBusy()
 
   StrCopy(fname,fr.drawer)
   AddPart(fname,fr.file,100)
@@ -826,9 +854,10 @@ PROC genCode()
   WriteF('libsused=\d\n',libsused)
   
   IF FileLength(fname)>=0
-    IF warnRequest(win,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
+    IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
   ENDIF
 
+  setBusy()
   NEW fs.create(fname,MODE_NEWFILE)
   
   SELECT langid
@@ -861,7 +890,7 @@ PROC genCode()
   END srcGen
   
   END fs
-
+  clearBusy()
 ENDPROC
 
 PROC processObjects(obj:PTR TO reactionObject,list:PTR TO stdlist)
@@ -885,7 +914,9 @@ PROC loadFile() HANDLE
   DEF loadObjectList=0:PTR TO stdlist
   DEF reactionLists:PTR TO stdlist
   DEF type,i
-  DEF ver,newid
+  DEF a=0:PTR TO menuitem
+
+  DEF ver,newid,v
 
   DEF tags
   DEF fr:PTR TO filerequester
@@ -915,28 +946,59 @@ PROC loadFile() HANDLE
   
   fs.readLine(tempStr)
   IF StrCmp(tempStr,'-REBUILD-')=FALSE
-    errorRequest(win,'Error','This file is not a valid rebuild file.')
+    errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
     END fs
     RETURN
   ENDIF
 
   fs.readLine(tempStr)
-  ver:=Val(tempStr)
-  IF (ver<1)
-    errorRequest(win,'Error','This file is not a valid rebuild file.')
-    END fs
-    RETURN
-  ENDIF
-  
-  IF (ver>FILE_FORMAT_VER)
-    errorRequest(win,'Error','This file is too new for this version of ReBuild.')
-    END fs
-    RETURN
-  ENDIF
-  
-  
-  fs.readLine(tempStr)
-  newid:=Val(tempStr)
+  WHILE (StrCmp(tempStr,'#')=FALSE)
+    IF StrCmp(tempStr,'VER=',STRLEN)
+      ver:=Val(tempStr+STRLEN)
+      IF (ver<1)
+        errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
+        END fs
+        RETURN
+      ENDIF
+      IF (ver>FILE_FORMAT_VER)
+        errorRequest(mainWindow,'Error','This file is too new for this version of ReBuild.')
+        END fs
+        RETURN
+      ENDIF
+    ELSEIF StrCmp(tempStr,'NEXTID=',STRLEN)
+      newid:=Val(tempStr+STRLEN)
+      IF newid<1
+        errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
+        END fs
+        RETURN
+      ENDIF
+    ELSEIF StrCmp(tempStr,'VIEWTMP=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      IF Eor((v=TRUE),(bufferLayout<>0))
+        WriteF('toggle\n')
+        toggleBuffer()
+      ENDIF
+    ELSEIF StrCmp(tempStr,'ADDSETT=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      IF win
+        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+        IF a
+          IF v
+            WriteF('on\n')
+            a.flags:=a.flags OR CHECKED
+          ELSE
+            a.flags:=a.flags AND Not(CHECKED)
+          ENDIF
+        ENDIF
+      ENDIF
+    ENDIF
+    
+    IF fs.readLine(tempStr)=FALSE
+      errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
+      END fs
+      RETURN
+    ENDIF
+  ENDWHILE
   
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
@@ -1012,7 +1074,7 @@ ENDPROC
 
 PROC saveFile() HANDLE
   DEF fs=0:PTR TO fileStreamer
-  DEF i,j
+  DEF i,j,a=0:PTR TO menuitem
   DEF comp:PTR TO reactionObject
   DEF tempStr[10]:STRING
   DEF reactionLists:PTR TO stdlist
@@ -1021,12 +1083,25 @@ PROC saveFile() HANDLE
     RETURN saveFileAs()
   ENDIF
 
+  setBusy()
+
   NEW fs.create(filename,MODE_NEWFILE)
   fs.writeLine('-REBUILD-')
-  StringF(tempStr,'\d',FILE_FORMAT_VER)
+  StringF(tempStr,'VER=\d',FILE_FORMAT_VER)
   fs.writeLine(tempStr)
-  StringF(tempStr,'\d',getObjId())
+  StringF(tempStr,'NEXTID=\d',getObjId())
   fs.writeLine(tempStr)
+  StringF(tempStr,'VIEWTMP=\d',IF bufferLayout THEN TRUE ELSE FALSE)
+  fs.writeLine(tempStr)
+  IF win
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+    IF a
+      StringF(tempStr,'ADDSETT=\d',IF a.flags AND CHECKED THEN TRUE ELSE FALSE)
+      fs.writeLine(tempStr)
+    ENDIF
+  ENDIF
+
+  fs.writeLine('#')
 
   reactionLists:=getReactionLists()
   FOR i:=0 TO reactionLists.count()-1
@@ -1044,6 +1119,7 @@ PROC saveFile() HANDLE
   changes:=FALSE
 EXCEPT DO
   END fs 
+  clearBusy()
 ENDPROC TRUE
 
 PROC saveFileAs()
@@ -1056,12 +1132,16 @@ PROC saveFileAs()
   tags:=NEW [ASL_HAIL,'Enter a file to save as',
      ASL_WINDOW, win,
      TAG_DONE]
+
+  setBusy()
   fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
   IF(AslRequest(fr,0))=FALSE
     IF tags THEN FastDisposeList(tags)
     IF aslbase THEN CloseLibrary(aslbase)
+    clearBusy()
     RETURN FALSE
   ENDIF
+  clearBusy()
 
   StrCopy(fname,fr.drawer)
   AddPart(fname,fr.file,100)
@@ -1072,7 +1152,7 @@ PROC saveFileAs()
   IF aslbase THEN CloseLibrary(aslbase)
 
   IF FileLength(filename)>=0
-    IF warnRequest(win,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN FALSE
+    IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN FALSE
   ENDIF
 ENDPROC saveFile()
 
@@ -1081,6 +1161,7 @@ PROC unsavedChangesWarning()
   DEF reqobj
   DEF res=0
   
+  setBusy()
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
   reqmsg.window:=win
@@ -1091,12 +1172,15 @@ PROC unsavedChangesWarning()
     DisposeObject(reqobj)
   ENDIF
   END reqmsg
+  clearBusy()
 ENDPROC res
 
 PROC showAbout()
   DEF reqmsg:PTR TO orrequest
   DEF reqobj
   
+  setBusy()
+
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
   reqmsg.window:=win
@@ -1107,6 +1191,7 @@ PROC showAbout()
     DisposeObject(reqobj)
   ENDIF
   END reqmsg
+  clearBusy()
 ENDPROC
 
 PROC doLoad()
@@ -1116,9 +1201,11 @@ PROC doLoad()
     IF res=0 THEN RETURN
     IF res=1 THEN IF saveFile()=FALSE THEN RETURN
   ENDIF
+  setBusy()
   closePreviews()
   loadFile()
   restorePreviews()
+  clearBusy()
 ENDPROC
 
 PROC doNew()
@@ -1147,17 +1234,31 @@ ENDPROC
 
 PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
+  DEF a=0:PTR TO menuitem
   changes:=TRUE
   newObj:=0
   WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
   IF comp
     newObj:=createObjectByObj(objType,comp)
     IF newObj 
-      IF newObj.editSettings()
-        addObject(comp,newObj)
-      ELSE
-        END newObj
+      setBusy()
+      
+      IF win
+        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+        WriteF('item=\h\n',a)
+        WriteF('flags=\h\n',a.flags)
+
       ENDIF
+      IF (a<>0) ANDALSO (a.flags AND CHECKED)
+        IF newObj.editSettings()
+          addObject(comp,newObj)
+        ELSE
+          END newObj
+        ENDIF
+      ELSE
+        addObject(comp,newObj)
+      ENDIF
+      clearBusy()
     ENDIF
   ENDIF
 ENDPROC
@@ -1174,10 +1275,12 @@ PROC doAdd()
   ENDIF
 
   NEW frmObjectPicker.create()
+  setBusy()
   IF (objType:=frmObjectPicker.selectItem())<>-1
     doAddComp(comp,objType)
   ENDIF
   END frmObjectPicker
+  clearBusy()
 ENDPROC
 
 PROC doEdit()
@@ -1185,6 +1288,7 @@ PROC doEdit()
   DEF winObj:PTR TO windowObject
   DEF pwin
   IF selectedComp
+    setBusy()
     IF selectedComp.editSettings()
       changes:=TRUE
       idx:=findWindowIndex(selectedComp)
@@ -1210,11 +1314,13 @@ PROC doEdit()
         rethinkPreviews()
       ENDIF
     ENDIF
+    clearBusy()
+
   ENDIF
 ENDPROC
 
 PROC doDelete()
-  IF warnRequest(win,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1
+  IF warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1
     changes:=TRUE
     removeObject(selectedComp.parent,selectedComp)
   ENDIF
@@ -1255,7 +1361,7 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   DEF newObj:PTR TO reactionObject
   DEF comp:PTR TO reactionObject
   DEF fs:PTR TO fileStreamer
-  DEF oldid
+  DEF oldid,defname
   DEF name[100]:STRING
 
   NEW fs.create('t:tempcomp',MODE_NEWFILE)
@@ -1266,16 +1372,27 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   oldid:=newObj.id
   NEW fs.create('t:tempcomp',MODE_OLDFILE)
   newObj.deserialise(fs)
+  StringF(name,'\s_\d',newObj.getTypeName(),newObj.id)
+  defname:=StrCmp(newObj.name,name)
+ 
   newObj.id:=oldid
 
-  StringF(name,'\s_\d',newObj.getTypeName(),oldid)
-  AstrCopy(newObj.name,name)
+  IF defname
+    StringF(name,'\s_\d',newObj.getTypeName(),oldid)
+    AstrCopy(newObj.name,name)
+  ENDIF
   
   END fs
 
   comp:=selectedComp
   WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
-  IF comp THEN addObject(comp,newObj) ELSE END newObj
+  IF comp 
+    addObject(comp,newObj)
+    SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newObj.node, TAG_END])
+    updateSel(win,newObj.node)
+  ELSE 
+    END newObj
+  ENDIF
   DeleteFile('t:tempcomp')
   changes:=TRUE
 ENDPROC
@@ -1288,11 +1405,21 @@ PROC moveFromBuffer(bufferComp:PTR TO reactionObject)
 ENDPROC
 
 PROC removeBufferItem(bufferComp:PTR TO reactionObject)
-  DEF i
+  DEF i,oldpos
   FOR i:=bufferList.count()-1 TO 0 STEP -1
-    IF bufferList.item(i)=bufferComp THEN bufferList.remove(i)
+    IF bufferList.item(i)=bufferComp 
+      bufferList.remove(i)
+      oldpos:=i
+    ENDIF
   ENDFOR
   makeBufferList()
+  IF oldpos<bufferList.count()
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_SELECTED, oldpos, TAG_END])
+    updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
+  ELSEIF (oldpos-1)<bufferList.count()
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_SELECTED, oldpos-1, TAG_END])
+    updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
+  ENDIF
 ENDPROC
 
 PROC makeBufferList()
@@ -1300,22 +1427,24 @@ PROC makeBufferList()
   DEF compStr[100]:STRING
   DEF i,n
   
-  SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
-  IF list2 THEN freeBrowserNodes( list2 )
-  list2:=browserNodesA([0])
+  IF bufferLayout
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+    IF list2 THEN freeBrowserNodes( list2 )
+    list2:=browserNodesA([0])
 
-  FOR i:=0 TO bufferList.count()-1
-    comp:=bufferList.item(i)
-    IF StrLen(comp.name)=0
-      StringF(compStr,'\s',comp.getTypeName())
-    ELSE
-      StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
-    ENDIF
-    IF (n:=AllocListBrowserNodeA(1, [LBNA_USERDATA, comp, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr,TAG_END])) THEN AddTail(list2, n) ELSE Raise("MEM")
-  ENDFOR
-  
-  SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, list2, TAG_END])
-  updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
+    FOR i:=0 TO bufferList.count()-1
+      comp:=bufferList.item(i)
+      IF StrLen(comp.name)=0
+        StringF(compStr,'\s',comp.getTypeName())
+      ELSE
+        StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
+      ENDIF
+      IF (n:=AllocListBrowserNodeA(1, [LBNA_USERDATA, comp, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr,TAG_END])) THEN AddTail(list2, n) ELSE Raise("MEM")
+    ENDFOR
+    
+    SetGadgetAttrsA(gMain_Gadgets[GAD_TEMPLIST],win,0,[LISTBROWSER_LABELS, list2, TAG_END])
+    updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
+  ENDIF
 ENDPROC
 
 PROC disposeObjects()
@@ -1379,12 +1508,21 @@ PROC newProject()
 ENDPROC
 
 PROC toggleBuffer()
+  DEF w:PTR TO window
+  DEF a=0:PTR TO menuitem
+
+  IF win
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_BUFFER,0))
+  ENDIF
+
   IF bufferLayout
     SetGadgetAttrsA(mainWindowLayout,win,0,[LAYOUT_REMOVECHILD, bufferLayout,TAG_END])
     bufferLayout:=0
+    IF a THEN a.flags:=a.flags AND Not(CHECKED)
   ELSE
     createBufferGads()
     SetGadgetAttrsA(mainWindowLayout,win,0,[LAYOUT_ADDCHILD, bufferLayout,CHILD_WEIGHTEDWIDTH,20,TAG_END])
+    IF a THEN a.flags:=a.flags OR CHECKED
   ENDIF
   IF win THEN RethinkLayout(mainWindowLayout, win, 0, TRUE )
 
@@ -1400,9 +1538,13 @@ PROC togglePreview(subitem)
   pwin:=Gets(previewWin,WINDOW_WINDOW)
   IF pwin
     winObj.previewOpen:=FALSE
+    winObj.previewLeft:=Gets(previewWin,WA_LEFT)
+    winObj.previewTop:=Gets(previewWin,WA_TOP)
     RA_CloseWindow(previewWin)
   ELSE
     winObj.previewOpen:=TRUE
+    Sets(previewWin,WA_LEFT,winObj.previewLeft)
+    Sets(previewWin,WA_TOP,winObj.previewTop)
     RA_OpenWindow(previewWin)
   ENDIF
 ENDPROC
@@ -1410,7 +1552,6 @@ ENDPROC
 PROC handlePreviewInputs()
   DEF pwin:PTR TO window,previewWin,i,code
   DEF winObj:PTR TO windowObject
-  DEF left,top
   DEF result,tmp
   
   i:=ROOT_WINDOW_ITEM
@@ -1422,13 +1563,11 @@ PROC handlePreviewInputs()
       tmp:=(result AND WMHI_CLASSMASK)
       SELECT tmp
         CASE WMHI_CHANGEWINDOW
-          ->SetGadgetAttrsA(previewWin,pwin,0,[WA_LEFT,pwin.leftedge,WA_TOP,pwin.topedge,TAG_END])
+          winObj.previewLeft:=Gets(previewWin,WA_LEFT)
+          winObj.previewTop:=Gets(previewWin,WA_TOP)
         CASE WMHI_CLOSEWINDOW
-          left:=Gets(previewWin,WA_LEFT)
-          top:=Gets(previewWin,WA_TOP)
           winObj.previewOpen:=FALSE
           RA_CloseWindow(previewWin)
-          SetGadgetAttrsA(previewWin,0,0,[WA_LEFT,left,WA_TOP,top,TAG_END])
           remakePreviewMenus()
       ENDSELECT
     ENDWHILE
@@ -1437,20 +1576,29 @@ PROC handlePreviewInputs()
 ENDPROC
 
 PROC setBusy()
-  SetWindowPointerA(win,[WA_BUSYPOINTER,TRUE,TAG_END])
+  Sets(mainWindow,WA_BUSYPOINTER,TRUE)
 ENDPROC
 
 PROC clearBusy()
-  SetWindowPointerA(win,[WA_BUSYPOINTER,FALSE,TAG_END])
+  Sets(mainWindow,WA_BUSYPOINTER,FALSE)
 ENDPROC
 
 PROC remakePreviewMenus()
   DEF menuData:PTR TO newmenu,scr,visInfo
   DEF winObj:PTR TO windowObject
   DEF count,n,i
+  DEF addSett=TRUE
+  DEF a:PTR TO menuitem
 
   count:=(objectList.count()-ROOT_WINDOW_ITEM)/4
-  count:=count+54
+  count:=count+55
+
+  IF win
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+    IF (a)
+      IF (a.flags AND CHECKED)=0 THEN addSett:=FALSE
+    ENDIF
+  ENDIF
 
   IF menus THEN FreeMenus(menus)
 
@@ -1555,12 +1703,15 @@ PROC remakePreviewMenus()
   menuData[48].label:=NM_BARLABEL
   menuData[49].type:=NM_ITEM
   menuData[49].label:='Show Buffer'
-  menuData[49].flags:=CHECKIT OR MENUTOGGLE OR CHECKED
+  menuData[49].flags:=CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[50].type:=NM_ITEM
-  menuData[50].label:=NM_BARLABEL
+  menuData[50].label:='Settings on add'
+  menuData[50].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 )OR MENUTOGGLE
   menuData[51].type:=NM_ITEM
-  menuData[51].label:='Preview Windows'
-  n:=52
+  menuData[51].label:=NM_BARLABEL
+  menuData[52].type:=NM_ITEM
+  menuData[52].label:='Preview Windows'
+  n:=53
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
     winObj:=objectList.item(i)
@@ -1643,6 +1794,8 @@ PROC restorePreviews()
     winObj:=objectList.item(i)
     previewWin:=winObj.previewObject
     IF winObj.previewOpen
+      Sets(previewWin,WA_LEFT,winObj.previewLeft)
+      Sets(previewWin,WA_TOP,winObj.previewTop)
       RA_OpenWindow(previewWin)
     ENDIF
     i+=3

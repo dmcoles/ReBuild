@@ -1,7 +1,7 @@
 
 OPT MODULE
 
-  MODULE '*fileStreamer'
+  MODULE '*fileStreamer','*stringlist'
 
 EXPORT ENUM NONE, ESOURCE_GEN, CSOURCE_GEN
 
@@ -10,6 +10,7 @@ EXPORT OBJECT srcGen
   fser:PTR TO fileStreamer
   libsused:LONG
   stringDelimiter:CHAR
+  orOperator:PTR TO CHAR
   extraPadding:CHAR
   upperCaseProperties:CHAR
   terminator:CHAR
@@ -22,6 +23,7 @@ PROC create(fser:PTR TO fileStreamer,libsused) OF srcGen
   self.fser:=fser
   self.libsused:=libsused
   self.stringDelimiter:=34
+  self.orOperator:='|'
   AstrCopy(self.assignChars,'=')
   self.extraPadding:=TRUE
   self.upperCaseProperties:=FALSE
@@ -76,7 +78,7 @@ PROC componentPropertyInt(propName:PTR TO CHAR, propValue:LONG) OF srcGen
   
   StringF(propValueStr,'\d',propValue)
   
-  str:=String(StrLen(propName)+StrLen(propValue)+5)
+  str:=String(StrLen(propName)+StrLen(propValueStr)+5)
   StrCopy(str,propName)
   IF self.upperCaseProperties THEN UpperStr(str)
   StrAdd(str,', ')
@@ -84,6 +86,37 @@ PROC componentPropertyInt(propName:PTR TO CHAR, propValue:LONG) OF srcGen
   StrAdd(str,',')
   self.writeLine(str)
   DisposeLink(str)
+ENDPROC
+
+PROC componentPropertyListOr(propName:PTR TO CHAR, propValues:PTR TO stringlist) OF srcGen
+  DEF str,totlen,i
+  DEF propValueStr
+  
+  totlen:=0
+  FOR i:=0 TO propValues.count()-1
+    totlen:=totlen+EstrLen(propValues.item(i))
+    totlen:=totlen+2+StrLen(self.orOperator)
+  ENDFOR
+
+  propValueStr:=String(totlen)  
+  FOR i:=0 TO propValues.count()-1
+    IF i<>0 
+      StrAdd(propValueStr,' ')
+      StrAdd(propValueStr,self.orOperator)
+      StrAdd(propValueStr,' ')
+    ENDIF
+    StrAdd(propValueStr,propValues.item(i))
+  ENDFOR
+  
+  str:=String(StrLen(propName)+StrLen(propValueStr)+5)
+  StrCopy(str,propName)
+  IF self.upperCaseProperties THEN UpperStr(str)
+  StrAdd(str,', ')
+  StrAdd(str,propValueStr)
+  StrAdd(str,',')
+  self.writeLine(str)
+  DisposeLink(str)
+  DisposeLink(propValueStr)
 ENDPROC
 
 PROC componentEnd(name:PTR TO CHAR) OF srcGen

@@ -431,7 +431,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF fuelGaugeSettingsForm
   self:=nself
+  self.setBusy()
   self.fuelGaugeObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF fuelGaugeSettingsForm

@@ -412,7 +412,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF buttonSettingsForm
   self:=nself
+  self.setBusy()
   self.buttonObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF buttonSettingsForm
@@ -421,6 +423,8 @@ PROC selectPen(nself,gadget,id,code) OF buttonSettingsForm
   DEF colourProp:PTR TO INT
 
   self:=nself
+
+  self.setBusy()
   SELECT id
     CASE BTNGAD_TEXTPEN
       colourProp:={self.tmpTextPen}
@@ -437,6 +441,7 @@ PROC selectPen(nself,gadget,id,code) OF buttonSettingsForm
     colourProp[]:=selColour
   ENDIF
   END frmColourPicker
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF buttonSettingsForm
@@ -573,8 +578,7 @@ EXPORT PROC serialiseData() OF buttonObject IS
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF buttonObject
   DEF tempStr[100]:STRING
   
-    StringF(tempStr,'\d',self.id)
-    srcGen.componentProperty('GA_ID',tempStr,TRUE)
+    srcGen.componentPropertyInt('GA_ID',self.id)
     srcGen.componentProperty('GA_Text',self.name,TRUE)
     srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
     srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)

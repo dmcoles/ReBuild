@@ -379,7 +379,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF getFontSettingsForm
   self:=nself
+  self.setBusy()
   self.getFontObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF getFontSettingsForm

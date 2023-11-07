@@ -569,7 +569,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF getScreenModeSettingsForm
   self:=nself
+  self.setBusy()
   self.getScreenModeObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF getScreenModeSettingsForm

@@ -1,4 +1,4 @@
-OPT MODULE
+OPT MODULE, OSVERSION=37
 
   MODULE 'reaction/reaction_macros',
         'classes/window',
@@ -27,6 +27,14 @@ EXPORT PROC gadgetPress(id,code) OF reactionForm
       action(self,gadget,id,code)
     ENDIF
   ENDIF
+ENDPROC
+
+EXPORT PROC setBusy() OF reactionForm
+  IF self.windowObj THEN Sets(self.windowObj,WA_BUSYPOINTER,TRUE)
+ENDPROC
+
+EXPORT PROC clearBusy() OF reactionForm
+  IF self.windowObj THEN Sets(self.windowObj,WA_BUSYPOINTER,FALSE)
 ENDPROC
 
 EXPORT PROC canClose() OF reactionForm IS TRUE

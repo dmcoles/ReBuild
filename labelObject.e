@@ -243,7 +243,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF labelSettingsForm
   self:=nself
+  self.setBusy()
   self.labelObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF labelSettingsForm
@@ -259,6 +261,7 @@ PROC selectPen(nself,gadget,id,code) OF labelSettingsForm
 
   self:=nself
 
+  self.setBusy()
   SELECT id
     CASE LBLGAD_FGPEN
       colourProp:={self.tempFgPen}
@@ -271,6 +274,7 @@ PROC selectPen(nself,gadget,id,code) OF labelSettingsForm
     colourProp[]:=selColour
   ENDIF
   END frmColourPicker
+  self.clearBusy()
 ENDPROC
 
 PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm

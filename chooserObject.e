@@ -330,18 +330,21 @@ PROC selectList(nself,gadget,id,code) OF chooserSettingsForm
   DEF res
   
   self:=nself
-  
+
+  self.setBusy()
   NEW frmListPicker.create()
   IF (res:=frmListPicker.selectList())<>-1
     self.selectedListId:=res  
   ENDIF
   END frmListPicker
-  
+  self.clearBusy()
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF chooserSettingsForm
   self:=nself
+  self.setBusy()
   self.chooserObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF chooserSettingsForm

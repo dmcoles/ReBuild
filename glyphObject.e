@@ -47,13 +47,14 @@ PROC create() OF glyphSettingsForm
     WA_TITLE, 'Glyph Attribute Setting',
     WA_LEFT, 0,
     WA_TOP, 0,
-    WA_HEIGHT, 80,
+    WA_HEIGHT, 70,
     WA_WIDTH, 150,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
     WA_MINHEIGHT, 80,
     WA_MAXHEIGHT, 8192,
     WA_ACTIVATE, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
     WA_PUBSCREEN, 0,
     ->WA_CustomScreen, gScreen,
     ->WINDOW_AppPort, gApp_port,
@@ -160,12 +161,22 @@ PROC create() OF glyphSettingsForm
             BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
         LayoutEnd,
+        CHILD_WEIGHTEDHEIGHT, 0,
+
       LayoutEnd,
     LayoutEnd,
   WindowEnd
 
+  self.gadgetActions[GLYGAD_CHILD]:={editChildSettings}
   self.gadgetActions[GLYGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[GLYGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editChildSettings(nself,gadget,id,code) OF glyphSettingsForm
+  self:=nself
+  self.setBusy()
+  self.glyphObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF glyphSettingsForm
@@ -177,6 +188,8 @@ ENDPROC
 PROC editSettings(comp:PTR TO glyphObject) OF glyphSettingsForm
   DEF res
 
+  self.glyphObject:=comp
+  
   SetGadgetAttrsA(self.gadgetList[ GLYGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GLYGAD_TYPE ],0,0,[CHOOSER_SELECTED,comp.glyphType,0])
 

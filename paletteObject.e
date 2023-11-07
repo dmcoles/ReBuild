@@ -230,7 +230,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF paletteSettingsForm
   self:=nself
+  self.setBusy()
   self.paletteObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF paletteSettingsForm

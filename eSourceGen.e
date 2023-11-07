@@ -10,6 +10,7 @@ PROC create(fser:PTR TO fileStreamer,libsused) OF eSrcGen
   SUPER self.create(fser,libsused)
   self.type:=ESOURCE_GEN
   self.stringDelimiter:=39
+  self.orOperator:='OR'
   self.upperCaseProperties:=TRUE
   AstrCopy(self.assignChars,':=')
   self.extraPadding:=FALSE

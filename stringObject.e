@@ -272,7 +272,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF stringSettingsForm
   self:=nself
+  self.setBusy()
   self.stringObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF stringSettingsForm
@@ -378,6 +380,8 @@ EXPORT PROC getTypeName() OF stringObject
 ENDPROC
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF stringObject
+
+  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF self.tabCycle THEN srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)

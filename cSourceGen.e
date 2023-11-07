@@ -10,6 +10,7 @@ PROC create(fser:PTR TO fileStreamer, libsused) OF cSrcGen
   SUPER self.create(fser,libsused)
   self.type:=CSOURCE_GEN
   self.stringDelimiter:=34
+  self.orOperator:='|'
   self.upperCaseProperties:=FALSE
   AstrCopy(self.assignChars,'=')
   self.extraPadding:=TRUE
@@ -145,19 +146,19 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
   self.writeLine('  if( IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L) )')
   self.writeLine('  {')
   self.writeLine('    gScreen = LockPubScreen( NULL );')
-  self.writeLine('    if ( gScreen ) gDrinfo = GetScreenDrawInfo ( gScreen );')
   self.writeLine('')
-  self.writeLine('    if( GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) )')
-  self.writeLine('    {')
   IF menuObject.menuItems.count()>0
+    self.writeLine('    if( GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) )')
+    self.writeLine('    {')
     self.writeLine('      gVi = GetVisualInfo( gScreen, TAG_DONE );')
+    self.writeLine('    }')
   ENDIF
 
-  self.writeLine('    }')
   self.writeLine('  }')
   self.writeLine('')
   self.writeLine('  if ( gScreen )')
   self.writeLine('  {')
+  self.writeLine('    gDrinfo = GetScreenDrawInfo ( gScreen );')
   self.writeLine('    gApp_port = CreateMsgPort();')
  
   self.writeLine('    if( WindowBase = (struct Library*) OpenLibrary("window.class",0L) )')
@@ -475,8 +476,10 @@ PROC genFooter(count,menuObject:PTR TO menuObject) OF cSrcGen
   self.writeLine('    DeleteMsgPort( gApp_port );')
   self.writeLine('  if ( gDrinfo )')
   self.writeLine('    FreeScreenDrawInfo( gScreen, gDrinfo);')
-  self.writeLine('  if ( gVi )')
-  self.writeLine('    FreeVisualInfo( gVi );')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  if ( gVi )')
+    self.writeLine('    FreeVisualInfo( gVi );')
+  ENDIF
   self.writeLine('  if ( gScreen )')
   self.writeLine('    UnlockPubScreen(0, gScreen );')
   self.writeLine('  if ( gWindow_object )')

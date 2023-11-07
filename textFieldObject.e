@@ -467,6 +467,7 @@ PROC create() OF textFieldSettingsForm
           CheckBoxEnd,
 
           LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_SCROLLBAR ]:=CheckBoxObject,
+            GA_DISABLED, TRUE,
             GA_ID, TEXTFIELDGAD_SCROLLBAR,
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
@@ -643,7 +644,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF textFieldSettingsForm
   self:=nself
+  self.setBusy()
   self.textFieldObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF textFieldSettingsForm
@@ -653,6 +656,7 @@ PROC selectPen(nself,gadget,id,code) OF textFieldSettingsForm
 
   self:=nself
 
+  self.setBusy()
   SELECT id
     CASE TEXTFIELDGAD_PAPERPEN
       colourProp:={self.tempPaperPen}
@@ -667,6 +671,7 @@ PROC selectPen(nself,gadget,id,code) OF textFieldSettingsForm
     colourProp[]:=selColour
   ENDIF
   END frmColourPicker
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF textFieldSettingsForm
@@ -826,7 +831,7 @@ EXPORT PROC create(parent) OF textFieldObject
   self.vCenter:=0
   self.userAlign:=0
   self.ruledPaper:=0
-  self.scrollBar:=TRUE
+  self.scrollBar:=FALSE
   self.paperPen:=-1
   self.inkPen:=-1
   self.linePen:=-1

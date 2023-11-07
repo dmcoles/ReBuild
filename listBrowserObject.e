@@ -588,11 +588,13 @@ PROC editColumns(nself,gadget,id,code) OF listBrowserSettingsForm
   
   self:=nself
   
+  self.setBusy()
   colcount:=Gets(self.gadgetList[ LISTBGAD_NUMCOLS ],INTEGER_NUMBER)
   
   NEW editColumnsForm.create(colcount)
   editColumnsForm.editColumns(self.colTitles,self.colWidths)
   END editColumnsForm
+  self.clearBusy()
 ENDPROC
 
 PROC selectList(nself,gadget,id,code) OF listBrowserSettingsForm
@@ -601,17 +603,20 @@ PROC selectList(nself,gadget,id,code) OF listBrowserSettingsForm
   
   self:=nself
   
+  self.setBusy()
   NEW frmListPicker.create()
   IF (res:=frmListPicker.selectList())<>-1
     self.selectedListId:=res  
   ENDIF
   END frmListPicker
-  
+  self.clearBusy()
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF listBrowserSettingsForm
   self:=nself
+  self.setBusy()
   self.listBrowserObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF listBrowserSettingsForm

@@ -787,7 +787,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF drawListSettingsForm
   self:=nself
+  self.setBusy()
   self.drawListObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF drawListSettingsForm

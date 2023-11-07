@@ -550,7 +550,9 @@ ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF layoutSettingsForm
   self:=nself
+  self.setBusy()
   self.layoutObject.editChildSettings()
+  self.clearBusy()
 ENDPROC
 
 PROC end() OF layoutSettingsForm
