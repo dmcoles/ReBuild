@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
 
 EXPORT ENUM RADIOGAD_LISTSELECT, RADIOGAD_LABELPLACE,
       RADIOGAD_SPACING, RADIOGAD_SELECTED,
@@ -359,6 +359,17 @@ EXPORT PROC serialiseData() OF radioObject IS
   makeProp(spacing,FIELDTYPE_INT),
   makeProp(selected,FIELDTYPE_INT)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF radioObject
+
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  
+  IF self.spacing<>1 THEN srcGen.componentPropertyInt('RADIOBUTTON_Spacing',self.spacing)
+  IF self.selected THEN  srcGen.componentPropertyInt('RADIOBUTTON_Selected',self.selected)
+  IF self.labelPlace<>1 THEN srcGen.componentProperty('RADIOBUTTON_LabelPlace',ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF radioObject
   RETURN 'RadioButton'

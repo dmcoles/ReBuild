@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
 
 EXPORT ENUM LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
       LISTBGAD_TOP, LISTBGAD_MAKEVISIBLE,
@@ -1064,7 +1064,26 @@ EXPORT PROC serialiseData() OF listBrowserObject IS
   makeProp(colWidths,FIELDTYPE_INTLIST),
   makeProp(colTitles,FIELDTYPE_STRLIST)
 ]
-  
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)
+
+  IF self.left THEN srcGen.componentPropertyInt('LISTBROWSER_Left',self.left)
+  IF self.top THEN srcGen.componentPropertyInt('LISTBROWSER_Top',self.top)
+  IF self.makeVisible THEN srcGen.componentPropertyInt('LISTBROWSER_MakeVisible',self.makeVisible)
+  srcGen.componentPropertyInt('LISTBROWSER_Position',self.position)
+  IF self.virtualWidth THEN srcGen.componentPropertyInt('LISTBROWSER_VirtualWidth',self.virtualWidth)
+  IF self.spacing THEN srcGen.componentPropertyInt('LISTBROWSER_Spacing',self.spacing)
+  IF self.selected<>-1 THEN srcGen.componentPropertyInt('LISTBROWSER_Selected',self.selected)
+ENDPROC
+
+  ->numColumns:INT
+  ->columninfo
+
 EXPORT PROC getTypeName() OF listBrowserObject
   RETURN 'ListBrowser'
 ENDPROC

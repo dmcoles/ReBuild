@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
 
 EXPORT ENUM CLICKTAB_GAD_LISTSELECT,
       CLICKTAB_GAD_TOP, CLICKTAB_GAD_LEFT, CLICKTAB_GAD_HEIGHT,
@@ -391,6 +391,17 @@ EXPORT PROC serialiseData() OF clickTabObject IS
   makeProp(current,FIELDTYPE_INT),
   makeProp(disabled,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  
+  srcGen.componentPropertyInt('GA_Left',self.left)
+  srcGen.componentPropertyInt('GA_Top',self.top)
+  srcGen.componentPropertyInt('GA_Height',self.height)
+  IF self.current THEN srcGen.componentPropertyInt('CLICKTAB_Current',self.current)
+ENDPROC
 
 EXPORT PROC getTypeName() OF clickTabObject
   RETURN 'ClickTab'

@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
 
 EXPORT ENUM CHOOSER_GAD_NAME, CHOOSER_GAD_LISTSELECT,
       CHOOSER_GAD_MAXLABELS, CHOOSER_GAD_ACTIVE, CHOOSER_GAD_WIDTH,
@@ -492,6 +492,33 @@ EXPORT PROC serialiseData() OF chooserObject IS
   makeProp(dropdown,FIELDTYPE_CHAR)
 ]
 
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF chooserObject
+
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)
+  
+  IF self.maxLabels<>12 THEN srcGen.componentPropertyInt('CHOOSER_MaxLabels',self.maxLabels)
+
+  IF self.popup 
+    srcGen.componentProperty('CHOOSER_PopUp','TRUE',FALSE)
+  ELSEIF self.dropdown 
+    srcGen.componentProperty('CHOOSER_DropDown','TRUE',FALSE)
+  ENDIF
+  
+  srcGen.componentPropertyInt('CHOOSER_Selected',self.active)
+  IF self.width<>-1 THEN srcGen.componentPropertyInt('CHOOSER_Width',self.width)
+
+  IF self.autofit THEN srcGen.componentProperty('CHOOSER_AutoFit','TRUE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF chooserObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC getTypeName() OF chooserObject
   RETURN 'Chooser'
 ENDPROC
@@ -501,3 +528,37 @@ EXPORT PROC createChooserObject(parent)
   
   NEW chooser.create(parent)
 ENDPROC chooser
+/*
+
+            CHOOSER_POPUP, TRUE,
+            CHOOSER_MAXLABELS, 12,
+            CHOOSER_ACTIVE, 0,
+            CHOOSER_WIDTH, -1,          
+            CHOOSER_LABELS, self.labels1:=chooserLabelsA(['TEXTFIELD_BORDER_NONE','TEXTFIELD_BORDER_BEVEL','TEXTFIELD_BORDER_DOUBLEBEVEL',0]),
+          ChooserEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Border',
+          LabelEnd,
+
+
+struct List LB_aaa_list;
+UBYTE *aaa_str[] = { "i1", "i2", NULL };
+
+	NewList(&LB_aaa_list);
+	MakeListBrowserList1(&LB_aaa_list, aaa_str);
+
+
+				LAYOUT_AddChild, gMain_Gadgets[ 0 ] = ChooserObject,
+				  GA_ID, 0,
+				  GA_RelVerify, TRUE,
+				  GA_TabCycle, TRUE,
+				  GA_Disabled, TRUE,
+				  GA_ReadOnly, TRUE,
+				  CHOOSER_DropDown, TRUE,
+				  CHOOSER_AutoFit, TRUE,
+				  CHOOSER_MaxLabels, 14,
+				  CHOOSER_Active, 5,
+				  CHOOSER_Width, 4,
+				  CHOOSER_Labels, &C_aaa_list,
+				ChooserEnd,
+*/

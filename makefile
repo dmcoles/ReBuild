@@ -105,7 +105,7 @@ chooserObject.m:			chooserObject.e reactionObject.m reactionForm.m listPicker.m 
 listBrowserObject.m:			listBrowserObject.e reactionObject.m reactionForm.m listPicker.m stringlist.m reactionLists.m sourceGen.m reactionListObject.m
 							$(compiler) listBrowserObject $(options)
               
-clickTabObject.m:			clickTabObject.e reactionObject.m reactionForm.m listPicker.m stringlist.m reactionLists.m sourceGen.m reactionListObject.m
+clickTabObject.m:			clickTabObject.e reactionObject.m reactionForm.m listPicker.m stringlist.m reactionLists.m sourceGen.m reactionListObject.m sourceGen.m
 							$(compiler) clickTabObject $(options)
               
 reactionListObject.m:			reactionListObject.e stringlist.m reactionObject.m fileStreamer.m
