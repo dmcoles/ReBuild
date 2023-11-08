@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM INTGAD_NAME, INTGAD_MAXCHARS, INTGAD_VALUE,INTGAD_MINVISIBLE,
       INTGAD_MINIMUM, INTGAD_MAXIMUM,
@@ -409,6 +409,25 @@ EXPORT PROC serialiseData() OF integerObject IS
 
 EXPORT PROC getTypeName() OF integerObject
   RETURN 'Integer'
+ENDPROC
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF integerObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle',IF self.tabCycle THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+
+  IF self.maxChars<>10 THEN srcGen.componentPropertyInt('INTEGER_MaxChars',self.maxChars)
+  srcGen.componentPropertyInt('INTEGER_Minimum',self.minimum)
+  srcGen.componentPropertyInt('INTEGER_Maximum',self.maximum)
+  IF self.arrows=FALSE THEN srcGen.componentProperty('INTEGER_Arrows','FALSE',FALSE)
+  IF self.minVisible<>0 THEN srcGen.componentPropertyInt('INTEGER_MinVisible',self.minVisible)
+  IF self.value<>0 THEN srcGen.componentPropertyInt('INTEGER_Number',self.value)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF integerObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC createIntegerObject(parent)

@@ -15,6 +15,7 @@ OPT MODULE, OSVERSION=37
         'libraries/gadtools',
         'intuition/screens',
         'intuition/intuition',
+        'intuition/screens',
         'intuition/imageclass',
         'intuition/gadgetclass'
 
@@ -581,17 +582,17 @@ EXPORT PROC create(parent) OF bevelObject
 
   SUPER self.create(parent)
   
-  self.textPen:=1
+  self.textPen:=TEXTPEN
   self.fillPen:=0
   self.top:=0
   self.width:=0
   self.height:=0
   self.style:=1
   self.placeText:=0
-  self.highlightPen:=3
-  self.foregroundPen:=3
-  self.backgroundPen:=4
-  self.shadowPen:=4
+  self.highlightPen:=SHINEPEN
+  self.foregroundPen:=SHINEPEN
+  self.backgroundPen:=SHADOWPEN
+  self.shadowPen:=SHADOWPEN
   self.recessed:=0
   self.edgesOnly:=0
   self.transparent:=0
@@ -629,6 +630,29 @@ EXPORT PROC serialiseData() OF bevelObject IS
   makeProp(transparent,FIELDTYPE_CHAR)
 
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF bevelObject
+  srcGen.componentProperty('GA_DrawInfo','gDrawInfo',FALSE)
+  srcGen.componentPropertyInt('IA_Top',self.top)
+  srcGen.componentPropertyInt('IA_Left',self.left)
+  srcGen.componentPropertyInt('IA_Width',self.width)
+  srcGen.componentPropertyInt('IA_Height',self.height)
+  IF self.textPen<>TEXTPEN THEN srcGen.componentPropertyInt('BEVEL_TextPen',self.textPen) 
+  IF self.fillPen<>0 THEN srcGen.componentPropertyInt('BEVEL_FillPen',self.fillPen) 
+  IF self.style<>2 THEN srcGen.componentProperty('BEVEL_Style',ListItem(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP','BVS_FIELD','BVS_DROPBOX','BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD'],self.style),FALSE)
+  IF self.placeText<>0 THEN srcGen.componentProperty('BEVEL_LabelPlace',ListItem(['BVJ_TOP_CENTER', 'BVJ_TOP_LEFT', 'BVJ_TOP_RIGHT', 'BVJ_IN_CENTER', 'BVJ_IN_LEFT', 'BVJ_IN_RIGHT'],self.placeText),FALSE)
+
+  srcGen.componentProperty('BEVEL_Label',self.name,TRUE)
+
+  IF self.highlightPen<>SHINEPEN THEN srcGen.componentPropertyInt('IA_HighlightPen',self.highlightPen)
+  IF self.foregroundPen<>SHINEPEN THEN srcGen.componentPropertyInt('IA_FGPen',self.foregroundPen)
+  IF self.backgroundPen<>SHADOWPEN THEN srcGen.componentPropertyInt('IA_BGPen',self.backgroundPen)
+  IF self.shadowPen<>SHADOWPEN THEN srcGen.componentPropertyInt('IA_ShadowPen',self.shadowPen)
+
+  IF self.recessed THEN srcGen.componentProperty('IA_Recessed','TRUE',TRUE)
+  IF self.edgesOnly THEN srcGen.componentProperty('IA_EdgesOnly','TRUE',TRUE)
+  IF self.transparent THEN srcGen.componentProperty('BEVEL_Transparent','TRUE',TRUE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF bevelObject
   RETURN 'Bevel'

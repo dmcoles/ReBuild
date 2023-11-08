@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM PALGAD_NAME, PALGAD_DISABLED,
       PALGAD_INITIAL, PALGAD_OFFSET, PALGAD_NUMCOLS,
@@ -315,6 +315,16 @@ EXPORT PROC serialiseData() OF paletteObject IS
   makeProp(offset,FIELDTYPE_INT),
   makeProp(numcols,FIELDTYPE_INT)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF paletteObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.initial<>0 THEN srcGen.componentPropertyInt('PALETTE_Colour',self.initial)
+  IF self.offset<>0 THEN  srcGen.componentPropertyInt('PALETTE_ColourOffset',self.offset)
+  IF self.numcols<>2 THEN srcGen.componentPropertyInt('PALETTE_NumColours',self.numcols)
+ENDPROC
 
 EXPORT PROC getTypeName() OF paletteObject
   RETURN 'Palette'

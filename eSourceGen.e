@@ -1,7 +1,7 @@
 
 OPT MODULE
 
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*stringlist'
+  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -18,20 +18,15 @@ PROC create(fser:PTR TO fileStreamer,libsused) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC genHeader(count,menuObject:PTR TO menuObject) OF eSrcGen
+PROC genHeader() OF eSrcGen
   DEF tempStr[200]:STRING
-  DEF i
-  DEF menuItem:PTR TO menuItem
-  DEF itemType
-  DEF itemName[200]:STRING
-  DEF commKey[10]:STRING
   self.writeLine('OPT OSVERSION=37')
   self.writeLine('')
   self.writeLine('  MODULE \areaction/reaction_macros\a,')
   self.writeLine('      \areaction/reaction_lib\a,')
   self.writeLine('      \awindow\a,\aclasses/window\a,')
   self.writeLine('      \agadgets/layout\a,\alayout\a,')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('      \alibraries/gadtools\a,\agadtools\a,')
+  self.writeLine('      \alibraries/gadtools\a,\agadtools\a,')
   IF self.libsused AND LIB_BUTTON THEN self.writeLine('      \abutton\a,\agadgets/button\a,')
   IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('      \acheckbox\a,\agadgets/checkbox\a,')
   IF self.libsused AND LIB_CHOOSER THEN self.writeLine('      \achooser\a,\agadgets/chooser\a,')
@@ -59,10 +54,14 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF eSrcGen
   self.writeLine('      \aintuition/imageclass\a,')
   self.writeLine('      \aintuition/gadgetclass\a')
   self.writeLine('')
+  self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
+  self.writeLine('')
   
-  self.writeLine('PROC openClasses()')
+  self.writeLine('PROC setup()')
   self.writeLine('  IF (windowbase:=OpenLibrary(\awindow.class\a,0))=NIL THEN Throw(\qLIB\q,\qwin\q)')
   self.writeLine('  IF (layoutbase:=OpenLibrary(\agadgets/layout.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlayo\q)')
+  self.writeLine('  IF (gadtoolsbase:=OpenLibrary(\agadtools.library\a,0))=NIL THEN Throw(\qLIB\q,\qgadt\q)')
+
   IF self.libsused AND LIB_BUTTON THEN self.writeLine('  IF (buttonbase:=OpenLibrary(\agadgets/button.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qbtn\q)')
   IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('  IF (checkboxbase:=OpenLibrary(\agadgets/checkbox.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qchkb\q)')
   IF self.libsused AND LIB_CHOOSER THEN self.writeLine('  IF (chooserbase:=OpenLibrary(\agadgets/chooser.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qchoo\q)')
@@ -83,11 +82,19 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF eSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  IF (drawlistbase:=OpenLibrary(\aimages/drawlist.image\a,0))=NIL THEN Throw(\qLIB\q,\qdraw\q)')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  IF (glyphbase:=OpenLibrary(\aimages/glyph.image\a,0))=NIL THEN Throw(\qLIB\q,\qglyp\q)')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('  IF (labelbase:=OpenLibrary(\aimages/label.image\a,0))=NIL THEN Throw(\qLIB\q,\qlabl\q)')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('  IF (gadtoolsbase:=OpenLibrary(\agadtools.library\a,0))=NIL THEN Throw(\qLIB\q,\qgadt\q)')
-
+  self.writeLine('  IF (gScreen:=LockPubScreen(NIL))=NIL THEN Raise(\qpub\q)')
+  self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
+  self.writeLine('  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")')
+  self.writeLine('  IF (gAppPort:=CreateMsgPort())=NIL THEN Raise(\qport\q)')
   self.writeLine('ENDPROC')
   self.writeLine('')
-  self.writeLine('PROC closeClasses()')
+  self.writeLine('PROC cleanup()')
+  self.writeLine('  IF gVisInfo THEN FreeVisualInfo(gVisInfo)')
+  self.writeLine('  IF gDrawInfo THEN FreeScreenDrawInfo(gScreen,gDrawInfo)')
+  self.writeLine('  IF gAppPort THEN DeleteMsgPort(gAppPort)')
+  self.writeLine('  IF gScreen THEN UnlockPubScreen(NIL,gScreen)')
+  self.writeLine('')
+  self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')
   self.writeLine('  IF windowbase THEN CloseLibrary(windowbase)')
   self.writeLine('  IF layoutbase THEN CloseLibrary(layoutbase)')
   IF self.libsused AND LIB_BUTTON THEN self.writeLine('  IF buttonbase THEN CloseLibrary(buttonbase)')
@@ -110,40 +117,82 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF eSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  IF drawlistbase THEN CloseLibrary(drawlistbase)')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  IF glyphbase THEN CloseLibrary(glyphbase)')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('  IF labelbase THEN CloseLibrary(labelbase)')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
   
-  self.writeLine('PROC main() HANDLE')
+  self.writeLine('PROC runWindow(windowObject,menuStrip) HANDLE')
   self.writeLine('  DEF running=TRUE')
-  self.writeLine('  DEF window_object=0')
-  self.writeLine('  DEF app_port=0')
-
-  StringF(tempStr,'  DEF main_gadgets[\d]:ARRAY OF LONG',count)
-  self.writeLine(tempStr)
-  IF menuObject.menuItems.count()>0
-    self.writeLine('  DEF menuStrip=0,menuData=0:PTR TO newmenu,scr=0,visInfo=0')
-  ENDIF
   self.writeLine('  DEF win:PTR TO window,wsig,code,msg,sig,result')
   self.writeLine('')
-  self.writeLine('  openClasses()')
-  self.writeLine('  IF (app_port:=CreateMsgPort())=NIL THEN Raise(\qport\q)')
+  self.writeLine('  IF (win:=RA_OpenWindow(windowObject))')
+  self.writeLine('    GetAttr( WINDOW_SIGMASK, windowObject, {wsig} )')
+  self.writeLine('    IF menuStrip THEN SetMenuStrip( win, menuStrip )')
   self.writeLine('')
+  self.writeLine('    WHILE running')
+  self.writeLine('      sig:=Wait(wsig)')
+  self.writeLine('      IF (sig AND (wsig))')
+  self.writeLine('        WHILE ((result:=RA_HandleInput(windowObject,{code})) <> WMHI_LASTMSG)')
+  self.writeLine('          msg:=(result AND WMHI_CLASSMASK)')
+  self.writeLine('          SELECT msg')
+  self.writeLine('            CASE WMHI_GADGETUP')
+  self.writeLine('              ->handle gadget press')
+  self.writeLine('            CASE WMHI_CLOSEWINDOW')
+  self.writeLine('              running:=FALSE')
+  self.writeLine('            CASE WMHI_MENUPICK')
+  self.writeLine('              ->handle menu item')
+  self.writeLine('            CASE WMHI_ICONIFY')
+  self.writeLine('              RA_Iconify(windowObject)')
+  self.writeLine('            CASE WMHI_UNICONIFY')
+  self.writeLine('              win:=RA_OpenWindow(windowObject)')
+  self.writeLine('          ENDSELECT')
+  self.writeLine('        ENDWHILE')
+  self.writeLine('      ENDIF')
+  self.writeLine('    ENDWHILE')
+  self.writeLine('  ENDIF')
+  self.writeLine('EXCEPT DO')
+  self.writeLine('  RA_CloseWindow(windowObject)')
+  self.writeLine('ENDPROC')
+  self.writeLine('')
+ENDPROC
+
+PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF eSrcGen
+  DEF tempStr[200]:STRING
+  DEF i
+  DEF menuItem:PTR TO menuItem
+  DEF itemType
+  DEF itemName[200]:STRING
+  DEF commKey[10]:STRING
+
+  StrCopy(tempStr,windowObject.name)
+  LowerStr(tempStr)
+  self.write('PROC ')
+  self.write(tempStr)
+  self.writeLine('() HANDLE')
+  self.writeLine('  DEF windowObject')
+  StringF(tempStr,'  DEF mainGadgets[\d]:ARRAY OF LONG',count)
+  self.writeLine(tempStr)
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  DEF menuStrip=0,menuData=0:PTR TO newmenu')
+  ENDIF
+  self.writeLine('')
+
   IF menuObject.menuItems.count()>0
     StringF(tempStr,'  NEW menuData[\d]',menuObject.menuItems.count()+1)
     self.writeLine(tempStr)
-    
 
     FOR i:=0 TO menuObject.menuItems.count()-1
       menuItem:=menuObject.menuItems.item(i)
       StrCopy(commKey,'')
-      IF menuItem.menuItem 
-        itemType:='NM_ITEM'
-        StringF(itemName,'\a\s\a',menuItem.itemName)
+      IF menuItem.type=MENU_TYPE_MENUSUB
+        itemType:='NM_SUB'
+        IF menuItem.menuBar THEN StrCopy(itemName,'NM_BARLABEL') ELSE StringF(itemName,'\a\s\a',menuItem.itemName)
+
         IF StrLen(menuItem.commKey) THEN StringF(commKey,'\a\s\a',menuItem.commKey)
-      ELSEIF menuItem.menuBar
+      ELSEIF menuItem.type=MENU_TYPE_MENUITEM
         itemType:='NM_ITEM'
-        StrCopy(itemName,'NM_BARLABEL')
+        IF menuItem.menuBar THEN StrCopy(itemName,'NM_BARLABEL') ELSE StringF(itemName,'\a\s\a',menuItem.itemName)
+
+        IF StrLen(menuItem.commKey) THEN StringF(commKey,'\a\s\a',menuItem.commKey)
       ELSE
         itemType:='NM_TITLE'
         StringF(itemName,'\a\s\a',menuItem.itemName)
@@ -161,71 +210,56 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF eSrcGen
     self.writeLine(tempStr)
     self.writeLine('')
     self.writeLine('  IF (menuStrip:=CreateMenusA( menuData, [TAG_END]))=NIL THEN Raise(\qmenu\q)')
-    self.writeLine('  IF (scr:=LockPubScreen(NIL))=NIL THEN Raise(\qpub\q)')
-    self.writeLine('  IF (visInfo:=GetVisualInfoA(scr, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
-    self.writeLine('  LayoutMenusA(menuStrip,visInfo,[GTMN_NEWLOOKMENUS,TRUE,TAG_END])')
+    self.writeLine('  LayoutMenusA(menuStrip,gVisInfo,[GTMN_NEWLOOKMENUS,TRUE,TAG_END])')
     StringF(tempStr,'  END menuData[\d]',menuObject.menuItems.count()+1)
     self.writeLine(tempStr)
     self.writeLine('  menuData:=0')
-    self.writeLine('')
+    self.writeLine('')  
   ENDIF
   self.indent:=2
 ENDPROC
 
-PROC genFooter(count, menuObject:PTR TO menuObject) OF eSrcGen
-  DEF tempStr[200]:STRING
-  self.indent:=0
+PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF eSrcGen
   self.writeLine('')
-  self.writeLine('  IF (win:=RA_OpenWindow(window_object))')
-  self.writeLine('    GetAttr( WINDOW_SIGMASK, window_object, {wsig} )')
   IF menuObject.menuItems.count()>0
-    self.writeLine('    SetMenuStrip( win, menuStrip )')
+    self.writeLine('  runWindow(windowObject,menuStrip)')
+  ELSE
+    self.writeLine('  runWindow(windowObject,NIL)')
   ENDIF
-  self.writeLine('')
-  self.writeLine('    WHILE running')
-  self.writeLine('      sig:=Wait(wsig)')
-  self.writeLine('      IF (sig AND (wsig))')
-  self.writeLine('        WHILE ((result:=RA_HandleInput(window_object,{code})) <> WMHI_LASTMSG)')
-  self.writeLine('          msg:=(result AND WMHI_CLASSMASK)')
-  self.writeLine('          SELECT msg')
-  self.writeLine('            CASE WMHI_GADGETUP')
-  self.writeLine('              ->handle gadget press')
-  self.writeLine('            CASE WMHI_CLOSEWINDOW')
-  self.writeLine('              running:=FALSE')
-  self.writeLine('            CASE WMHI_MENUPICK')
-  self.writeLine('              ->handle menu item')
-  self.writeLine('            CASE WMHI_ICONIFY')
-  self.writeLine('              RA_Iconify(window_object)')
-  self.writeLine('            CASE WMHI_UNICONIFY')
-  self.writeLine('              win:=RA_OpenWindow(window_object)')
-  self.writeLine('          ENDSELECT')
-  self.writeLine('        ENDWHILE')
-  self.writeLine('      ENDIF')
-  self.writeLine('    ENDWHILE')
-  self.writeLine('    RA_CloseWindow(window_object)')
-  self.writeLine('  ENDIF')
   self.writeLine('')
   self.writeLine('EXCEPT DO')
-  self.writeLine('  IF window_object THEN DisposeObject(window_object);')
-  self.writeLine('  IF app_port  THEN DeleteMsgPort(app_port)')
+  self.writeLine('  IF windowObject THEN DisposeObject(windowObject);')
   IF menuObject.menuItems.count()>0
-    self.writeLine('  IF menuStrip THEN FreeMenus( menuStrip )')
-    self.writeLine('  IF visInfo THEN FreeVisualInfo(visInfo)')
-    self.writeLine('  IF scr THEN UnlockPubScreen(NIL,scr)')
-    StringF(tempStr,'  IF menuData THEN END menuData[\d]',menuObject.menuItems.count()+1)
-    self.writeLine(tempStr)
+    self.writeLine('  IF menuData THEN  END menuData[3]')
+    self.writeLine('  IF menuStrip THEN FreeMenus(menuStrip)')
   ENDIF
-  self.writeLine('  closeClasses()')
+  self.writeLine('ENDPROC')
+  self.writeLine('')
+ENDPROC
+
+PROC genFooter(windowObject:PTR TO windowObject) OF eSrcGen
+  DEF tempStr[200]:STRING
+  self.writeLine('PROC main() HANDLE')
+  self.writeLine('  setup()')
+  self.writeLine('')
+  StringF(tempStr,'  \s',windowObject.name)
+  LowerStr(tempStr)
+  StrAdd(tempStr,'()')
+
+  self.writeLine(tempStr)
+  self.writeLine('')
+  self.writeLine('EXCEPT DO')
+  self.writeLine('  cleanup()')
   self.writeLine('ENDPROC')
 ENDPROC
 
 PROC assignWindowVar() OF eSrcGen
   self.genIndent()
-  self.write('window_object:=')
+  self.write('windowObject:=')
 ENDPROC
 
 PROC assignGadgetVar(index) OF eSrcGen
   DEF tempStr[100]:STRING
-  StringF(tempStr,'main_gadgets[\d]:=',index)
+  StringF(tempStr,'mainGadgets[\d]:=',index)
   self.write(tempStr)
 ENDPROC

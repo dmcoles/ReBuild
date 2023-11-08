@@ -16,7 +16,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
 
 EXPORT ENUM LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
       LBLGAD_OK, LBLGAD_CHILD, LBLGAD_CANCEL
@@ -352,6 +352,15 @@ EXPORT PROC serialiseData() OF labelObject IS
   makeProp(dispose,FIELDTYPE_CHAR),
   makeProp(justify,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF labelObject
+  srcGen.componentProperty('LABEL_DrawInfo','gDrawInfo',FALSE)
+  srcGen.componentProperty('LABEL_Text',self.name,TRUE)
+  IF self.fgPen<>1 THEN srcGen.componentPropertyInt('IA_FGPen',self.fgPen)
+  IF self.bgPen<>0 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
+  IF self.dispose THEN srcGen.componentProperty('LABEL_DisposeImage','TRUE',FALSE)
+  IF self.justify<>0 THEN srcGen.componentProperty('LABEL_Justification',ListItem(['LJ_LEFT','LJ_CENTER','LJ_RIGHT'],self.justify),FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF labelObject
   RETURN 'Label'

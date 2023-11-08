@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM GETFILEGAD_NAME, GETFILEGAD_FILEGADNAME, GETFILEGAD_DRAWERGADNAME, GETFILEGAD_FULLFILENAME,
             GETFILEGAD_PATTERN, GETFILEGAD_REJECTPATTERN, GETFILEGAD_ACCEPTPATTERN,
@@ -587,6 +587,30 @@ EXPORT PROC serialiseData() OF getFileObject IS
   makeProp(filterDrawers,FIELDTYPE_CHAR),
   makeProp(readOnly,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFileObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GETFILE_TitleText','Select a file',TRUE)
+  IF StrLen(self.fileGadgetName) THEN srcGen.componentProperty('GETFILE_File',self.fileGadgetName,TRUE)
+  IF StrLen(self.drawerGadgetName) THEN srcGen.componentProperty('GETFILE_Drawer',self.drawerGadgetName,TRUE)
+  IF StrLen(self.fullFileName) THEN srcGen.componentProperty('GETFILE_FullFile',self.fullFileName,TRUE)
+  IF (StrLen(self.pattern)>0) AND (StrCmp(self.pattern,'#?')=FALSE) THEN srcGen.componentProperty('GETFILE_Pattern',self.pattern,TRUE)
+  IF StrLen(self.rejectPattern) THEN srcGen.componentProperty('GETFILE_RejectPattern',self.rejectPattern,TRUE)
+  IF StrLen(self.acceptPattern) THEN srcGen.componentProperty('GETFILE_AcceptPattern',self.acceptPattern,TRUE)
+  IF self.leftEdge<>30 THEN srcGen.componentPropertyInt('GETFILE_LeftEdge',self.leftEdge)
+  IF self.topEdge<>20 THEN srcGen.componentPropertyInt('GETFILE_TopEdge',self.topEdge)
+  IF self.width<>300 THEN srcGen.componentPropertyInt('GETFILE_Width',self.width)
+  IF self.height<>200 THEN srcGen.componentPropertyInt('GETFILE_Height',self.height)
+  IF self.fullFileExpand=FALSE THEN srcGen.componentProperty('GETFILE_FullFileExpand','FALSE',FALSE)
+  IF self.doSaveMode THEN srcGen.componentProperty('GETFILE_DoSaveMode','TRUE',FALSE)
+  IF self.doMultiSelect THEN srcGen.componentProperty('GETFILE_DoMultiSelect','TRUE',FALSE)
+  IF self.doPatterns THEN srcGen.componentProperty('GETFILE_DoPatterns','TRUE',FALSE)
+  IF self.drawersOnly THEN srcGen.componentProperty('GETFILE_DrawersOnly','TRUE',FALSE)
+  IF self.rejectIcons THEN srcGen.componentProperty('GETFILE_RejectIcons','TRUE',FALSE)
+  IF self.filterDrawers THEN srcGen.componentProperty('GETFILE_FilterDrawers','TRUE',FALSE)
+  IF self.readOnly=FALSE THEN srcGen.componentProperty(' GETFILE_ReadOnly','FALSE',FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF getFileObject
   RETURN 'GetFile'

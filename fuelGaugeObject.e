@@ -51,9 +51,6 @@ OBJECT fuelGaugeSettingsForm OF reactionForm
   labels1:PTR TO LONG
   labels2:PTR TO LONG
   labels3:PTR TO LONG
-  labels4:PTR TO LONG
-  labels5:PTR TO LONG
-  labels6:PTR TO LONG
 ENDOBJECT
 
 PROC create() OF fuelGaugeSettingsForm
@@ -63,6 +60,8 @@ PROC create() OF fuelGaugeSettingsForm
   self.gadgetList:=gads
   NEW gads[NUM_FGAUGE_GADS]
   self.gadgetActions:=gads
+
+  self.labels3:=chooserLabelsA(['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN',0])  
   
   self.windowObj:=WindowObject,
     WA_TITLE, 'FuelGauge Attribute Setting',
@@ -301,7 +300,7 @@ PROC create() OF fuelGaugeSettingsForm
             CHOOSER_MAXLABELS, 12,
             CHOOSER_ACTIVE, 0,
             CHOOSER_WIDTH, -1,          
-            CHOOSER_LABELS, self.labels3:=chooserLabelsA(['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN',0]),
+            CHOOSER_LABELS, self.labels3,
           ChooserEnd,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Tic_kPen',
@@ -315,7 +314,7 @@ PROC create() OF fuelGaugeSettingsForm
             CHOOSER_MAXLABELS, 12,
             CHOOSER_ACTIVE, 0,
             CHOOSER_WIDTH, -1,
-            CHOOSER_LABELS, self.labels2:=chooserLabelsA(['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN',0]),
+            CHOOSER_LABELS, self.labels3,
           ChooserEnd,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Perc_ent',
@@ -346,7 +345,7 @@ PROC create() OF fuelGaugeSettingsForm
             CHOOSER_MAXLABELS, 12,
             CHOOSER_ACTIVE, 0,
             CHOOSER_WIDTH, -1,          
-            CHOOSER_LABELS, self.labels5:=chooserLabelsA(['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN',0]),
+            CHOOSER_LABELS, self.labels3,
           ChooserEnd,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Empt_yPen',
@@ -360,7 +359,7 @@ PROC create() OF fuelGaugeSettingsForm
             CHOOSER_MAXLABELS, 12,
             CHOOSER_ACTIVE, 0,
             CHOOSER_WIDTH, -1,
-            CHOOSER_LABELS, self.labels6:=chooserLabelsA(['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN',0]),
+            CHOOSER_LABELS, self.labels3,
           ChooserEnd,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, '_FillPen',
@@ -440,9 +439,6 @@ PROC end() OF fuelGaugeSettingsForm
   freeChooserLabels( self.labels1 )
   freeChooserLabels( self.labels2 )
   freeChooserLabels( self.labels3 )
-  freeChooserLabels( self.labels4 )
-  freeChooserLabels( self.labels5 )
-  freeChooserLabels( self.labels6 )
 
   END self.gadgetList[NUM_FGAUGE_GADS]
   END self.gadgetActions[NUM_FGAUGE_GADS]
@@ -578,6 +574,35 @@ EXPORT PROC serialiseData() OF fuelGaugeObject IS
   makeProp(emptyPen,FIELDTYPE_CHAR),
   makeProp(fillPen,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
+  DEF penlist
+
+  penlist:=['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN']
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  
+  srcGen.componentPropertyInt('FUELGAUGE_Min',self.min)
+  srcGen.componentPropertyInt('FUELGAUGE_Max',self.max)
+  srcGen.componentPropertyInt('FUELGAUGE_Level',self.level)
+  IF self.tickSize<>5 THEN srcGen.componentPropertyInt('FUELGAUGE_TickSize',self.tickSize)
+  IF self.ticks THEN srcGen.componentPropertyInt('FUELGAUGE_Ticks',self.ticks)
+  IF self.shortTicks THEN srcGen.componentProperty('FUELGAUGE_ShortTicks','TRUE',FALSE)
+  IF self.percent=FALSE THEN srcGen.componentProperty('FUELGAUGE_Percent','FALSE',FALSE)
+  IF self.orientation<>0 THEN srcGen.componentProperty('FUELGAUGE_Orientation',ListItem(['FGORIENT_HORIZ','FGORIENT_VERT'],self.orientation),FALSE)
+  IF self.justification<>0 THEN srcGen.componentProperty('FUELGAUGE_Justification',ListItem(['FGJ_LEFT','FGJ_CENTER'],self.justification),FALSE)
+
+  IF self.tickPen<>3 THEN srcGen.componentProperty('FUELGAUGE_TickPen',ListItem(penlist,self.tickPen),FALSE)
+  IF self.percentPen<>2 THEN srcGen.componentProperty('FUELGAUGE_PercentPen',ListItem(penlist,self.percentPen),FALSE)
+  IF self.emptyPen<>7 THEN srcGen.componentProperty('FUELGAUGE_EmptyPen',ListItem(penlist,self.emptyPen),FALSE)
+  IF self.fillPen<>7 THEN srcGen.componentProperty('FUELGAUGE_FillPen',ListItem(penlist,self.fillPen),FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 
 EXPORT PROC getTypeName() OF fuelGaugeObject
   RETURN 'FuelGauge'

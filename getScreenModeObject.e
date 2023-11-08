@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM GETSCREENGAD_NAME, GETSCREENGAD_TITLE,
             GETSCREENGAD_LEFT, GETSCREENGAD_TOP, GETSCREENGAD_WIDTH, GETSCREENGAD_HEIGHT, 
@@ -749,6 +749,58 @@ EXPORT PROC serialiseData() OF getScreenModeObject IS
   makeProp(doOverscan,FIELDTYPE_CHAR),
   makeProp(doAutoScroll,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getScreenModeObject
+  DEF propflags
+
+  propflags:=['DIPF_IS_LACE','DIPF_IS_DUALPF','DIPF_IS_PF2PRI','DIPF_IS_HAM','DIPF_IS_ECS6','DIPF_IS_AA','DIPF_IS_PAL','DIPF_IS_SPRITES',
+      'DIPF_IS_GENLOCK','DIPF_IS_WB','DIPF_IS_DRAGGABLE','DIPF_IS_PANELLED','DIPF_IS_BEAMSYNC','DIPF_IS_EXTRAHALFBRITE',
+      'DIPF_IS_SPRITES_ATT','DIPF_IS_SPRITES_CHNG_RES','DIPF_IS_SPRITES_BORDER','DIPF_IS_SCANDBL','DIPF_IS_SPRITES_CHNG_BASE',
+      'DIPF_IS_SPRITES_CHNG_PRI','DIPF_IS_DBUFFER','DIPF_IS_PROGBEAM','DIPF_IS_FOREIGN'] 
+
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  IF StrLen(self.title) THEN srcGen.componentProperty('GETSCREENMODE_TitleText',self.title,TRUE)
+  IF self.leftEdge<>30 THEN srcGen.componentPropertyInt('GETSCREENMODE_LeftEdge',self.leftEdge)
+  IF self.topEdge<>20 THEN srcGen.componentPropertyInt('GETSCREENMODE_TopEdge',self.topEdge)
+  IF self.width<>300 THEN srcGen.componentPropertyInt('GETSCREENMODE_Width',self.width)
+  IF self.height<>200 THEN srcGen.componentPropertyInt('GETSCREENMODE_Height',self.height)
+  
+  IF self.sMinWidth<>16 THEN srcGen.componentPropertyInt('GETSCREENMODE_MinWidth',self.sMinWidth)
+  IF self.sMaxWidth<>16368 THEN srcGen.componentPropertyInt('GETSCREENMODE_MaxWidth',self.sMaxWidth)
+  
+  IF self.sMinHeight<>16 THEN srcGen.componentPropertyInt('GETSCREENMODE_MinHeight',self.sMinHeight)
+  IF self.sMaxHeight<>16368 THEN srcGen.componentPropertyInt('GETSCREENMODE_MaxHeight',self.sMaxHeight)
+  
+  IF self.sMinDepth<>1 THEN srcGen.componentPropertyInt('GETSCREENMODE_MinDepth',self.sMinDepth)
+  IF self.sMaxDepth<>24 THEN srcGen.componentPropertyInt('GETSCREENMODE_MaxDepth',self.sMaxDepth)
+
+  IF self.infoLeftEdge<>30 THEN srcGen.componentPropertyInt('GETSCREENMODE_InfoLeftEdge',self.infoLeftEdge)
+  IF self.infoTopEdge<>20 THEN srcGen.componentPropertyInt('GETSCREENMODE_InfoTopEdge',self.infoTopEdge)
+
+  IF self.oscanType<>0 THEN srcGen.componentProperty('GETSCREENMODE_OverscanType',ListItem(['OSCAN_TEXT', 'OSCAN_STANDARD', 'OSCAN_MAX', 'OSCAN_VIDEO'],self.oscanType),FALSE)
+  IF self.displayId<>0 THEN srcGen.componentProperty('GETSCREENMODE_DisplayID',ListItem(['LORES_KEY','HIRES_KEY','SUPER_KEY','HAM_KEY','LORESLACE_KEY','HIRESLACE_KEY',
+      'SUPERLACE_KEY','HAMLACE_KEY','EXTRAHALFBRITE_KEY','EXTRAHALFBRITELACE_KEY',
+      'HIRESHAM_KEY','SUPERHAM_KEY','HIRESEHB_KEY','SUPEREHB_KEY',
+      'HIRESHAMLACE_KEY','SUPERHAMLACE_KEY','HIRESEHBLACE_KEY','SUPEREHBLACE_KEY',
+      'LORESSDBL_KEY','LORESHAMSDBL_KEY','LORESEHBSDBL_KEY','HIRESHAMSDBL_KEY',
+      'VGAEXTRALORES_KEY','VGALORES_KEY','VGAPRODUCT_KEY','VGAHAM_KEY',
+      'VGAEXTRALORESLACE_KEY','VGALORESLACE_KEY','VGAPRODUCTLACE_KEY',
+      'VGAHAMLACE_KEY','VGAPRODUCTHAM_KEY','VGALORESHAM_KEY',
+      'VGAEXTRALORESHAM_KEY','VGAPRODUCTHAMLACE_KEY',0],self.displayId),FALSE)
+
+  IF self.propertyFlags<>9 THEN srcGen.componentProperty('GETSCREENMODE_PropertyFlags',ListItem(propflags,self.propertyFlags),FALSE)
+  IF self.propertyMask<>9 THEN srcGen.componentProperty('GETSCREENMODE_GETSCREENMODE_PropertyMask',ListItem(propflags,self.propertyMask),FALSE)
+ 
+  IF self.autoScroll=FALSE THEN srcGen.componentProperty('GETSCREENMODE_AutoScroll','FALSE',FALSE)
+  IF self.infoOpened THEN srcGen.componentProperty('GETSCREENMODE_InfoOpened','TRUE',FALSE)
+
+  IF self.doWidth THEN srcGen.componentProperty('GETSCREENMODE_DoWidth','TRUE',FALSE)
+  IF self.doHeight THEN srcGen.componentProperty('GETSCREENMODE_DoHeight','TRUE',FALSE)
+  IF self.doDepth THEN srcGen.componentProperty('GETSCREENMODE_DoDepth','TRUE',FALSE)
+  IF self.doOverscan THEN srcGen.componentProperty('GETSCREENMODE_DoOverscanType','TRUE',FALSE)
+  IF self.doAutoScroll THEN srcGen.componentProperty('GETSCREENMODE_DoAutoScroll','TRUE',FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF getScreenModeObject
   RETURN 'GetScreenMode'

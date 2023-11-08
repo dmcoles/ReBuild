@@ -62,8 +62,9 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEDOWN=5
   CONST MENU_EDIT_LISTS=7
   CONST MENU_EDIT_BUFFER=9
-  CONST MENU_SHOW_ADD_SETTINGS=10
-  CONST MENU_EDIT_PREVIEW=12
+  CONST MENU_EDIT_SHOW_ADD_SETTINGS=10
+  CONST MENU_EDIT_WARN_ON_DEL=11
+  CONST MENU_EDIT_PREVIEW=13
 
   CONST FILE_FORMAT_VER=1
 
@@ -85,9 +86,9 @@ OPT OSVERSION=37,LARGE
   DEF filename[255]:STRING
 
 PROC openClasses()
+  IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
   IF (gadtoolsbase:=OpenLibrary('gadtools.library',0))=NIL THEN Throw("LIB","gadt")
   IF (windowbase:=OpenLibrary('window.class',0))=NIL THEN Throw("LIB","win")
-  IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
   IF (listbrowserbase:=OpenLibrary('gadgets/listbrowser.gadget',0))=NIL THEN Throw("LIB","list")
   IF (radiobuttonbase:=OpenLibrary('gadgets/radiobutton.gadget',0))=NIL THEN Throw("LIB","rbtn")
   IF (clicktabbase:=OpenLibrary('gadgets/clicktab.gadget',0))=NIL THEN Throw("LIB","clkt")
@@ -303,6 +304,7 @@ PROC updateSel(win,node)
   DEF comp=0:PTR TO reactionObject
   DEF dis,idx
   DEF check,i
+  DEF dismoveup,dismovedown,disdel
   
   IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
   IF comp
@@ -311,10 +313,28 @@ PROC updateSel(win,node)
       check:=(i=1) OR (i=11) OR (i=16) OR (i=17) OR (i=18)
       menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,((comp.parent=0) AND (comp.type<>TYPE_LAYOUT)) OR check)
     ENDFOR
+    
+    IF comp.parent=0
+      IF comp.type=TYPE_WINDOW
+        idx:=findWindowIndex(comp)
+        dismoveup:=idx=0
+        dismovedown:=idx=(((objectList.count()-ROOT_WINDOW_ITEM)/3)-1)
+        disdel:=(objectList.count()=(ROOT_WINDOW_ITEM+3))
+      ELSE
+        dismoveup:=TRUE
+        dismovedown:=TRUE
+        disdel:=TRUE
+      ENDIF
+    ELSE
+      dismoveup:=comp.getChildIndex()=0
+      dismovedown:=comp.getChildIndex()=(comp.parent.children.count()-1)
+      disdel:=comp.parent=0
+    ENDIF
+    
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,comp.parent=0)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,(comp.parent=0) ORELSE (comp.getChildIndex()=0))
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)))
+    menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,disdel)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,dismoveup)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,dismovedown)
     
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
@@ -335,9 +355,9 @@ PROC updateSel(win,node)
       ENDIF
     ENDIF
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENPLUS],win,0,[GA_DISABLED,dis,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_DELETE],win,0,[GA_DISABLED,comp.parent=0,TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=0),TAG_END])
-    SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,(comp.parent=0) ORELSE (comp.getChildIndex()=(comp.parent.children.count()-1)),TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_DELETE],win,0,[GA_DISABLED,disdel,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEUP],win,0,[GA_DISABLED,dismoveup,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,dismovedown,TAG_END])
 
     IF bufferLayout
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
@@ -669,6 +689,24 @@ PROC removeObject(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   ENDIF
 ENDPROC
 
+PROC removeWindow(win:PTR TO reactionObject)
+  DEF idx,comp:PTR TO reactionObject
+  idx:=findWindowIndex(win)
+  idx:=(idx*3)
+  removeMembers(objectList.item(idx+ROOT_LAYOUT_ITEM),objectList.item(idx+ROOT_WINDOW_ITEM)::windowObject.previewRootLayout)
+  comp:=objectList.item(idx+ROOT_WINDOW_ITEM) 
+  END comp
+  comp:=objectList.item(idx+ROOT_LAYOUT_ITEM)
+  END comp
+  comp:=objectList.item(idx+ROOT_MENU_ITEM)
+  END comp
+  objectList.remove(idx+ROOT_LAYOUT_ITEM)
+  objectList.remove(idx+ROOT_MENU_ITEM)
+  objectList.remove(idx+ROOT_WINDOW_ITEM) 
+  makeList()
+  rethinkPreviews()
+ENDPROC
+
 PROC doGenUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   DEF idx, mainRootLayout, previewRootLayout
 
@@ -705,8 +743,39 @@ PROC doGenDown(parent:PTR TO reactionObject, child:PTR TO reactionObject)
   rethinkPreviews()
 ENDPROC
 
+PROC swapWindows(idx1,idx2)
+  DEF tempitem
+
+  idx1:=idx1*3
+  idx2:=idx2*3
+  
+  tempitem:=objectList.item(ROOT_WINDOW_ITEM+idx1)
+  objectList.setItem(ROOT_WINDOW_ITEM+idx1,objectList.item(ROOT_WINDOW_ITEM+idx2))
+  objectList.setItem(ROOT_WINDOW_ITEM+idx2,tempitem)
+  
+  tempitem:=objectList.item(ROOT_MENU_ITEM+idx1)
+  objectList.setItem(ROOT_MENU_ITEM+idx1,objectList.item(ROOT_MENU_ITEM+idx2))
+  objectList.setItem(ROOT_MENU_ITEM+idx2,tempitem)
+
+  tempitem:=objectList.item(ROOT_LAYOUT_ITEM+idx1)
+  objectList.setItem(ROOT_LAYOUT_ITEM+idx1,objectList.item(ROOT_LAYOUT_ITEM+idx2))
+  objectList.setItem(ROOT_LAYOUT_ITEM+idx2,tempitem)
+ENDPROC
+
 PROC moveUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   DEF idx, mainRootLayout, previewRootLayout
+
+  IF parent=0
+    idx:=findWindowIndex(child)
+
+    mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
+    removeMembers(mainRootLayout,previewRootLayout)
+    swapWindows(idx,idx-1)
+    makeList(child)
+    addMembers(mainRootLayout,previewRootLayout)
+    RETURN
+  ENDIF
 
   IF parent.type=TYPE_LAYOUT
     changes:=TRUE
@@ -723,6 +792,18 @@ ENDPROC
 
 PROC moveDown(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   DEF idx, mainRootLayout, previewRootLayout
+
+  IF parent=0
+    idx:=findWindowIndex(child)
+
+    mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
+    removeMembers(mainRootLayout,previewRootLayout)
+    swapWindows(idx,idx+1)
+    makeList(child)
+    addMembers(mainRootLayout,previewRootLayout)
+    RETURN
+  ENDIF
 
   IF parent.type=TYPE_LAYOUT
     changes:=TRUE
@@ -772,13 +853,20 @@ PROC findWindowIndex(comp:PTR TO reactionObject)
   ENDIF
 ENDPROC -1
 
-PROC enumerateGads(from=0:PTR TO reactionObject,n=0,libsused=0)
+PROC findLibsUsed(from=0:PTR TO reactionObject,libsused=0)
   DEF i
   IF from=0 THEN from:=objectList.item(ROOT_LAYOUT_ITEM)
   libsused:=libsused OR from.libused
 
-  FOR i:=0 TO from.children.count()-1 DO n,libsused:=enumerateGads(from.children.item(i),n,libsused)
-ENDPROC n+1,libsused
+  FOR i:=0 TO from.children.count()-1 DO libsused:=findLibsUsed(from.children.item(i),libsused)
+ENDPROC libsused
+
+PROC countGads(from=0:PTR TO reactionObject,n=0)
+  DEF i
+  IF from=0 THEN from:=objectList.item(ROOT_LAYOUT_ITEM)
+
+  FOR i:=0 TO from.children.count()-1 DO n:=countGads(from.children.item(i),n)
+ENDPROC n+1
 
 PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   DEF i
@@ -814,12 +902,13 @@ PROC genCode()
   DEF cSrcGen: PTR TO cSrcGen
   DEF srcGen:PTR TO srcGen
   DEF count,libsused
-  DEF comp:PTR TO reactionObject
   DEF objectCreate[50]:STRING
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
-  DEF langid
+  DEF langid,i
   DEF menuComp:PTR TO reactionObject
+  DEF windowComp:PTR TO reactionObject
+  DEF layoutComp:PTR TO reactionObject
   
   setBusy()
   NEW codeGenForm.create()
@@ -850,7 +939,12 @@ PROC genCode()
   IF tags THEN FastDisposeList(tags)
   IF aslbase THEN CloseLibrary(aslbase)
   
-  count,libsused:=enumerateGads()
+  i:=ROOT_LAYOUT_ITEM
+  libsused:=0
+  WHILE i<objectList.count()
+    libsused:=libsused OR findLibsUsed(objectList.item(i))
+    i+=3
+  ENDWHILE
   WriteF('libsused=\d\n',libsused)
   
   IF FileLength(fname)>=0
@@ -869,24 +963,34 @@ PROC genCode()
       srcGen:=cSrcGen
   ENDSELECT
 
-  menuComp:=objectList.item(ROOT_MENU_ITEM)
-  srcGen.genHeader(count,menuComp)
-  srcGen.assignWindowVar()
-  comp:=objectList.item(ROOT_WINDOW_ITEM)
-  StringF(objectCreate,'\sObject,',comp.getTypeName())
-  StringF(objectEnd,'\sEnd',comp.getTypeName())
-  srcGen.componentCreate(objectCreate)
-  comp.genCodeProperties(srcGen)
+  i:=0
+  windowComp:=objectList.item(ROOT_WINDOW_ITEM)
+  srcGen.genHeader()
+  WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
+    windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)
+    menuComp:=objectList.item(i+ROOT_MENU_ITEM)
+    layoutComp:=objectList.item(i+ROOT_LAYOUT_ITEM)
+    count:=countGads(layoutComp)
+  
+    srcGen.genWindowHeader(count,windowComp,menuComp)
+    srcGen.assignWindowVar()
+    StringF(objectCreate,'\sObject,',windowComp.getTypeName())
+    StringF(objectEnd,'\sEnd',windowComp.getTypeName())
+    srcGen.componentCreate(objectCreate)
+    windowComp.genCodeProperties(srcGen)
 
-  srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
-  srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
-  srcGen.increaseIndent()
-  comp:=objectList.item(ROOT_LAYOUT_ITEM)
-  genComponentCode(comp,0,srcGen)
-  srcGen.componentEnd('LayoutEnd,') 
-  srcGen.finalComponentEnd(objectEnd) 
-  srcGen.decreaseIndent()
-  srcGen.genFooter(count,menuComp)
+    srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
+    srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
+    srcGen.increaseIndent()
+    genComponentCode(layoutComp,0,srcGen)
+    srcGen.componentEnd('LayoutEnd,') 
+    srcGen.finalComponentEnd(objectEnd) 
+    srcGen.decreaseIndent()
+    srcGen.genWindowFooter(count,windowComp,menuComp)
+    i+=3
+  ENDWHILE
+  windowComp:=objectList.item(ROOT_WINDOW_ITEM)
+  srcGen.genFooter(windowComp)
   END srcGen
   
   END fs
@@ -981,7 +1085,7 @@ PROC loadFile() HANDLE
     ELSEIF StrCmp(tempStr,'ADDSETT=',STRLEN)
       v:=Val(tempStr+STRLEN)
       IF win
-        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
         IF a
           IF v
             WriteF('on\n')
@@ -1094,7 +1198,7 @@ PROC saveFile() HANDLE
   StringF(tempStr,'VIEWTMP=\d',IF bufferLayout THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
   IF win
-    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
     IF a
       StringF(tempStr,'ADDSETT=\d',IF a.flags AND CHECKED THEN TRUE ELSE FALSE)
       fs.writeLine(tempStr)
@@ -1244,7 +1348,7 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
       setBusy()
       
       IF win
-        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
         WriteF('item=\h\n',a)
         WriteF('flags=\h\n',a.flags)
 
@@ -1320,9 +1424,24 @@ PROC doEdit()
 ENDPROC
 
 PROC doDelete()
-  IF warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1
-    changes:=TRUE
-    removeObject(selectedComp.parent,selectedComp)
+  DEF a=0:PTR TO menuitem
+  DEF skipWarn=FALSE
+
+  IF selectedComp.type=TYPE_WINDOW
+    IF warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this whole window?',TRUE)=1
+      changes:=TRUE
+      removeWindow(selectedComp)
+    ENDIF
+  ELSE
+    IF win
+      a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_WARN_ON_DEL,0))
+    ENDIF
+    IF a THEN skipWarn:=(a.flags AND CHECKED)
+    
+    IF (skipWarn=0) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
+      changes:=TRUE
+      removeObject(selectedComp.parent,selectedComp)
+    ENDIF
   ENDIF
 ENDPROC
 
@@ -1508,7 +1627,6 @@ PROC newProject()
 ENDPROC
 
 PROC toggleBuffer()
-  DEF w:PTR TO window
   DEF a=0:PTR TO menuitem
 
   IF win
@@ -1591,10 +1709,10 @@ PROC remakePreviewMenus()
   DEF a:PTR TO menuitem
 
   count:=(objectList.count()-ROOT_WINDOW_ITEM)/4
-  count:=count+55
+  count:=count+56
 
   IF win
-    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_SHOW_ADD_SETTINGS,0))
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
     IF (a)
       IF (a.flags AND CHECKED)=0 THEN addSett:=FALSE
     ENDIF
@@ -1705,13 +1823,16 @@ PROC remakePreviewMenus()
   menuData[49].label:='Show Buffer'
   menuData[49].flags:=CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[50].type:=NM_ITEM
-  menuData[50].label:='Settings on add'
-  menuData[50].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 )OR MENUTOGGLE
+  menuData[50].label:='Show Settings On Add'
+  menuData[50].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[51].type:=NM_ITEM
-  menuData[51].label:=NM_BARLABEL
+  menuData[51].label:='Warn On Delete'
+  menuData[51].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[52].type:=NM_ITEM
-  menuData[52].label:='Preview Windows'
-  n:=53
+  menuData[52].label:=NM_BARLABEL
+  menuData[53].type:=NM_ITEM
+  menuData[53].label:='Preview Windows'
+  n:=54
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
     winObj:=objectList.item(i)
@@ -2088,6 +2209,67 @@ PROC main() HANDLE
   ENDIF
   
 EXCEPT DO
+  SELECT exception
+    CASE "NIL"
+      WriteF('nil pointer error\n')
+    CASE "WIN"
+      errorRequest(0,'Error','Error window could not be opened')
+    CASE "MEM"
+      errorRequest(0,'Error','Not enough free memory')
+    CASE "LIB"
+      SELECT exceptioninfo
+        CASE "reqr"
+          EasyRequestArgs(NIL,[20,0,'Error','Unable to open requester.class','Ok'],NIL,NIL) 
+        CASE "gadt"
+          errorRequest(0,'Error','Unable to open gadtools.library')
+        CASE "win"
+          errorRequest(0,'Error','Unable to open window.class')
+        CASE "list"
+          errorRequest(0,'Error','Unable to open listbrowser.gadget')
+        CASE "rbtn"
+          errorRequest(0,'Error','Unable to open radiobutton.gadget')
+        CASE "clkt"
+          errorRequest(0,'Error','Unable to open clicktab.gadget')
+        CASE "btn"
+          errorRequest(0,'Error','Unable to open button.gadget')
+        CASE "layo"
+          errorRequest(0,'Error','Unable to open layout.gadget')
+        CASE "strn"
+          errorRequest(0,'Error','Unable to open string.gadget')
+        CASE "choo"
+          errorRequest(0,'Error','Unable to open chooser.gadget')
+        CASE "pall"
+          errorRequest(0,'Error','Unable to open palette.gadget')
+        CASE "spce"
+          errorRequest(0,'Error','Unable to open space.gadget')
+        CASE "intr"
+          errorRequest(0,'Error','Unable to open integer.gadget')
+        CASE "scrl"
+          errorRequest(0,'Error','Unable to open scroller.gadget')
+        CASE "chkb"
+          errorRequest(0,'Error','Unable to open checkbox.gadget')
+        CASE "fuel"
+          errorRequest(0,'Error','Unable to open fuelgauge.gadget')
+        CASE "text"
+          errorRequest(0,'Error','Unable to open textfield.gadget')
+        CASE "file"
+          errorRequest(0,'Error','Unable to open getfile.gadget')
+        CASE "font"
+          errorRequest(0,'Error','Unable to open getfont.gadget')
+        CASE "scrn"
+          errorRequest(0,'Error','Unable to open getscreenmode.gadget')
+        CASE "glyp"
+          errorRequest(0,'Error','Unable to open glyph.image')
+        CASE "labl"
+          errorRequest(0,'Error','Unable to open label.image')
+        CASE "bevl"
+          errorRequest(0,'Error','Unable to open bevel.image')
+        CASE "draw"
+          errorRequest(0,'Error','Unable to open drawlist.image')
+        CASE "ASL"
+          errorRequest(0,'Error','Unable to open asl.library')
+      ENDSELECT
+  ENDSELECT
   WriteF('shutdown\n')
   RA_CloseWindow(mainWindow)
   win:=0

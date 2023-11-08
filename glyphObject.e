@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM GLYGAD_NAME, GLYGAD_TYPE,
       GLYGAD_OK, GLYGAD_CHILD, GLYGAD_CANCEL
@@ -246,6 +246,12 @@ EXPORT PROC serialiseData() OF glyphObject IS
 [
   makeProp(glyphType,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF glyphObject
+  srcGen.componentProperty('GLYPH_DrawInfo','gDrawInfo',FALSE)
+  IF self.glyphType<>9 THEN srcGen.componentProperty('GLYPH_Glyph',ListItem(['GLYPH_NONE', 'GLYPH_DOWNARROW', 'GLYPH_UPARROW', 'GLYPH_LEFTARROW', 'GLYPH_RIGHTARROW', 
+            'GLYPH_DROPDOWN', 'GLYPH_POPUP', 'GLYPH_CHECKMARK', 'GLYPH_POPFONT', 'GLYPH_POPFILE','GLYPH_POPDRAWER','GLYPH_POPSCREENMODE'],self.glyphType),FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF glyphObject
   RETURN 'Glyph'

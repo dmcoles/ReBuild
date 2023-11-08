@@ -1601,12 +1601,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   IF self.lockHeight THEN srcGen.componentProperty('WINDOW_LockHeight','TRUE',FALSE)
   IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
   IF self.gadgetHelp THEN srcGen.componentProperty('WINDOW_GadgetHelp','TRUE',FALSE)
-
-  IF srcGen.type=ESOURCE_GEN
-    srcGen.componentProperty('WINDOW_AppPort','app_port',FALSE)
-  ELSE
-    srcGen.componentProperty('WINDOW_AppPort','gApp_port',FALSE)
-  ENDIF
+  srcGen.componentProperty('WINDOW_AppPort','gAppPort',FALSE)
 
   IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
   IF self.flags AND WFLG_CLOSEGADGET THEN srcGen.componentProperty('WA_CloseGadget','TRUE',FALSE)

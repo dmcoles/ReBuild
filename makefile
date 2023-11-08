@@ -24,7 +24,7 @@ reactionLists.m:			reactionLists.e stringlist.m
 stringlist.m:			stringlist.e
 							$(compiler) stringlist $(options)
 
-paletteObject.m:			paletteObject.e reactionObject.m reactionForm.m
+paletteObject.m:			paletteObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) paletteObject $(options)
 
 screenObject.m:			screenObject.e reactionObject.m reactionForm.m
@@ -33,16 +33,16 @@ screenObject.m:			screenObject.e reactionObject.m reactionForm.m
 windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m
 							$(compiler) windowObject $(options)
 
-glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m
+glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) glyphObject $(options)
 
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
 							$(compiler) spaceObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m
+cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m
@@ -51,19 +51,19 @@ sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m
 layoutObject.m:			layoutObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) layoutObject $(options)
 
-integerObject.m:			integerObject.e reactionObject.m reactionForm.m
+integerObject.m:			integerObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) integerObject $(options)
               
-scrollerObject.m:			scrollerObject.e reactionObject.m reactionForm.m
+scrollerObject.m:			scrollerObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) scrollerObject $(options)
 
 stringObject.m:			stringObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) stringObject $(options)
 
-checkboxObject.m:			checkboxObject.e reactionObject.m reactionForm.m colourPicker.m
+checkboxObject.m:			checkboxObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m
 							$(compiler) checkboxObject $(options)
 
-labelObject.m:			labelObject.e reactionObject.m reactionForm.m colourPicker.m
+labelObject.m:			labelObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m
 							$(compiler) labelObject $(options)
 
 rexxObject.m:			rexxObject.e reactionObject.m reactionForm.m stringlist.m

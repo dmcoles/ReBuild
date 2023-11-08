@@ -1,7 +1,7 @@
 
 OPT MODULE
 
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*stringlist'
+  MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist'
 
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
@@ -18,7 +18,7 @@ PROC create(fser:PTR TO fileStreamer, libsused) OF cSrcGen
   self.indent:=0
 ENDPROC
 
-PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
+PROC genHeader() OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
@@ -61,7 +61,7 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('#include <proto/glyph.h>')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('#include <proto/label.h>')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('#include <proto/gadtools.h>')
+  self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
   self.writeLine('#include <libraries/gadtools.h>')
@@ -70,47 +70,11 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
   self.writeLine('#include <reaction/reaction_macros.h>')
   self.writeLine('#include <classes/window.h>')
   self.writeLine('')
-  self.writeLine('int main(int argc, char **argv);')
-  self.writeLine('void close_all(void);')
-  self.writeLine('')
-  IF menuObject.menuItems.count()>0
-    self.writeLine('struct NewMenu gMenuData[] =')
-    self.writeLine('{')
-    FOR i:=0 TO menuObject.menuItems.count()-1
-      menuItem:=menuObject.menuItems.item(i)
-      StrCopy(commKey,'0')
-      IF menuItem.menuItem 
-        itemType:='NM_ITEM'
-        StringF(itemName,'\q\s\q',menuItem.itemName)
-        IF StrLen(menuItem.commKey) THEN StringF(commKey,'\q\s\q',menuItem.commKey)
-      ELSEIF menuItem.menuBar
-        itemType:='NM_ITEM'
-        StrCopy(itemName,'NM_BARLABEL')
-      ELSE
-        itemType:='NM_TITLE'
-        StringF(itemName,'\q\s\q',menuItem.itemName)      
-      ENDIF
-      StringF(tempStr,'  { \s, \s,\s,0,0,NULL },',itemType,itemName,commKey)
-      self.writeLine(tempStr)
-    ENDFOR
-    self.writeLine('  { NM_END, NULL, 0, 0, 0, (APTR)0 }')
-    self.writeLine('};')
 
-    self.write('')
-    self.writeLine('')
-  ENDIF
-  
   self.writeLine('struct Screen	*gScreen = NULL;')
-  self.writeLine('struct DrawInfo	*gDrinfo = NULL;')
-  self.writeLine('struct MsgPort	*gApp_port = NULL;')
-  self.writeLine('struct Window	*gMain_window = NULL;')
-  StringF(tempStr,'struct Gadget	*gMain_Gadgets[ \d ];',count)
-  self.writeLine(tempStr)
-  IF menuObject.menuItems.count()>0
-    self.writeLine('struct Menu	*gMenuStrip = NULL;')
-    self.writeLine('APTR gVi = NULL;')
-  ENDIF
-  self.writeLine('Object *gWindow_object = NULL;')
+  self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
+  self.writeLine('APTR gVisinfo = NULL;')
+  self.writeLine('struct MsgPort	*gAppPort = NULL;')
   self.writeLine('')
 
   self.writeLine('struct Library *WindowBase = NULL,')
@@ -134,360 +98,115 @@ PROC genHeader(count,menuObject:PTR TO menuObject) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('               *GlyphBase = NULL,')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('               *LabelBase = NULL,')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('               *GadToolsBase = NULL,')
+  self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
-  IF menuObject.menuItems.count()>0  THEN self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
-
+  self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
   self.writeLine('')
-  self.writeLine('int main(int argc, char **argv)')
+  self.writeLine('int setup( void )')
   self.writeLine('{')
-  self.writeLine('  char initOk=0;')
+  self.writeLine('  if( !(IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L)) ) return 0;')
+  self.writeLine('  if( !(GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) ) ) return 0;')
+  self.writeLine('  if( !(WindowBase = (struct Library*) OpenLibrary("window.class",0L) ) ) return 0;')
+  self.writeLine('  if( !(LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) ) ) return 0;')
 
-  self.writeLine('  if( IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L) )')
-  self.writeLine('  {')
-  self.writeLine('    gScreen = LockPubScreen( NULL );')
-  self.writeLine('')
-  IF menuObject.menuItems.count()>0
-    self.writeLine('    if( GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) )')
-    self.writeLine('    {')
-    self.writeLine('      gVi = GetVisualInfo( gScreen, TAG_DONE );')
-    self.writeLine('    }')
-  ENDIF
-
-  self.writeLine('  }')
-  self.writeLine('')
-  self.writeLine('  if ( gScreen )')
-  self.writeLine('  {')
-  self.writeLine('    gDrinfo = GetScreenDrawInfo ( gScreen );')
-  self.writeLine('    gApp_port = CreateMsgPort();')
- 
-  self.writeLine('    if( WindowBase = (struct Library*) OpenLibrary("window.class",0L) )')
-  self.writeLine('    {')
-  self.writeLine('      if( LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) )')
-  self.writeLine('      {')
-  self.indent:=8
   IF self.libsused AND LIB_BUTTON
-    self.writeLine('if( ButtonBase = (struct Library*) OpenLibrary("gadgets/button.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(ButtonBase = (struct Library*) OpenLibrary("gadgets/button.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_CHECKBOX
-    self.writeLine('if( CheckBoxBase = (struct Library*) OpenLibrary("gadgets/checkbox.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(CheckBoxBase = (struct Library*) OpenLibrary("gadgets/checkbox.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_CHOOSER
-    self.writeLine('if( ChooserBase = (struct Library*) OpenLibrary("gadgets/chooser.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(ChooserBase = (struct Library*) OpenLibrary("gadgets/chooser.gadget",0L) ) ) return 0;')
   ENDIF
   
   IF self.libsused AND LIB_CLICKTAB
-    self.writeLine('if( ClickTabBase = (struct Library*) OpenLibrary("gadgets/clicktab.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(ClickTabBase = (struct Library*) OpenLibrary("gadgets/clicktab.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_FUELGAUGE
-    self.writeLine('if( FuelGaugeBase = (struct Library*) OpenLibrary("gadgets/fuelgauge.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(FuelGaugeBase = (struct Library*) OpenLibrary("gadgets/fuelgauge.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_GETFILE
-    self.writeLine('if( GetFileBase = (struct Library*) OpenLibrary("gadgets/getfile.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(GetFileBase = (struct Library*) OpenLibrary("gadgets/getfile.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_GETFONT
-    self.writeLine('if( GetFontBase = (struct Library*) OpenLibrary("gadgets/getfont.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(GetFontBase = (struct Library*) OpenLibrary("gadgets/getfont.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_GETSCREEN
-    self.writeLine('if( GetScreenModeBase = (struct Library*) OpenLibrary("gadgets/getscreenmode.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(GetScreenModeBase = (struct Library*) OpenLibrary("gadgets/getscreenmode.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_INTEGER
-    self.writeLine('if( IntegerBase = (struct Library*) OpenLibrary("gadgets/integer.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(IntegerBase = (struct Library*) OpenLibrary("gadgets/integer.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_PALETTE
-    self.writeLine('if( PaletteBase = (struct Library*) OpenLibrary("gadgets/palette.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(PaletteBase = (struct Library*) OpenLibrary("gadgets/palette.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_LISTB
-    self.writeLine('if( ListBrowserBase = (struct Library*) OpenLibrary("gadgets/listbrowser.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(ListBrowserBase = (struct Library*) OpenLibrary("gadgets/listbrowser.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_RADIO
-    self.writeLine('if( RadioButtonBase = (struct Library*) OpenLibrary("gadgets/radiobutton.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(RadioButtonBase = (struct Library*) OpenLibrary("gadgets/radiobutton.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_SCROLLER
-    self.writeLine('if( ScrollerBase = (struct Library*) OpenLibrary("gadgets/scroller.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(ScrollerBase = (struct Library*) OpenLibrary("gadgets/scroller.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_STRING
-    self.writeLine('if( StringBase = (struct Library*) OpenLibrary("gadgets/string.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(StringBase = (struct Library*) OpenLibrary("gadgets/string.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_SPACE
-    self.writeLine('if( SpaceBase = (struct Library*) OpenLibrary("gadgets/space.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(SpaceBase = (struct Library*) OpenLibrary("gadgets/space.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_TEXTFIELD
-    self.writeLine('if( TextFieldBase = (struct Library*) OpenLibrary("gadgets/textfield.gadget",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(TextFieldBase = (struct Library*) OpenLibrary("gadgets/textfield.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_BEVEL
-    self.writeLine('if( BevelBase = (struct Library*) OpenLibrary("images/bevel.image",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(BevelBase = (struct Library*) OpenLibrary("images/bevel.image",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_DRAWLIST
-    self.writeLine('if( DrawListBase = (struct Library*) OpenLibrary("images/drawlist.image",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(DrawListBase = (struct Library*) OpenLibrary("images/drawlist.image",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_GLYPH
-    self.writeLine('if( GlyphBase = (struct Library*) OpenLibrary("images/glyph.image",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(GlyphBase = (struct Library*) OpenLibrary("images/glyph.image",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused AND LIB_LABEL
-    self.writeLine('if( LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) )')
-    self.writeLine('{')
-    self.indent+=2
+    self.writeLine('  if( !(LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) ) ) return 0;')
   ENDIF
-  
-  self.writeLine('initOk = -1;')
-
-  IF self.libsused AND LIB_BUTTON
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_CHECKBOX
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_CHOOSER
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_CLICKTAB
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-  
-  IF self.libsused AND LIB_FUELGAUGE
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-  
-  IF self.libsused AND LIB_GETFILE
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_GETFONT
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_GETSCREEN
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-            
-  IF self.libsused AND LIB_INTEGER
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_PALETTE
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_LISTB
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_RADIO
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_SCROLLER
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_STRING
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_SPACE
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_TEXTFIELD
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_BEVEL
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-  
-  IF self.libsused AND LIB_DRAWLIST
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  IF self.libsused AND LIB_GLYPH
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-  
-  IF self.libsused AND LIB_LABEL
-    self.indent-=2
-    self.writeLine('}')
-  ENDIF
-
-  self.indent-=2
-  self.writeLine('}')
-  
-  self.indent-=2
-  self.writeLine('}')
- 
-  self.indent-=2
-  self.writeLine('}')
-
+  self.writeLine('  if( !(gScreen = LockPubScreen( NULL ) ) ) return 0;')
+  self.writeLine('  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;')
+  self.writeLine('  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;')
+  self.writeLine('  if( !(gAppPort = CreateMsgPort() ) ) return 0;')
   self.writeLine('')
-  self.writeLine('if ( initOk )')
+
+  self.writeLine('  return -1;')
+  self.writeLine('}')
+  self.writeLine('')
+
+  self.writeLine('void cleanup( void )')
   self.writeLine('{')
-  self.indent+=2
-  IF menuObject.menuItems.count()>0
-    self.writeLine('if ( gVi )')
-    self.writeLine('{')
-    self.writeLine('  gMenuStrip = CreateMenusA( gMenuData, TAG_END);')
-    self.writeLine('  LayoutMenus( gMenuStrip, gVi,')
-    self.writeLine('    GTMN_NewLookMenus, TRUE,')
-    self.writeLine('    TAG_DONE);')
-    self.writeLine('}')
-    self.writeLine('')
-   ENDIF
-  
-ENDPROC
-
-PROC genFooter(count,menuObject:PTR TO menuObject) OF cSrcGen
-  self.writeLine('}')
-  self.indent:=0
+  self.writeLine('  if ( gDrawInfo ) FreeScreenDrawInfo( gScreen, gDrawInfo);')
+  self.writeLine('  if ( gVisinfo ) FreeVisualInfo( gVisinfo );')
+  self.writeLine('  if ( gAppPort ) DeleteMsgPort( gAppPort );')
+  self.writeLine('  if ( gScreen ) UnlockPubScreen( 0, gScreen );')
   self.writeLine('')
-  self.writeLine('  if ( gWindow_object )')
-  self.writeLine('  {')
-  self.writeLine('    if ( gMain_window = (struct Window *) RA_OpenWindow( gWindow_object ))')
-  self.writeLine('    {')
-  self.writeLine('      WORD Code;')
-  self.writeLine('      ULONG wait = 0, signal = 0, result = 0, done = FALSE;')
-  self.writeLine('      GetAttr( WINDOW_SigMask, gWindow_object, &signal );')
-  IF menuObject.menuItems.count()>0
-    self.writeLine('      SetMenuStrip( gMain_window, gMenuStrip );')
-  ENDIF
-
-  self.writeLine('      while ( !done)')
-  self.writeLine('      {')
-  self.writeLine('            wait = Wait( signal | SIGBREAKF_CTRL_C );')
-  self.writeLine('')
-  self.writeLine('        if ( wait & SIGBREAKF_CTRL_C )')
-  self.writeLine('          done = TRUE;')
-  self.writeLine('            else')
-  self.writeLine('        while (( result = RA_HandleInput( gWindow_object, &Code )) != WMHI_LASTMSG)')
-  self.writeLine('        {')
-  self.writeLine('          switch ( result & WMHI_CLASSMASK )')
-  self.writeLine('          {')
-  self.writeLine('            case WMHI_CLOSEWINDOW:')
-  self.writeLine('              done = TRUE;')
-  self.writeLine('              break;')
-  self.writeLine('')
-  self.writeLine('            case WMHI_GADGETUP:')
-  self.writeLine('              break;')
-  self.writeLine('')
-  self.writeLine('            case WMHI_ICONIFY:')
-  self.writeLine('              if ( RA_Iconify( gWindow_object ) )')
-  self.writeLine('                gMain_window = NULL;')
-  self.writeLine('              break;')
-  self.writeLine('')
-  self.writeLine('            case WMHI_UNICONIFY:')
-  self.writeLine('              gMain_window = RA_OpenWindow( gWindow_object );')
-  self.writeLine('            break;')
-  self.writeLine('')
-  self.writeLine('          }')
-  self.writeLine('        }')
-  self.writeLine('      }')
-  self.writeLine('    }')
-  self.writeLine('    close_all();')
-  self.writeLine('  }')
-  self.writeLine('  return(0);')
-  self.writeLine('}')
-  self.writeLine('')
-  
-  self.writeLine('void close_all( void )')
-  self.writeLine('{')
-  IF menuObject.menuItems.count()>0
-    self.writeLine('  if ( gMenuStrip )')
-    self.writeLine('    FreeMenus( gMenuStrip );')
-  ENDIF
-  self.writeLine('  if ( gApp_port )')
-  self.writeLine('    DeleteMsgPort( gApp_port );')
-  self.writeLine('  if ( gDrinfo )')
-  self.writeLine('    FreeScreenDrawInfo( gScreen, gDrinfo);')
-  IF menuObject.menuItems.count()>0
-    self.writeLine('  if ( gVi )')
-    self.writeLine('    FreeVisualInfo( gVi );')
-  ENDIF
-  self.writeLine('  if ( gScreen )')
-  self.writeLine('    UnlockPubScreen(0, gScreen );')
-  self.writeLine('  if ( gWindow_object )')
-  self.writeLine('  {')
-  self.writeLine('    DisposeObject( gWindow_object );')
-  self.writeLine('    gWindow_object = NULL;')
-  self.writeLine('    gMain_window = NULL;')
-  self.writeLine('  }')
+  self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
+  self.writeLine('  if (IntuitionBase) CloseLibrary( (struct Library *)IntuitionBase );')
   IF self.libsused AND LIB_BUTTON THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );')
   IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('  if (CheckBoxBase) CloseLibrary( (struct Library *)CheckBoxBase );')
   IF self.libsused AND LIB_CHOOSER THEN self.writeLine('  if (ChooserBase) CloseLibrary( (struct Library *)ChooserBase );')
@@ -508,9 +227,155 @@ PROC genFooter(count,menuObject:PTR TO menuObject) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
-  IF menuObject.menuItems.count()>0 THEN self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
   self.writeLine('  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );')
   self.writeLine('  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );')
   self.writeLine('}')
   self.writeLine('')
+  self.writeLine('void runWindow( Object *window_object, struct Menu *menu_strip )')
+  self.writeLine('{')
+  self.writeLine('  struct Window	*main_window = NULL;')
+  self.writeLine('')
+  self.writeLine('  if ( window_object )')
+  self.writeLine('  {')
+  self.writeLine('    if ( main_window = (struct Window *) RA_OpenWindow( window_object ))')
+  self.writeLine('    {')
+  self.writeLine('      WORD Code;')
+  self.writeLine('      ULONG wait = 0, signal = 0, result = 0, done = FALSE;')
+  self.writeLine('      GetAttr( WINDOW_SigMask, window_object, &signal );')
+  self.writeLine('      if ( menu_strip)  SetMenuStrip( main_window, menu_strip );')
+  self.writeLine('      while ( !done)')
+  self.writeLine('      {')
+  self.writeLine('        wait = Wait( signal | SIGBREAKF_CTRL_C );')
+  self.writeLine('')
+  self.writeLine('        if ( wait & SIGBREAKF_CTRL_C )')
+  self.writeLine('          done = TRUE;')
+  self.writeLine('        else')
+  self.writeLine('          while (( result = RA_HandleInput( window_object, &Code )) != WMHI_LASTMSG)')
+  self.writeLine('          {')
+  self.writeLine('            switch ( result & WMHI_CLASSMASK )')
+  self.writeLine('            {')
+  self.writeLine('              case WMHI_CLOSEWINDOW:')
+  self.writeLine('                done = TRUE;')
+  self.writeLine('                break;')
+  self.writeLine('')
+  self.writeLine('              case WMHI_GADGETUP:')
+  self.writeLine('                break;')
+  self.writeLine('')
+  self.writeLine('              case WMHI_ICONIFY:')
+  self.writeLine('                if ( RA_Iconify( window_object ) )')
+  self.writeLine('                  main_window = NULL;')
+  self.writeLine('                break;')
+  self.writeLine('')
+  self.writeLine('              case WMHI_UNICONIFY:')
+  self.writeLine('                main_window = RA_OpenWindow( window_object );')
+  self.writeLine('              break;')
+  self.writeLine('')
+  self.writeLine('            }')
+  self.writeLine('          }')
+  self.writeLine('      }')
+  self.writeLine('    }')
+  self.writeLine('  }')
+  self.writeLine('}')
+  self.writeLine('')
+ENDPROC
+
+PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF cSrcGen
+  DEF tempStr[200]:STRING
+  DEF i
+  DEF menuItem:PTR TO menuItem
+  DEF itemType
+  DEF itemName[200]:STRING
+  DEF commKey[10]:STRING
+
+  StrCopy(tempStr,windowObject.name)
+  LowerStr(tempStr)
+  self.write('void ')
+  self.write(tempStr)
+  self.writeLine('( void )')
+  self.writeLine('{')
+
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  struct NewMenu menuData[] =')
+    self.writeLine('  {')
+    FOR i:=0 TO menuObject.menuItems.count()-1
+      menuItem:=menuObject.menuItems.item(i)
+      StrCopy(commKey,'0')
+      IF menuItem.type=MENU_TYPE_MENUSUB
+        itemType:='NM_SUB'
+        IF menuItem.menuBar THEN StrCopy(itemName,'NM_BARLABEL') ELSE StringF(itemName,'\q\s\q',menuItem.itemName)
+       
+        IF StrLen(menuItem.commKey) THEN StringF(commKey,'\q\s\q',menuItem.commKey)
+      ELSEIF menuItem.type=MENU_TYPE_MENUITEM
+        itemType:='NM_ITEM'
+        IF menuItem.menuBar THEN StrCopy(itemName,'NM_BARLABEL') ELSE StringF(itemName,'\q\s\q',menuItem.itemName)
+
+        IF StrLen(menuItem.commKey) THEN StringF(commKey,'\q\s\q',menuItem.commKey)
+      ELSE
+        itemType:='NM_TITLE'
+        StringF(itemName,'\q\s\q',menuItem.itemName)      
+      ENDIF
+      StringF(tempStr,'    { \s, \s,\s,0,0,NULL },',itemType,itemName,commKey)
+      self.writeLine(tempStr)
+    ENDFOR
+    self.writeLine('    { NM_END, NULL, 0, 0, 0, (APTR)0 }')
+    self.writeLine('  };')
+    self.writeLine('')
+    self.writeLine('  struct Menu	*menu_strip = NULL;')
+  ENDIF
+  StringF(tempStr,'  struct Gadget	*main_gadgets[ \d ];',count)
+  self.writeLine(tempStr)
+  self.writeLine('  Object *window_object = NULL;')
+  self.writeLine('')
+
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  menu_strip = CreateMenusA( menuData, TAG_END );')
+    self.writeLine('  LayoutMenus( menu_strip, gVisinfo,')
+    self.writeLine('    GTMN_NewLookMenus, TRUE,')
+    self.writeLine('    TAG_DONE );')
+    self.writeLine('')
+   ENDIF
+  self.indent:=2
+ENDPROC
+
+PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF cSrcGen
+  self.writeLine('')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  runWindow( window_object,menu_strip );')
+  ELSE
+    self.writeLine('  runWindow( window_object, 0 );')
+  ENDIF
+  self.writeLine('')
+  self.writeLine('  if ( window_object ) DisposeObject( window_object );')
+  IF menuObject.menuItems.count()>0
+    self.writeLine('  if ( menu_strip ) FreeMenus( menu_strip );')
+  ENDIF
+  self.writeLine('}')
+  self.writeLine('')
+ENDPROC
+
+PROC genFooter(windowObject:PTR TO windowObject) OF cSrcGen
+  DEF tempStr[200]:STRING
+  self.writeLine('int main( int argc, char **argv )')
+  self.writeLine('{')
+  self.writeLine('  if ( setup() )')
+  self.writeLine('  {')
+  StringF(tempStr,'    \s',windowObject.name)
+  LowerStr(tempStr)
+  StrAdd(tempStr,'();')
+  self.writeLine(tempStr)
+  self.writeLine('  }')
+
+  self.writeLine('  cleanup();')
+  self.writeLine('}')
+ENDPROC
+
+PROC assignWindowVar() OF cSrcGen
+  self.genIndent()
+  self.write('window_object = ')
+ENDPROC
+
+PROC assignGadgetVar(index) OF cSrcGen
+  DEF tempStr[100]:STRING
+  StringF(tempStr,'main_gadgets[\d] = ',index)
+  self.write(tempStr)
 ENDPROC

@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM SCLGAD_NAME, SCLGAD_TOP, SCLGAD_VISIBLE, SCLGAD_TOTAL, SCLGAD_ARROWDELTA,
       SCLGAD_ARROWS, SCLGAD_ORIENTATION,
@@ -357,6 +357,18 @@ EXPORT PROC serialiseData() OF scrollerObject IS
   makeProp(arrows,FIELDTYPE_CHAR),
   makeProp(orientation,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF scrollerObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  srcGen.componentPropertyInt('SCROLLER_Top',self.top)
+  srcGen.componentPropertyInt('SCROLLER_Visible',self.visible)
+  srcGen.componentPropertyInt('SCROLLER_Total',self.total)
+  srcGen.componentProperty('SCROLLER_Arrows',IF self.arrows THEN 'TRUE' ELSE 'FALSE',FALSE)
+  IF self.arrowdelta<>1 THEN srcGen.componentPropertyInt('SCROLLER_ArrowDelta',self.arrowdelta)
+  srcGen.componentProperty('SCROLLER_Orientation',ListItem(['SORIENT_HORIZ','SORIENT_VERT'],self.orientation),FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF scrollerObject
   RETURN 'Scroller'

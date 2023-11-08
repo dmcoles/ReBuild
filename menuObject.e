@@ -10,6 +10,7 @@ OPT MODULE, OSVERSION=37
         'string',
         'gadtools',
         'gadgets/checkbox','checkbox',
+        'gadgets/chooser','chooser',
         'images/label','label',
         'amigalib/boopsi',
         'libraries/gadtools',
@@ -20,17 +21,19 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*stringlist','*fileStreamer','*dialogs'
 
-EXPORT ENUM MENUGAD_ITEMLIST, MENUGAD_ITEM_NAME, MENUGAD_ITEM_COMMKEY, MENUGAD_ITEM_MENUBAR, MENUGAD_ITEM_MENUITEM, 
+EXPORT ENUM MENUGAD_ITEMLIST, MENUGAD_ITEM_NAME, MENUGAD_ITEM_COMMKEY, MENUGAD_ITEM_TYPE, MENUGAD_ITEM_MENUBAR,
       MENUGAD_ADD, MENUGAD_DELETE, MENUGAD_MODIFY, MENUGAD_MOVEUP, MENUGAD_MOVEDOWN, 
       MENUGAD_OK, MENUGAD_CANCEL
 
 CONST NUM_MENU_GADS=MENUGAD_CANCEL+1
 
+EXPORT ENUM MENU_TYPE_MENU, MENU_TYPE_MENUITEM, MENU_TYPE_MENUSUB
+
 EXPORT OBJECT menuItem
   itemName[80]:ARRAY OF CHAR
   commKey[2]:ARRAY OF CHAR
+  type:CHAR
   menuBar:CHAR
-  menuItem:CHAR
 ENDOBJECT
 
 EXPORT OBJECT menuObject OF reactionObject
@@ -43,6 +46,7 @@ OBJECT menuSettingsForm OF reactionForm
   tempMenuItems:PTR TO stdlist
   columninfo[4]:ARRAY OF columninfo
   browserlist:PTR TO mlh
+  labels1:LONG
 ENDOBJECT
 
 PROC moveUp(nself,gadget,id,code) OF menuSettingsForm
@@ -54,6 +58,7 @@ PROC moveUp(nself,gadget,id,code) OF menuSettingsForm
   DEF str2b[100]:STRING
   DEF str2c[100]:STRING
   DEF node1,node2,strval
+  DEF gen1, gen2
   
   self:=nself
   IF self.selectedItem>=0
@@ -63,12 +68,15 @@ PROC moveUp(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
 
+
+    GetListBrowserNodeAttrsA(node1,[LBNA_GENERATION,{gen1},TAG_END])
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str1a,strval)
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str1b,strval)
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str1c,strval)
+    GetListBrowserNodeAttrsA(node2,[LBNA_GENERATION,{gen2},TAG_END])
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str2a,strval)
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
@@ -76,8 +84,8 @@ PROC moveUp(nself,gadget,id,code) OF menuSettingsForm
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str2c,strval)
 
-    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
-    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
+    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_GENERATION,gen2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
+    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_GENERATION,gen1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
     
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, node1,0])
@@ -98,6 +106,7 @@ PROC moveDown(nself,gadget,id,code) OF menuSettingsForm
   DEF str2b[100]:STRING
   DEF str2c[100]:STRING
   DEF node1,node2,strval
+  DEF gen1,gen2
   
   self:=nself
 
@@ -108,6 +117,7 @@ PROC moveDown(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
 
+    GetListBrowserNodeAttrsA(node1,[LBNA_GENERATION,{gen1},TAG_END])
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str1a,strval)
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
@@ -115,6 +125,7 @@ PROC moveDown(nself,gadget,id,code) OF menuSettingsForm
     GetListBrowserNodeAttrsA(node1,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str1c,strval)
 
+    GetListBrowserNodeAttrsA(node2,[LBNA_GENERATION,{gen2},TAG_END])
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,0, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str2a,strval)
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,1, LBNCA_TEXT,{strval},TAG_END])
@@ -122,8 +133,8 @@ PROC moveDown(nself,gadget,id,code) OF menuSettingsForm
     GetListBrowserNodeAttrsA(node2,[LBNA_COLUMN,2, LBNCA_TEXT,{strval},TAG_END])
     StrCopy(str2c,strval)
 
-    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
-    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
+    SetListBrowserNodeAttrsA(node1,[LBNA_FLAGS,0, LBNA_GENERATION,gen2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str2c, TAG_END])
+    SetListBrowserNodeAttrsA(node2,[LBNA_FLAGS,0, LBNA_GENERATION,gen1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1a, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1b, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, str1c, TAG_END])
     
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, node2,0])
@@ -152,6 +163,7 @@ ENDPROC
 PROC modifyItem(nself,gadget,id,code) OF menuSettingsForm
   DEF win,node,strval
   DEF menuItem:PTR TO menuItem
+  DEF gen
   DEF type[20]:STRING
 
   self:=nself
@@ -170,19 +182,22 @@ PROC modifyItem(nself,gadget,id,code) OF menuSettingsForm
     strval:=Gets(self.gadgetList[ MENUGAD_ITEM_COMMKEY ],STRINGA_TEXTVAL)
     AstrCopy(menuItem.commKey,strval,2)
     
+    menuItem.type:=Gets(self.gadgetList[ MENUGAD_ITEM_TYPE ],CHOOSER_SELECTED)
     menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
-    menuItem.menuItem:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUITEM ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
 
-    IF menuItem.menuBar
-      StrCopy(type,'Menubar')
-    ELSEIF menuItem.menuItem
-      StrCopy(type,'Menuitem')
+    IF menuItem.type=MENU_TYPE_MENUSUB
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Sub item')
+      gen:=2
+    ELSEIF menuItem.type=MENU_TYPE_MENUITEM
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Menu item')
+      gen:=1
     ELSE
       StrCopy(type,'Menu')
+      gen:=0
     ENDIF
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
-    SetListBrowserNodeAttrsA(node,[LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type,TAG_END])
+    SetListBrowserNodeAttrsA(node,[LBNA_FLAGS,0, LBNA_GENERATION, gen, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type,TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
   ENDIF
 ENDPROC
@@ -201,8 +216,8 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, -1, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUITEM],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
   ELSE
     SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, FALSE, TAG_END])
@@ -212,15 +227,15 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, menuItem.itemName, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, menuItem.commKey, TAG_END])
 
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, menuItem.type , TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, menuItem.menuBar , TAG_END])
-    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUITEM],win,0,[CHECKBOX_CHECKED, menuItem.menuItem, TAG_END])
     DoMethod(self.windowObj, WM_RETHINK)
   ENDIF
 ENDPROC
 
 PROC addItem(nself,gadget,id,code) OF menuSettingsForm
   DEF strval
-  DEF n,win
+  DEF n,win,gen
   DEF menuItem:PTR TO menuItem
   DEF type[20]:STRING
 
@@ -237,19 +252,22 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
     strval:=Gets(self.gadgetList[ MENUGAD_ITEM_COMMKEY ],STRINGA_TEXTVAL)
     AstrCopy(menuItem.commKey,strval,2)
     
+    menuItem.type:=Gets(self.gadgetList[ MENUGAD_ITEM_TYPE ],CHOOSER_SELECTED)
     menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
-    menuItem.menuItem:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUITEM ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
     self.tempMenuItems.add(menuItem)
     
-    IF menuItem.menuBar
-      StrCopy(type,'Menubar')
-    ELSEIF menuItem.menuItem
-      StrCopy(type,'Menuitem')
+    IF menuItem.type=MENU_TYPE_MENUSUB
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Sub item')
+      gen:=2
+    ELSEIF menuItem.type=MENU_TYPE_MENUITEM
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Menu item')
+      gen:=1
     ELSE
       StrCopy(type,'Menu')
+      gen:=0
     ENDIF
 
-    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
+    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_GENERATION, gen, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
       AddTail(self.browserlist, n)
     ELSE 
       Raise("MEM")    
@@ -348,6 +366,7 @@ PROC create() OF menuSettingsForm
               LISTBROWSER_VERTSEPARATORS, TRUE,
               LISTBROWSER_SEPARATORS, TRUE,
               LISTBROWSER_COLUMNTITLES, TRUE,
+              LISTBROWSER_HIERARCHICAL, TRUE,
               LISTBROWSER_COLUMNINFO, self.columninfo,
               LISTBROWSER_LABELS, self.browserlist,
         ListBrowserEnd,
@@ -388,6 +407,20 @@ PROC create() OF menuSettingsForm
             LABEL_TEXT, 'Comm_Key',
           LabelEnd,
 
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_TYPE ]:=ChooserObject,
+            GA_ID, MENUGAD_ITEM_TYPE,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            CHOOSER_POPUP, TRUE,
+            CHOOSER_MAXLABELS, 12,
+            CHOOSER_ACTIVE, 0,
+            CHOOSER_WIDTH, -1,
+            CHOOSER_LABELS, self.labels1:=chooserLabelsA(['Menu','Menu Item','Menu Sub Item',0]),
+          ChooserEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Type',
+          LabelEnd,
+
           LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_MENUBAR ]:=CheckBoxObject,
             GA_ID, MENUGAD_ITEM_MENUBAR,
             GA_RELVERIFY, TRUE,
@@ -399,16 +432,6 @@ PROC create() OF menuSettingsForm
             CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
           CheckBoxEnd,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_MENUITEM ]:=CheckBoxObject,
-            GA_ID, MENUGAD_ITEM_MENUITEM,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            GA_TEXT, 'Menu _Item',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
-            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-          CheckBoxEnd,
         LayoutEnd,
         CHILD_WEIGHTEDHEIGHT, 0,
         
@@ -557,21 +580,33 @@ PROC end() OF menuSettingsForm
   freeBrowserNodes(self.browserlist)
   END self.gadgetList[NUM_MENU_GADS]
   END self.gadgetActions[NUM_MENU_GADS]
+  freeChooserLabels( self.labels1 ) 
 ENDPROC
 
 
 PROC validate(nself,gadget,id,code) OF menuSettingsForm
   DEF win,menuItem:PTR TO menuItem
+  DEF lastWasItem=FALSE
+  DEF i
 
   self:=nself
   win:=Gets(self.windowObj,WINDOW_WINDOW)
 
   IF self.tempMenuItems.count()>0
     menuItem:=self.tempMenuItems.item(0)
-    IF menuItem.menuItem OR menuItem.menuBar
+    IF menuItem.type<>MENU_TYPE_MENU
       errorRequest(self.windowObj,'Error','The first item must always be a menu')
       RETURN
     ENDIF
+    FOR i:=0 TO self.tempMenuItems.count()-1
+      menuItem:=self.tempMenuItems.item(i)
+      IF (menuItem.type=MENU_TYPE_MENUSUB) AND (lastWasItem=FALSE)
+        errorRequest(self.windowObj,'Error','Sub items must always follow a menu item')
+        RETURN
+      ENDIF
+      lastWasItem:=menuItem.type<>MENU_TYPE_MENU
+      
+    ENDFOR
   ENDIF
   self.modalResult:=MR_OK
 ENDPROC TRUE
@@ -581,6 +616,7 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
   DEF i,n
   DEF menuItem:PTR TO menuItem
   DEF type[20]:STRING
+  DEF gen
 
   self.menuObject:=comp
   SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],0,0,[LISTBROWSER_LABELS, -1, TAG_END])
@@ -589,20 +625,23 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
     NEW menuItem
     AstrCopy(menuItem.itemName,comp.menuItems.item(i)::menuItem.itemName)
     AstrCopy(menuItem.commKey,comp.menuItems.item(i)::menuItem.commKey,2)
+    menuItem.type:=comp.menuItems.item(i)::menuItem.type
     menuItem.menuBar:=comp.menuItems.item(i)::menuItem.menuBar
-    menuItem.menuItem:=comp.menuItems.item(i)::menuItem.menuItem
    
     self.tempMenuItems.add(menuItem)
 
-    IF menuItem.menuBar
-      StrCopy(type,'Menubar')
-    ELSEIF menuItem.menuItem
-      StrCopy(type,'Menuitem')
+    IF menuItem.type=MENU_TYPE_MENUSUB
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Sub item')
+      gen:=2
+    ELSEIF menuItem.type=MENU_TYPE_MENUITEM
+      IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Menu item')
+      gen:=1
     ELSE
       StrCopy(type,'Menu')
+      gen:=0
     ENDIF
 
-    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
+    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_GENERATION, gen, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.itemName, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, menuItem.commKey, LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, type, TAG_END]))
       AddTail(self.browserlist, n)
     ELSE 
       Raise("MEM")    
@@ -623,8 +662,8 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
       NEW menuItem
       AstrCopy(menuItem.itemName,self.tempMenuItems.item(i)::menuItem.itemName)
       AstrCopy(menuItem.commKey,self.tempMenuItems.item(i)::menuItem.commKey,2)
+      menuItem.type:=self.tempMenuItems.item(i)::menuItem.type
       menuItem.menuBar:=self.tempMenuItems.item(i)::menuItem.menuBar
-      menuItem.menuItem:=self.tempMenuItems.item(i)::menuItem.menuItem
       comp.menuItems.add(menuItem)
     ENDFOR
 
@@ -646,20 +685,23 @@ EXPORT PROC createPreviewObject() OF menuObject
   IF count>0
     menuItem:=self.menuItems.item(0)
     ->first item must be a menu otherwise LayoutMenusA will freeze
-    IF (menuItem.menuItem=FALSE) AND (menuItem.menuBar=FALSE)
+    IF (menuItem.type=MENU_TYPE_MENU)
       count++
       NEW newMenu[count]
       FOR i:=0 TO count-2
         menuItem:=self.menuItems.item(i)
-        IF menuItem.menuItem
-          newMenu[i].type:=NM_ITEM
-          newMenu[i].label:=menuItem.itemName
+        IF menuItem.type=MENU_TYPE_MENUSUB
+          newMenu[i].type:=NM_SUB
+          IF menuItem.menuBar THEN newMenu[i].label:=NM_BARLABEL ELSE newMenu[i].label:=menuItem.itemName         
           IF StrLen(menuItem.commKey)
             newMenu[i].commkey:=menuItem.commKey
           ENDIF
-        ELSEIF menuItem.menuBar
+        ELSEIF menuItem.type=MENU_TYPE_MENUITEM
           newMenu[i].type:=NM_ITEM
-          newMenu[i].label:=NM_BARLABEL
+          IF menuItem.menuBar THEN newMenu[i].label:=NM_BARLABEL ELSE newMenu[i].label:=menuItem.itemName
+          IF StrLen(menuItem.commKey)
+            newMenu[i].commkey:=menuItem.commKey
+          ENDIF
         ELSE
           newMenu[i].type:=NM_TITLE
           newMenu[i].label:=menuItem.itemName
@@ -720,9 +762,9 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF menuObject
     fser.writeLine(tempStr)
     StringF(tempStr,'COMMKEY: \s',menuItem.commKey)
     fser.writeLine(tempStr)
-    StringF(tempStr,'MENUBAR: \d',menuItem.menuBar)
+    StringF(tempStr,'TYPE: \d',menuItem.type)
     fser.writeLine(tempStr)
-    StringF(tempStr,'MENUITEM: \d',menuItem.menuItem)
+    StringF(tempStr,'MENUBAR: \d',menuItem.menuBar)
     fser.writeLine(tempStr)
   ENDFOR
   fser.writeLine('-')
@@ -753,10 +795,10 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF menuObject
         AstrCopy(menuItem.itemName,tempStr+STRLEN,80)
       ELSEIF StrCmp('COMMKEY: ',tempStr,STRLEN)
         AstrCopy(menuItem.commKey,tempStr+STRLEN,2)
+      ELSEIF StrCmp('TYPE: ',tempStr,STRLEN)
+        menuItem.type:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MENUBAR: ',tempStr,STRLEN)
         menuItem.menuBar:=Val(tempStr+STRLEN)
-      ELSEIF StrCmp('MENUITEM: ',tempStr,STRLEN)
-        menuItem.menuItem:=Val(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE

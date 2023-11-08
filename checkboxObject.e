@@ -13,10 +13,11 @@ OPT MODULE, OSVERSION=37
         'amigalib/boopsi',
         'libraries/gadtools',
         'intuition/intuition',
+        'intuition/screens',
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen'
 
 EXPORT ENUM CHKGAD_NAME, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
       CHKGAD_DISABLED, CHKGAD_SELECTED, CHKGAD_LABELPLACE,
@@ -383,9 +384,9 @@ ENDPROC
 EXPORT PROC create(parent) OF checkboxObject
   self.type:=TYPE_CHECKBOX
   SUPER self.create(parent)
-  self.textPen:=1
-  self.bgPen:=0
-  self.fillTextPen:=1
+  self.textPen:=TEXTPEN
+  self.bgPen:=BACKGROUNDPEN
+  self.fillTextPen:=FILLTEXTPEN
   self.disabled:=0
   self.selected:=0
   self.labelPlace:=1
@@ -416,6 +417,20 @@ EXPORT PROC serialiseData() OF checkboxObject IS
   makeProp(selected,FIELDTYPE_CHAR),
   makeProp(labelPlace,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF checkboxObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_Text',self.name,TRUE)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.selected THEN srcGen.componentProperty('GA_Selected','TRUE',FALSE)
+  srcGen.componentProperty('CHECKBOX_TextPlace',ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),FALSE)
+
+  IF self.textPen<>TEXTPEN THEN srcGen.componentPropertyInt('CHECKBOX_TextPen',self.textPen)
+  IF self.bgPen<>BACKGROUNDPEN THEN srcGen.componentPropertyInt('CHECKBOX_BackgroundPen',self.bgPen)
+  IF self.fillTextPen<>FILLTEXTPEN THEN srcGen.componentPropertyInt('CHECKBOX_FillTextPen',self.fillTextPen)
+ENDPROC
 
 EXPORT PROC createCheckboxObject(parent)
   DEF checkbox:PTR TO checkboxObject

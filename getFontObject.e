@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM GETFONTGAD_NAME, GETFONTGAD_TITLE,
             GETFONTGAD_LEFT, GETFONTGAD_TOP, GETFONTGAD_WIDTH, GETFONTGAD_HEIGHT, 
@@ -512,6 +512,29 @@ EXPORT PROC serialiseData() OF getFontObject IS
   makeProp(doDrawMode,FIELDTYPE_CHAR),
   makeProp(fixedWidthOnly,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFontObject
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  IF StrLen(self.title) THEN srcGen.componentProperty('GETFONT_TitleText',self.title,TRUE)
+  IF self.leftEdge<>30 THEN srcGen.componentPropertyInt('GETFONT_LeftEdge',self.leftEdge)
+  IF self.topEdge<>20 THEN srcGen.componentPropertyInt('GETFONT_TopEdge',self.topEdge)
+  IF self.width<>300 THEN srcGen.componentPropertyInt('GETFONT_Width',self.width)
+  IF self.height<>200 THEN srcGen.componentPropertyInt('GETFONT_Height',self.height)
+  
+  IF self.fMinHeight<>6 THEN srcGen.componentPropertyInt('GETFONT_MinHeight',self.fMinHeight)
+  IF self.fMaxHeight<>20 THEN srcGen.componentPropertyInt('GETFONT_MaxHeight',self.fMaxHeight)
+  
+  IF self.maxFrontPen<>255 THEN srcGen.componentPropertyInt('GETFONT_MaxFrontPen',self.maxFrontPen)
+  IF self.maxBackPen<>255 THEN srcGen.componentPropertyInt('GETFONT_MaxBackPen',self.maxBackPen)
+
+  IF self.doFrontPen THEN srcGen.componentProperty('GETFONT_DoFrontPen','TRUE',FALSE)
+  IF self.doBackPen THEN srcGen.componentProperty('GETFONT_DoBackPen','TRUE',FALSE)
+
+  IF self.doStyle THEN srcGen.componentProperty('GETFONT_DoStyle','TRUE',FALSE)
+  IF self.doDrawMode THEN srcGen.componentProperty('GETFONT_DoDrawMode','TRUE',FALSE)
+  IF self.fixedWidthOnly THEN srcGen.componentProperty('GETFONT_FixedWidthOnly','TRUE',FALSE)
+ENDPROC
 
 EXPORT PROC getTypeName() OF getFontObject
   RETURN 'GetFont'

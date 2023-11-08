@@ -837,7 +837,10 @@ EXPORT PROC create(parent) OF textFieldObject
   self.linePen:=-1
   self.border:=1
   self.align:=0
-  
+
+  self.minWidth:=100
+  self.minHeight:=70
+
   self.libused:=LIB_TEXTFIELD
 ENDPROC
 
@@ -880,6 +883,42 @@ EXPORT PROC serialiseData() OF textFieldObject IS
   makeProp(border,FIELDTYPE_CHAR),
   makeProp(align,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textFieldObject
+
+  srcGen.componentPropertyInt('GA_ID',self.id)
+  srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  IF self.tabCycle THEN srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)
+
+  IF StrLen(self.delimiters) AND StrCmp(self.delimiters,',)!@^&*_=+\\|<>?/ ')=FALSE THEN srcGen.componentProperty('TEXTFIELD_Delimiters',self.delimiters,TRUE)
+  IF StrLen(self.acceptChars) THEN srcGen.componentProperty('TEXTFIELD_AcceptChars',self.acceptChars,TRUE)
+  IF StrLen(self.rejectChars) THEN srcGen.componentProperty('TEXTFIELD_RejectChars',self.rejectChars,TRUE)
+  
+  IF self.maxSize<>0 THEN srcGen.componentPropertyInt('TEXTFIELD_MaxSize',self.maxSize)
+  
+  IF self.blinkRate<>0 THEN srcGen.componentPropertyInt('TEXTFIELD_BlinkRate',self.blinkRate)
+  IF self.spacing<>0 THEN srcGen.componentPropertyInt('TEXTFIELD_Spacing',self.spacing)
+  IF self.tabSpaces<>0 THEN srcGen.componentPropertyInt('TEXTFIELD_TabSpaces',self.tabSpaces)
+  IF self.blockCursor THEN srcGen.componentProperty('TEXTFIELD_BlockCursor','TRUE',FALSE)
+  IF self.partial THEN srcGen.componentProperty('TEXTFIELD_Partial','TRUE',FALSE)
+  IF self.noGhost THEN srcGen.componentProperty('TEXTFIELD_NoGhost','TRUE',FALSE)
+  IF self.nonPrintChars THEN srcGen.componentProperty('TEXTFIELD_NonPrintChars','TRUE',FALSE)
+  IF self.inverted THEN srcGen.componentProperty('TEXTFIELD_Inverted','TRUE',FALSE)
+  IF self.vCenter THEN srcGen.componentProperty('TEXTFIELD_VCenter','TRUE',FALSE)
+  IF self.userAlign THEN srcGen.componentProperty('TEXTFIELD_UserAlign','TRUE',FALSE)
+  IF self.ruledPaper THEN srcGen.componentProperty('TEXTFIELD_RuledPaper','TRUE',FALSE)
+  IF self.maxSizeBeep=FALSE THEN srcGen.componentProperty('TEXTFIELD_MaxSizeBeep','FALSE',FALSE)
+  
+  IF self.paperPen<>-1 THEN srcGen.componentPropertyInt('TEXTFIELD_PaperPen',self.paperPen)
+  IF self.inkPen<>-1 THEN srcGen.componentPropertyInt('TEXTFIELD_InkPen',self.inkPen)
+  IF self.linePen<>-1 THEN srcGen.componentPropertyInt('TEXTFIELD_LinePen',self.linePen)
+  IF self.border<>0 THEN srcGen.componentProperty('TEXTFIELD_Border',ListItem(['TEXTFIELD_BORDER_NONE','TEXTFIELD_BORDER_BEVEL','TEXTFIELD_BORDER_DOUBLEBEVEL'],self.border),FALSE)
+  IF self.align<>0 THEN srcGen.componentProperty('TEXTFIELD_Alignment',ListItem(['TEXTFIELD_ALIGN_LEFT','TEXTFIELD_ALIGN_CENTER','TEXTFIELD_ALIGN_RIGHT'],self.align),FALSE)
+ENDPROC
+
+->  scrollBar:CHAR
 
 EXPORT PROC getTypeName() OF textFieldObject
   RETURN 'TextField'

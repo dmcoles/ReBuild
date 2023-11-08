@@ -134,14 +134,16 @@ ENDPROC
 
 PROC componentAddChildLabel(text) OF srcGen
   DEF tempStr[40]:STRING
-  StrCopy(tempStr,'CHILD_Label, ')
-  IF self.upperCaseProperties THEN UpperStr(tempStr)
-  StrAdd(tempStr,'LabelObject,')
-  self.writeLine(tempStr)
-  self.increaseIndent()
-  self.componentProperty('LABEL_Text',text,TRUE)
-  self.decreaseIndent()
-  self.writeLine('LabelEnd,')
+  IF StrLen(text)>0
+    StrCopy(tempStr,'CHILD_Label, ')
+    IF self.upperCaseProperties THEN UpperStr(tempStr)
+    StrAdd(tempStr,'LabelObject,')
+    self.writeLine(tempStr)
+    self.increaseIndent()
+    self.componentProperty('LABEL_Text',text,TRUE)
+    self.decreaseIndent()
+    self.writeLine('LabelEnd,')
+  ENDIF
 ENDPROC
 
 PROC componentAddChild() OF srcGen
@@ -165,7 +167,7 @@ PROC assignWindowVar() OF srcGen
   DEF padding
   self.genIndent()
   IF self.extraPadding THEN padding:=' ' ELSE padding:=''
-  StringF(tempStr,'gWindow_object\s\s\s',padding,self.assignChars,padding)
+  StringF(tempStr,'window_object\s\s\s',padding,self.assignChars,padding)
   self.write(tempStr)
 ENDPROC
 
@@ -173,7 +175,7 @@ PROC assignGadgetVar(index) OF srcGen
   DEF tempStr[100]:STRING
   DEF padding
   IF self.extraPadding THEN padding:=' ' ELSE padding:=''
-  StringF(tempStr,'gMain_Gadgets[\s\d\s]\s\s\s',padding,index,padding,padding,self.assignChars,padding)
+  StringF(tempStr,'main_Gadgets[\s\d\s]\s\s\s',padding,index,padding,padding,self.assignChars,padding)
   self.write(tempStr)
 ENDPROC
 
@@ -186,6 +188,7 @@ PROC addTerminator() OF srcGen
   ENDIF
 ENDPROC
 
-PROC genHeader(count,menuObject) OF srcGen IS -1
-
-PROC genFooter(count,menuObject) OF srcGen IS -1
+PROC genHeader() OF srcGen IS -1
+PROC genFooter(windowObject) OF srcGen IS -1
+PROC genWindowHeader(count, windowObject, menuObject) OF srcGen IS -1
+PROC genWindowFooter(count, windowObject, menuObject) OF srcGen IS -1
