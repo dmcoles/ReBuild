@@ -676,7 +676,6 @@ EXPORT PROC createPreviewObject() OF menuObject
   DEF count
   DEF menuItem:PTR TO menuItem
 
-
   IF self.previewObject 
     FreeMenus(self.previewObject)
     self.previewObject:=0
@@ -711,13 +710,10 @@ EXPORT PROC createPreviewObject() OF menuObject
         ENDIF
       ENDFOR
       newMenu[count-1].type:=NM_END    
-      WriteF('createmenus\n')
       self.previewObject:=CreateMenusA(newMenu,[GTMN_FRONTPEN,1,TAG_END])
       END newMenu[count]
     
-      WriteF('createdmenus\n')
       IF self.previewObject THEN LayoutMenusA(self.previewObject,self.visInfo,[GTMN_NEWLOOKMENUS,TRUE,TAG_END])
-      WriteF('layout done\n')
     ENDIF
   ENDIF
 ENDPROC

@@ -1,8 +1,9 @@
 
 OPT MODULE
 
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist'
-  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject'
+  MODULE 'images/drawlist'
+  MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject','*drawListObject'
 
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
@@ -19,7 +20,7 @@ PROC create(fser:PTR TO fileStreamer, libsused) OF cSrcGen
   self.indent:=0
 ENDPROC
 
-PROC genHeader() OF cSrcGen
+PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
@@ -70,17 +71,153 @@ PROC genHeader() OF cSrcGen
   self.writeLine('#include <intuition/gadgetclass.h>')
   self.writeLine('#include <reaction/reaction_macros.h>')
   self.writeLine('#include <classes/window.h>')
+  self.writeLine('#include <exec/memory.h>')
   self.writeLine('')
 
-  self.writeLine('struct List *ClickTabsA( STRPTR *text_array );')
-  self.writeLine('VOID FreeClickTabs( struct List *list );')
-  self.writeLine('struct List *BrowserNodesA( STRPTR *text_array );')
-  self.writeLine('VOID FreeBrowserNodes( struct List *list );')
-  self.writeLine('struct List *ChooserLabelsA( STRPTR *text_array );')
-  self.writeLine('VOID FreeChooserLabels( struct List *list );')
-  self.writeLine('struct List *RadioButtonsA( STRPTR *text_array );')
-  self.writeLine('VOID FreeRadioButtons( struct List *list );')
-  self.writeLine('')
+  IF self.libsused AND LIB_CHOOSER
+    self.writeLine('struct List *ChooserLabelsA(STRPTR *nameList)')
+    self.writeLine('{')
+    self.writeLine('  struct List *newList;')
+    self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
+    self.writeLine('')
+    self.writeLine('  if (newList && nameList)')
+    self.writeLine('  {')
+    self.writeLine('    NewList( newList );')
+    self.writeLine('    while(*nameList)')
+    self.writeLine('    {')
+    self.writeLine('      AddTail(newList, AllocChooserNode(CNA_Text, *nameList, TAG_END));')
+    self.writeLine('      nameList++;')
+    self.writeLine('    }')
+    self.writeLine('  }')
+    self.writeLine('  return newList;')
+    self.writeLine('}')
+    self.writeLine('')
+    self.writeLine('void FreeChooserLabels(struct List *list)')
+    self.writeLine('{')
+    self.writeLine('  struct Node *node;')
+    self.writeLine('  struct Node *nextnode;')
+    self.writeLine('  ')
+    self.writeLine('    if (list)')
+    self.writeLine('    {')
+    self.writeLine('      node = list->lh_Head;')
+    self.writeLine('')
+    self.writeLine('      while(nextnode = node->ln_Succ)')
+    self.writeLine('      {')
+    self.writeLine('        FreeChooserNode(node);')
+    self.writeLine('        node = nextnode;')
+    self.writeLine('      }')
+    self.writeLine('      FreeMem(list, sizeof (struct List));')
+    self.writeLine('    }')
+    self.writeLine('}')
+    self.writeLine('')
+  ENDIF
+
+  IF self.libsused AND LIB_CLICKTAB
+    self.writeLine('struct List *ClickTabsA(STRPTR *nameList)')
+    self.writeLine('{')
+    self.writeLine('  struct List *newList;')
+    self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
+    self.writeLine('')
+    self.writeLine('  if (newList && nameList)')
+    self.writeLine('  {')
+    self.writeLine('    NewList( newList );')
+    self.writeLine('    while(*nameList)')
+    self.writeLine('    {')
+    self.writeLine('      AddTail(newList, AllocClickTabNode(TNA_Text, *nameList, TAG_END));')
+    self.writeLine('      nameList++;')
+    self.writeLine('    }')
+    self.writeLine('  }')
+    self.writeLine('  return newList;')
+    self.writeLine('}')
+    self.writeLine('')
+    self.writeLine('void FreeClickTabs(struct List *list)')
+    self.writeLine('{')
+    self.writeLine('  struct Node *node;')
+    self.writeLine('  struct Node *nextnode;')
+    self.writeLine('  ')
+    self.writeLine('    if (list)')
+    self.writeLine('    {')
+    self.writeLine('      node = list->lh_Head;')
+    self.writeLine('')
+    self.writeLine('      while(nextnode = node->ln_Succ)')
+    self.writeLine('      {')
+    self.writeLine('        FreeClickTabNode(node);')
+    self.writeLine('        node = nextnode;')
+    self.writeLine('      }')
+    self.writeLine('      FreeMem(list, sizeof (struct List));')
+    self.writeLine('    }')
+    self.writeLine('}')
+    self.writeLine('')
+  ENDIF
+
+
+  IF self.libsused AND LIB_RADIO
+    self.writeLine('struct List *RadioButtonsA(STRPTR *nameList)')
+    self.writeLine('{')
+    self.writeLine('  struct List *newList;')
+    self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
+    self.writeLine('')
+    self.writeLine('  if (newList && nameList)')
+    self.writeLine('  {')
+    self.writeLine('    NewList( newList );')
+    self.writeLine('    while(*nameList)')
+    self.writeLine('    {')
+    self.writeLine('      AddTail(newList, AllocRadioButtonNode(RBNA_Labels, *nameList, TAG_END));')
+    self.writeLine('      nameList++;')
+    self.writeLine('    }')
+    self.writeLine('  }')
+    self.writeLine('  return newList;')
+    self.writeLine('}')
+    self.writeLine('')
+    self.writeLine('void FreeRadioButtons(struct List *list)')
+    self.writeLine('{')
+    self.writeLine('  struct Node *node;')
+    self.writeLine('  struct Node *nextnode;')
+    self.writeLine('  ')
+    self.writeLine('    if (list)')
+    self.writeLine('    {')
+    self.writeLine('      node = list->lh_Head;')
+    self.writeLine('')
+    self.writeLine('      while(nextnode = node->ln_Succ)')
+    self.writeLine('      {')
+    self.writeLine('        FreeRadioButtonNode(node);')
+    self.writeLine('        node = nextnode;')
+    self.writeLine('      }')
+    self.writeLine('      FreeMem(list, sizeof (struct List));')
+    self.writeLine('    }')
+    self.writeLine('}')
+    self.writeLine('')
+  ENDIF
+
+  IF self.libsused AND LIB_LISTB
+    self.writeLine('struct List *BrowserNodesA(STRPTR *nameList)')
+    self.writeLine('{')
+    self.writeLine('  struct List *newList;')
+    self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
+    self.writeLine('')
+    self.writeLine('  if (newList && nameList)')
+    self.writeLine('  {')
+    self.writeLine('    NewList( newList );')
+    self.writeLine('    while(*nameList)')
+    self.writeLine('    {')
+    self.writeLine('      AddTail(newList, AllocListBrowserNode(1, LBNCA_Text, *nameList, TAG_END));')
+    self.writeLine('      nameList++;')
+    self.writeLine('    }')
+    self.writeLine('  }')
+    self.writeLine('  return newList;')
+    self.writeLine('}')
+    self.writeLine('')
+    self.writeLine('void FreeBrowserNodes(struct List *list)')
+    self.writeLine('{')
+    self.writeLine('  ')
+    self.writeLine('    if (list)')
+    self.writeLine('    {')
+    self.writeLine('      FreeListBrowserList(list);')
+    self.writeLine('      FreeMem(list, sizeof (struct List));')
+    self.writeLine('    }')
+    self.writeLine('}')
+    self.writeLine('')
+  ENDIF
 
   self.writeLine('struct Screen	*gScreen = NULL;')
   self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
@@ -199,7 +336,7 @@ PROC genHeader() OF cSrcGen
   IF self.libsused AND LIB_LABEL
     self.writeLine('  if( !(LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) ) ) return 0;')
   ENDIF
-  self.writeLine('  if( !(gScreen = LockPubScreen( NULL ) ) ) return 0;')
+  self.genScreenCreate(screenObject)
   self.writeLine('  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;')
   self.writeLine('  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;')
   self.writeLine('  if( !(gAppPort = CreateMsgPort() ) ) return 0;')
@@ -213,8 +350,7 @@ PROC genHeader() OF cSrcGen
   self.writeLine('{')
   self.writeLine('  if ( gDrawInfo ) FreeScreenDrawInfo( gScreen, gDrawInfo);')
   self.writeLine('  if ( gVisinfo ) FreeVisualInfo( gVisinfo );')
-  self.writeLine('  if ( gAppPort ) DeleteMsgPort( gAppPort );')
-  self.writeLine('  if ( gScreen ) UnlockPubScreen( 0, gScreen );')
+  self.genScreenFree(screenObject)
   self.writeLine('')
   self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
   self.writeLine('  if (IntuitionBase) CloseLibrary( (struct Library *)IntuitionBase );')
@@ -292,14 +428,19 @@ ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF cSrcGen
   DEF tempStr[200]:STRING
-  DEF i
+  DEF i,j
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
+  DEF directiveStr[20]:STRING
   DEF listObjects:PTR TO stdlist
+  DEF listObjects2:PTR TO stdlist
   DEF reactionObject:PTR TO reactionObject
+  DEF drawlistObject:PTR TO drawListObject
+  DEF listbObject:PTR TO listBrowserObject
   DEF listStr
+  DEF drawlist:PTR TO drawlist
 
   StrCopy(tempStr,windowObject.name)
   LowerStr(tempStr)
@@ -360,7 +501,70 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       self.writeLine(tempStr)
     ENDIF
   ENDFOR
-  self.writeLine('')
+
+  NEW listObjects2.stdlist(20)
+  layoutObject.findObjectsByType(listObjects2,TYPE_DRAWLIST)
+  FOR i:=0 TO listObjects2.count()-1
+    drawlistObject:=listObjects2.item(i)
+    StringF(tempStr,'  struct DrawList DLST_DrawList\d',drawlistObject.id)
+    StrAdd(tempStr,'[] = ')
+    self.writeLine(tempStr)
+    self.writeLine('  {')
+    j:=0
+    drawlist:=drawlistObject.drawItems[j]
+    WHILE (drawlist.directive<>DLST_END)
+      SELECT drawlist.directive
+        CASE DLST_LINE
+          StrCopy(directiveStr,'DLST_LINE')
+        CASE DLST_RECT
+          StrCopy(directiveStr,'DLST_RECT')
+        CASE DLST_LINEPAT
+          StrCopy(directiveStr,'DLST_LINEPAT')
+        CASE DLST_FILLPAT
+          StrCopy(directiveStr,'DLST_FILLPAT')
+        CASE DLST_LINESIZE
+          StrCopy(directiveStr,'DLST_LINESIZE')
+        CASE DLST_AMOVE
+          StrCopy(directiveStr,'DLST_AMOVE')
+        CASE DLST_ADRAW
+          StrCopy(directiveStr,'DLST_ADRAW')
+        CASE DLST_AFILL
+          StrCopy(directiveStr,'DLST_AFILL')
+        CASE DLST_FILL
+          StrCopy(directiveStr,'DLST_FILL')
+        CASE DLST_ELLIPSE
+          StrCopy(directiveStr,'DLST_ELLIPSE')
+        CASE DLST_CIRCLE
+          StrCopy(directiveStr,'DLST_CIRCLE')
+      ENDSELECT
+      StringF(tempStr,'    { \s, \d, \d, \d, \d, \d },',directiveStr,drawlist.x1, drawlist.y1, drawlist.x2, drawlist.y2, drawlist.pen)
+      self.writeLine(tempStr)
+      j++
+      drawlist:=drawlistObject.drawItems[j]
+    ENDWHILE
+    self.writeLine('    { DLST_END, 0, 0, 0, 0, 0 },')
+    self.writeLine('  };')
+    self.writeLine('')
+  ENDFOR
+
+  listObjects2.clear()
+  layoutObject.findObjectsByType(listObjects2,TYPE_LISTBROWSER)
+  FOR i:=0 TO listObjects2.count()-1
+    listbObject:=listObjects2.item(i)
+    IF listbObject.columnTitles
+      StringF(tempStr,'  struct ColumnInfo ListBrowser\d_ci[] =',listbObject.id)
+      self.writeLine(tempStr)
+      self.writeLine('  {')
+      FOR j:=0 TO listbObject.numColumns-1
+        StringF(tempStr,'    { \d, \q\s\q, 0 },',IF j<listbObject.colWidths.count() THEN listbObject.colWidths.item(j) ELSE 1,IF j<listbObject.colTitles.count() THEN listbObject.colTitles.item(j) ELSE '')
+        self.writeLine(tempStr)
+      ENDFOR
+      self.writeLine('    { -1, (STRPTR)~0, -1 }')
+      self.writeLine('  };')
+      self.writeLine('')
+    ENDIF
+  ENDFOR
+  END listObjects2
 
   IF menuObject.menuItems.count()>0
     self.writeLine('  menu_strip = CreateMenusA( menuData, TAG_END );')
@@ -422,9 +626,9 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_RADIO
         StringF(tempStr,'  if ( labels\d ) FreeRadioButtons( labels\d );',reactionObject.id, reactionObject.id)
       CASE TYPE_CLICKTAB
-        StringF(tempStr,'  if ( labels\d ) FreeClickTabs( labels\d )',reactionObject.id,reactionObject.id)
+        StringF(tempStr,'  if ( labels\d ) FreeClickTabs( labels\d );',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTBROWSER
-        StringF(tempStr,'  if (labels\d ) FreeBrowserNodes( labels\d )',reactionObject.id,reactionObject.id)
+        StringF(tempStr,'  if ( labels\d ) FreeBrowserNodes( labels\d );',reactionObject.id,reactionObject.id)
     ENDSELECT
     self.writeLine(tempStr)
   ENDFOR
@@ -461,6 +665,34 @@ PROC assignGadgetVar(index) OF cSrcGen
   DEF tempStr[100]:STRING
   StringF(tempStr,'main_gadgets[\d] = ',index)
   self.write(tempStr)
+ENDPROC
+
+PROC genScreenCreate(screenObject:PTR TO screenObject) OF cSrcGen
+  DEF tempStr[200]:STRING
+  IF (screenObject.public=FALSE) AND (screenObject.custom=FALSE)
+    self.writeLine('  if( !(gScreen = LockPubScreen( 0 ) ) ) return 0;')
+  ELSEIF (screenObject.public) AND (screenObject.custom=FALSE)
+    StringF(tempStr,'  if( !(gScreen = LockPubScreen( \q\s\q ) ) ) return 0;',screenObject.publicname)
+    self.writeLine(tempStr)
+  ELSE
+    self.writeLine('  if (!( gScreen = OpenScreenTags( 0,')
+    self.indent:=8
+    screenObject.genCodeProperties(self)
+    self.indent:=0
+    self.writeLine('        TAG_END ) ) ) return 0;')
+  ENDIF
+ENDPROC
+
+PROC genScreenFree(screenObject:PTR TO screenObject) OF cSrcGen
+  DEF tempStr[200]:STRING
+  IF (screenObject.public=FALSE) AND (screenObject.custom=FALSE)
+    self.writeLine('  if ( gScreen ) UnlockPubScreen( 0, gScreen );')
+  ELSEIF (screenObject.public) AND (screenObject.custom=FALSE)
+    StringF(tempStr,'  if ( gScreen ) UnlockPubScreen( \q\s\q, gScreen );',screenObject.publicname)
+    self.writeLine(tempStr)
+  ELSE
+    self.writeLine('  if ( gScreen ) CloseScreen( gScreen );')
+  ENDIF
 ENDPROC
 
 PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF cSrcGen

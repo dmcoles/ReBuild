@@ -909,6 +909,7 @@ PROC genCode()
   DEF menuComp:PTR TO reactionObject
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
+  DEF screenComp:PTR TO screenObject
   
   setBusy()
   NEW codeGenForm.create()
@@ -965,7 +966,8 @@ PROC genCode()
 
   i:=0
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
-  srcGen.genHeader()
+  screenComp:=objectList.item(ROOT_SCREEN_ITEM)
+  srcGen.genHeader(screenComp)
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)
     menuComp:=objectList.item(i+ROOT_MENU_ITEM)
@@ -978,7 +980,10 @@ PROC genCode()
     StringF(objectEnd,'\sEnd',windowComp.getTypeName())
     srcGen.componentCreate(objectCreate)
     windowComp.genCodeProperties(srcGen)
-
+    
+    IF screenComp.custom
+      srcGen.componentProperty('WA_CustomScreen','gScreen',FALSE)
+    ENDIF
     srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
     srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
     srcGen.increaseIndent()

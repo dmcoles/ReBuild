@@ -17,7 +17,7 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm'
+  MODULE '*reactionObject','*reactionForm','*sourceGen'
 
 EXPORT ENUM SCRGAD_PUBLIC, SCRGAD_CUSTOM, SCRGAD_AUTOSCROLL, SCRGAD_TITLE, SCRGAD_PUBLICNAME,
       SCRGAD_LEFTEDGE, SCRGAD_TOPEDGE, SCRGAD_WIDTH, SCRGAD_HEIGHT, SCRGAD_DEPTH,
@@ -461,6 +461,33 @@ EXPORT PROC serialiseData() OF screenObject IS
   makeProp(overscanType,FIELDTYPE_CHAR),
   makeProp(displayID,FIELDTYPE_CHAR)
 ]
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF screenObject
+  DEF tempStr[100]:STRING
+
+  IF self.custom
+    srcGen.componentPropertyInt('SA_Left',self.leftEdge)
+    srcGen.componentPropertyInt('SA_Top',self.topEdge)
+    srcGen.componentPropertyInt('SA_Width',self.width)
+    srcGen.componentPropertyInt('SA_Height',self.height)
+    srcGen.componentPropertyInt('SA_Depth',self.depth)
+    srcGen.componentProperty('SA_Title',self.title, TRUE)
+    srcGen.componentProperty('SA_Type','CUSTOMSCREEN', FALSE)
+    srcGen.componentProperty('SA_AutoScroll',IF self.autoScroll THEN 'TRUE' ELSE 'FALSE', FALSE)
+    IF (self.public=TRUE) AND (StrLen(self.publicname)>0)
+      srcGen.componentProperty('SA_PubName',self.publicname, TRUE)
+    ENDIF
+    srcGen.componentProperty('SA_Overscan',ListItem(['OSCAN_TEXT', 'OSCAN_STANDARD', 'OSCAN_MAX', 'OSCAN_VIDEO'],self.overscanType),FALSE)
+    srcGen.componentProperty('SA_DisplayID',ListItem(
+        ['LORES_KEY','HIRES_KEY','SUPER_KEY','HAM_KEY','LORESLACE_KEY',
+              'HIRESLACE_KEY','SUPERLACE_KEY','HAMLACE_KEY','EXTRAHALFBRITE_KEY','EXTRAHALFBRITELACE_KEY',
+              'HIRESHAM_KEY','SUPERHAM_KEY','HIRESEHB_KEY','SUPEREHB_KEY','HIRESHAMLACE_KEY','SUPERHAMLACE_KEY',
+              'HIRESEHBLACE_KEY','SUPEREHBLACE_KEY','LORESDBL_KEY','LORESHAMDBL_KEY','LORESEHBDBL_KEY','HIRESHAMDBL_KEY',
+              'VGAEXTRALORES_KEY','VGALORES_KEY','VGAPRODUCT_KEY','VGAHAM_KEY','VGAEXTRALORESLACE_KEY',
+              'VGALORESLACE_KEY','VGAPRODUCTLACE_KEY','VGAHAMLACE_KEY','VGAPRODUCTHAM_KEY','VGALORESHAM_KEY',
+              'VGAEXTRALORESHAM_KEY','VGAPRODUCTHAMLACE_KEY'],self.displayID),FALSE)
+  ENDIF  
+ENDPROC
 
 EXPORT PROC createScreenObject(parent)
   DEF screen:PTR TO screenObject

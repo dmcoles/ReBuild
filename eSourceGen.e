@@ -1,8 +1,8 @@
 
 OPT MODULE
-
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist'
-  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject','*reactionLists'
+  MODULE 'images/drawlist'
+  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject','*reactionLists','*drawlistObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -19,7 +19,7 @@ PROC create(fser:PTR TO fileStreamer,libsused) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC genHeader() OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   DEF tempStr[200]:STRING
   self.writeLine('OPT OSVERSION=37')
   self.writeLine('')
@@ -53,6 +53,10 @@ PROC genHeader() OF eSrcGen
   self.writeLine('      \aexec\a,')
   self.writeLine('      \aintuition/intuition\a,')
   self.writeLine('      \aintuition/imageclass\a,')
+  IF (screenObject.custom)
+    self.writeLine('      \aintuition/screens\a,')
+    self.writeLine('      \agraphics/modeid\a,')
+  ENDIF
   self.writeLine('      \aintuition/gadgetclass\a')
   self.writeLine('')
   self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
@@ -83,7 +87,7 @@ PROC genHeader() OF eSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  IF (drawlistbase:=OpenLibrary(\aimages/drawlist.image\a,0))=NIL THEN Throw(\qLIB\q,\qdraw\q)')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('  IF (glyphbase:=OpenLibrary(\aimages/glyph.image\a,0))=NIL THEN Throw(\qLIB\q,\qglyp\q)')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('  IF (labelbase:=OpenLibrary(\aimages/label.image\a,0))=NIL THEN Throw(\qLIB\q,\qlabl\q)')
-  self.writeLine('  IF (gScreen:=LockPubScreen(NIL))=NIL THEN Raise(\qpub\q)')
+  self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
   self.writeLine('  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")')
   self.writeLine('  IF (gAppPort:=CreateMsgPort())=NIL THEN Raise(\qport\q)')
@@ -93,7 +97,7 @@ PROC genHeader() OF eSrcGen
   self.writeLine('  IF gVisInfo THEN FreeVisualInfo(gVisInfo)')
   self.writeLine('  IF gDrawInfo THEN FreeScreenDrawInfo(gScreen,gDrawInfo)')
   self.writeLine('  IF gAppPort THEN DeleteMsgPort(gAppPort)')
-  self.writeLine('  IF gScreen THEN UnlockPubScreen(NIL,gScreen)')
+  self.genScreenFree(screenObject)
   self.writeLine('')
   self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')
   self.writeLine('  IF windowbase THEN CloseLibrary(windowbase)')
@@ -158,14 +162,22 @@ ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
   DEF tempStr[200]:STRING
-  DEF i
+  DEF i,j
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
+  DEF directiveStr[20]:STRING
   DEF listObjects:PTR TO stdlist
+  DEF listObjects2:PTR TO stdlist
+  DEF listObjects3:PTR TO stdlist
   DEF reactionObject:PTR TO reactionObject
+  DEF drawlistObject:PTR TO drawListObject
+  DEF listbObject:PTR TO listBrowserObject
   DEF listStr
+  DEF drawlist:PTR TO drawlist
+  DEF colWidth
+  DEF colTitle
 
   StrCopy(tempStr,windowObject.name)
   LowerStr(tempStr)
@@ -184,11 +196,42 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
+  
+  NEW listObjects2.stdlist(20)
+  layoutObject.findObjectsByType(listObjects2,TYPE_DRAWLIST)
+  
+  NEW listObjects3.stdlist(20)
+  layoutObject.findObjectsByType(listObjects3,TYPE_LISTBROWSER)
+
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
     StringF(tempStr,'  DEF labels\d=0',reactionObject.id)
     self.writeLine(tempStr)
   ENDFOR
+
+  FOR i:=0 TO listObjects2.count()-1
+    drawlistObject:=listObjects2.item(i)
+    j:=0
+    drawlist:=drawlistObject.drawItems[j]
+    count:=0
+    WHILE (drawlist.directive<>DLST_END)
+      count++
+      j++
+      drawlist:=drawlistObject.drawItems[j]
+    ENDWHILE
+
+    StringF(tempStr,'  DEF dlstDrawList\d[\d]:ARRAY OF drawlist',drawlistObject.id,count+1)
+    self.writeLine(tempStr)
+  ENDFOR
+
+  FOR i:=0 TO listObjects3.count()-1
+    listbObject:=listObjects3.item(i)
+    IF listbObject.columnTitles
+      StringF(tempStr,'  DEF listBrowser\d_ci[\d]:ARRAY OF columninfo',listbObject.id,listbObject.numColumns+1)
+    self.writeLine(tempStr)
+    ENDIF
+  ENDFOR
+
   self.writeLine('')
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
@@ -210,11 +253,95 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       self.writeLine(listStr)
       DisposeLink(listStr)
     ELSE
-      StringF(tempStr,'  labels\d:=0',reactionObject.id)
+      StrAdd(tempStr,'[0])')
       self.writeLine(tempStr)
     ENDIF
   ENDFOR
   END listObjects
+
+  FOR i:=0 TO listObjects2.count()-1
+    drawlistObject:=listObjects2.item(i)
+    j:=0
+    drawlist:=drawlistObject.drawItems[j]
+    WHILE (drawlist.directive<>DLST_END)
+      SELECT drawlist.directive
+        CASE DLST_LINE
+          StrCopy(directiveStr,'DLST_LINE')
+        CASE DLST_RECT
+          StrCopy(directiveStr,'DLST_RECT')
+        CASE DLST_LINEPAT
+          StrCopy(directiveStr,'DLST_LINEPAT')
+        CASE DLST_FILLPAT
+          StrCopy(directiveStr,'DLST_FILLPAT')
+        CASE DLST_LINESIZE
+          StrCopy(directiveStr,'DLST_LINESIZE')
+        CASE DLST_AMOVE
+          StrCopy(directiveStr,'DLST_AMOVE')
+        CASE DLST_ADRAW
+          StrCopy(directiveStr,'DLST_ADRAW')
+        CASE DLST_AFILL
+          StrCopy(directiveStr,'DLST_AFILL')
+        CASE DLST_FILL
+          StrCopy(directiveStr,'DLST_FILL')
+        CASE DLST_ELLIPSE
+          StrCopy(directiveStr,'DLST_ELLIPSE')
+        CASE DLST_CIRCLE
+          StrCopy(directiveStr,'DLST_CIRCLE')
+      ENDSELECT
+      StringF(tempStr,'  dlstDrawList\d[\d].directive:=\s',drawlistObject.id,j,directiveStr)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  dlstDrawList\d[\d].x1:=\d',drawlistObject.id,j,drawlist.x1)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  dlstDrawList\d[\d].y1:=\d',drawlistObject.id,j,drawlist.y1)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  dlstDrawList\d[\d].x2:=\d',drawlistObject.id,j,drawlist.x2)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  dlstDrawList\d[\d].y2:=\d',drawlistObject.id,j,drawlist.y2)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  dlstDrawList\d[\d].pen:=\d',drawlistObject.id,j,drawlist.pen)
+      self.writeLine(tempStr)
+      j++
+      drawlist:=drawlistObject.drawItems[j]
+    ENDWHILE
+    StringF(tempStr,'  dlstDrawList\d[\d].directive:=DLST_END',drawlistObject.id,j)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  dlstDrawList\d[\d].x1:=0',drawlistObject.id,j)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  dlstDrawList\d[\d].y1:=0',drawlistObject.id,j)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  dlstDrawList\d[\d].x2:=0',drawlistObject.id,j)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  dlstDrawList\d[\d].y2:=0',drawlistObject.id,j)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  dlstDrawList\d[\d].pen:=0',drawlistObject.id,j)
+    self.writeLine('')
+  ENDFOR
+  END listObjects2
+
+  FOR i:=0 TO listObjects3.count()-1
+    listbObject:=listObjects3.item(i)
+    IF listbObject.columnTitles
+      FOR j:=0 TO listbObject.numColumns-1
+        colWidth:=IF j<listbObject.colWidths.count() THEN listbObject.colWidths.item(j) ELSE 1
+        colTitle:=IF j<listbObject.colTitles.count() THEN listbObject.colTitles.item(j) ELSE ''
+        
+        StringF(tempStr,'  listBrowser\d_ci[\d].width:=\d',listbObject.id,j,colWidth)
+        self.writeLine(tempStr)
+        StringF(tempStr,'  listBrowser\d_ci[\d].title:=\a\s\a',listbObject.id,j,colTitle)
+        self.writeLine(tempStr)
+        StringF(tempStr,'  listBrowser\d_ci[\d].flags:=CIF_WEIGHTED',listbObject.id,j)
+        self.writeLine(tempStr)
+      ENDFOR
+      StringF(tempStr,'  listBrowser\d_ci[\d].width:=-1',listbObject.id,j)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  listBrowser\d_ci[\d].title:=-1',listbObject.id,j)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  listBrowser\d_ci[\d].flags:=-1',listbObject.id,j)
+      self.writeLine(tempStr)
+    ENDIF
+  ENDFOR
+  END listObjects3
+
   self.writeLine('')
 
   IF menuObject.menuItems.count()>0
@@ -324,6 +451,34 @@ ENDPROC
 PROC assignWindowVar() OF eSrcGen
   self.genIndent()
   self.write('windowObject:=')
+ENDPROC
+
+PROC genScreenCreate(screenObject:PTR TO screenObject) OF eSrcGen
+  DEF tempStr[200]:STRING
+  IF (screenObject.public=FALSE) AND (screenObject.custom=FALSE)
+    self.writeLine('  IF (gScreen:=LockPubScreen(NIL))=NIL THEN Raise(\qpub\q)')
+  ELSEIF (screenObject.public) AND (screenObject.custom=FALSE)
+    StringF(tempStr,'  IF (gScreen:=LockPubScreen(\a\s\a))=NIL THEN Raise(\qpub\q)',screenObject.publicname)
+    self.writeLine(tempStr)
+  ELSE
+    self.writeLine('  IF (gScreen:=OpenScreenTagList(NIL, [')
+    self.indent:=8
+    screenObject.genCodeProperties(self)
+    self.indent:=0
+    self.writeLine('        TAG_END]))=NIL THEN Raise(\qpub\q)')
+  ENDIF
+ENDPROC
+
+PROC genScreenFree(screenObject:PTR TO screenObject) OF eSrcGen
+  DEF tempStr[200]:STRING
+  IF (screenObject.public=FALSE) AND (screenObject.custom=FALSE)
+    self.writeLine('  IF gScreen THEN UnlockPubScreen(NIL,gScreen)')
+  ELSEIF (screenObject.public) AND (screenObject.custom=FALSE)
+    StringF(tempStr,'  IF gScreen THEN UnlockPubScreen(\a\s\a,gScreen)',screenObject.publicname)
+    self.writeLine(tempStr)
+  ELSE
+    self.writeLine('  IF gScreen THEN CloseScreen(gScreen)')
+  ENDIF
 ENDPROC
 
 PROC assignGadgetVar(index) OF eSrcGen

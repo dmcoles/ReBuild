@@ -27,7 +27,7 @@ stringlist.m:			stringlist.e
 paletteObject.m:			paletteObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) paletteObject $(options)
 
-screenObject.m:			screenObject.e reactionObject.m reactionForm.m
+screenObject.m:			screenObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) screenObject $(options)
 
 windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m
@@ -39,10 +39,10 @@ glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m sourceGen.m
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
 							$(compiler) spaceObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m
+cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m

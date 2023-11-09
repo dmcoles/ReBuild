@@ -582,7 +582,7 @@ EXPORT PROC create(parent) OF bevelObject
 
   SUPER self.create(parent)
   
-  self.textPen:=TEXTPEN
+  self.textPen:=1
   self.fillPen:=0
   self.top:=0
   self.width:=0
@@ -637,7 +637,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF bevelObject
   srcGen.componentPropertyInt('IA_Left',self.left)
   srcGen.componentPropertyInt('IA_Width',self.width)
   srcGen.componentPropertyInt('IA_Height',self.height)
-  IF self.textPen<>TEXTPEN THEN srcGen.componentPropertyInt('BEVEL_TextPen',self.textPen) 
+  IF self.textPen<>1 THEN srcGen.componentPropertyInt('BEVEL_TextPen',self.textPen) 
   IF self.fillPen<>0 THEN srcGen.componentPropertyInt('BEVEL_FillPen',self.fillPen) 
   IF self.style<>2 THEN srcGen.componentProperty('BEVEL_Style',ListItem(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP','BVS_FIELD','BVS_DROPBOX','BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD'],self.style),FALSE)
   IF self.placeText<>0 THEN srcGen.componentProperty('BEVEL_LabelPlace',ListItem(['BVJ_TOP_CENTER', 'BVJ_TOP_LEFT', 'BVJ_TOP_RIGHT', 'BVJ_IN_CENTER', 'BVJ_IN_LEFT', 'BVJ_IN_RIGHT'],self.placeText),FALSE)

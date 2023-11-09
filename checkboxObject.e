@@ -384,9 +384,9 @@ ENDPROC
 EXPORT PROC create(parent) OF checkboxObject
   self.type:=TYPE_CHECKBOX
   SUPER self.create(parent)
-  self.textPen:=TEXTPEN
-  self.bgPen:=BACKGROUNDPEN
-  self.fillTextPen:=FILLTEXTPEN
+  self.textPen:=1
+  self.bgPen:=0
+  self.fillTextPen:=1
   self.disabled:=0
   self.selected:=0
   self.labelPlace:=1
@@ -427,9 +427,9 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF checkboxObject
   IF self.selected THEN srcGen.componentProperty('GA_Selected','TRUE',FALSE)
   srcGen.componentProperty('CHECKBOX_TextPlace',ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),FALSE)
 
-  IF self.textPen<>TEXTPEN THEN srcGen.componentPropertyInt('CHECKBOX_TextPen',self.textPen)
-  IF self.bgPen<>BACKGROUNDPEN THEN srcGen.componentPropertyInt('CHECKBOX_BackgroundPen',self.bgPen)
-  IF self.fillTextPen<>FILLTEXTPEN THEN srcGen.componentPropertyInt('CHECKBOX_FillTextPen',self.fillTextPen)
+  IF self.textPen<>1 THEN srcGen.componentPropertyInt('CHECKBOX_TextPen',self.textPen)
+  IF self.bgPen<>0 THEN srcGen.componentPropertyInt('CHECKBOX_BackgroundPen',self.bgPen)
+  IF self.fillTextPen<>1 THEN srcGen.componentPropertyInt('CHECKBOX_FillTextPen',self.fillTextPen)
 ENDPROC
 
 EXPORT PROC createCheckboxObject(parent)

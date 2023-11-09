@@ -61,6 +61,7 @@ PROC create() OF integerSettingsForm
     WA_MINHEIGHT, 80,
     WA_MAXHEIGHT, 8192,
     WA_ACTIVATE, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
     WA_PUBSCREEN, 0,
     ->WA_CustomScreen, gScreen,
     ->WINDOW_AppPort, gApp_port,

@@ -1086,6 +1086,29 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
     srcGen.componentProperty('LISTBROWSER_Labels',tempStr,FALSE)
   ENDIF
   
+  IF self.columnTitles
+    IF srcGen.type=CSOURCE_GEN
+      StringF(tempStr,'&ListBrowser\d_ci',self.id)
+    ELSE
+      StringF(tempStr,'listBrowser\d_ci',self.id)
+    ENDIF
+    srcGen.componentProperty('LISTBROWSER_ColumnInfo',tempStr,FALSE)
+    srcGen.componentProperty('LISTBROWSER_ColumnTitles','TRUE',FALSE)
+  ENDIF
+
+  IF self.showSelected=FALSE THEN srcGen.componentProperty('LISTBROWSER_ShowSelected','FALSE',FALSE)
+  IF self.multiSelect THEN srcGen.componentProperty('LISTBROWSER_MultiSelect','TRUE',FALSE)
+  IF self.separators=FALSE THEN srcGen.componentProperty('LISTBROWSER_Separators','FALSE',FALSE)
+  IF self.vertSeparators=FALSE THEN srcGen.componentProperty('LISTBROWSER_VertSeparators','FALSE',FALSE)
+  IF self.horzSeparators THEN srcGen.componentProperty('LISTBROWSER_HorizSeparators','TRUE',FALSE)
+  IF self.borderless THEN srcGen.componentProperty('LISTBROWSER_Borderless','TRUE',FALSE)
+  IF self.autofit THEN srcGen.componentProperty('LISTBROWSER_AutoFit','TRUE',FALSE)
+  IF self.vertProp=FALSE THEN srcGen.componentProperty('LISTBROWSER_VerticalProp','FALSE',FALSE)
+  IF self.horzProp THEN srcGen.componentProperty('LISTBROWSER_HorizontalProp','TRUE',FALSE)
+  IF self.scrollRaster=FALSE THEN srcGen.componentProperty('LISTBROWSER_ScrollRaster','FALSE',FALSE)
+  IF self.hierarchical THEN srcGen.componentProperty('LISTBROWSER_Hierarchical','TRUE',FALSE)
+  IF self.editable THEN srcGen.componentProperty('LISTBROWSER_Editable','TRUE',FALSE)
+
 ENDPROC
 
   ->numColumns:INT

@@ -33,7 +33,7 @@ EXPORT ENUM DRAWLISTGAD1_ACTION, DRAWLISTGAD1_X1, DRAWLISTGAD1_Y1, DRAWLISTGAD1_
 
 CONST NUM_DRAWLIST_GADS=DRAWLISTGAD_CANCEL+1
 
-CONST MAX_DRAW_ITEMS=7
+EXPORT CONST MAX_DRAW_ITEMS=7
 
 EXPORT OBJECT drawListObject OF reactionObject
   drawItems[MAX_DRAW_ITEMS+1]:ARRAY OF drawlist
@@ -899,7 +899,7 @@ EXPORT PROC create(parent) OF drawListObject
   
   FOR i:=0 TO MAX_DRAW_ITEMS-1
     self.drawItems[i].directive:=DLST_END
-    self.drawItems[i].pen:=0
+    self.drawItems[i].pen:=1
     self.drawItems[i].x1:=1
     self.drawItems[i].y1:=1
     self.drawItems[i].x2:=1
@@ -995,6 +995,17 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF drawListObject
       done:=TRUE
     ENDIF
   UNTIL done  
+ENDPROC
+
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF drawListObject
+  DEF tempStr[200]:STRING
+  
+  IF srcGen.type=CSOURCE_GEN
+    StringF(tempStr,'&DLST_DrawList\d',self.id)
+  ELSE
+    StringF(tempStr,'dlstDrawList\d',self.id)
+  ENDIF
+  srcGen.componentProperty('DRAWLIST_Directives',tempStr,FALSE) 
 ENDPROC
 
 EXPORT PROC isImage() OF drawListObject IS TRUE
