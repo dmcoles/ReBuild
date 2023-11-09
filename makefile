@@ -36,7 +36,7 @@ windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m str
 glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) glyphObject $(options)
 
-boingBallObject.m:			boingBallObject.e reactionObject.m reactionForm.m sourceGen.m
+boingBallObject.m:			boingBallObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m
 							$(compiler) boingBallObject $(options)
 
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
