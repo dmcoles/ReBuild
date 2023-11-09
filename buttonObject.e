@@ -491,7 +491,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF buttonObject
+EXPORT PROC createPreviewObject(scr) OF buttonObject
   self.previewObject:=ButtonObject,
       GA_TEXT,self.name,
       GA_RELVERIFY, TRUE,

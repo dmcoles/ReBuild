@@ -200,7 +200,7 @@ PROC editSettings(comp:PTR TO glyphObject) OF glyphSettingsForm
   ENDIF
 ENDPROC res
 
-EXPORT PROC createPreviewObject() OF glyphObject
+EXPORT PROC createPreviewObject(scr) OF glyphObject
   self.previewObject:=GlyphObject,
       GLYPH_GLYPH, ListItem([GLYPH_NONE,GLYPH_DOWNARROW,GLYPH_UPARROW,GLYPH_LEFTARROW,GLYPH_RIGHTARROW, GLYPH_DROPDOWN,GLYPH_POPUP,GLYPH_CHECKMARK,GLYPH_POPFONT,GLYPH_POPFILE,GLYPH_POPDRAWER,GLYPH_POPSCREENMODE],self.glyphType),
       GLYPH_DRAWINFO, self.drawInfo,

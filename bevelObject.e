@@ -542,7 +542,7 @@ PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF bevelObject
+EXPORT PROC createPreviewObject(scr) OF bevelObject
   self.previewObject:=BevelObject,
       IA_LEFT, self.left,
       IA_TOP, self.top,

@@ -1458,7 +1458,7 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF windowObject
+EXPORT PROC createPreviewObject(scr) OF windowObject
 /*  self.windowPos:=0
   self.lockWidth:=0
   self.lockHeight:=0
@@ -1525,7 +1525,7 @@ EXPORT PROC create(parent) OF windowObject
   
   self.appPort:=CreateMsgPort()
   self.previewObject:=0
-  self.createPreviewObject()
+  self.createPreviewObject(0)
   self.previewChildAttrs:=0
   self.previewOpen:=TRUE
   self.previewLeft:=-1

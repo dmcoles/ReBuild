@@ -907,7 +907,7 @@ PROC makeBrowserList(id) OF listBrowserObject
   ENDIF
 ENDPROC browserNodesA(newlist)
 
-EXPORT PROC createPreviewObject() OF listBrowserObject
+EXPORT PROC createPreviewObject(scr) OF listBrowserObject
   DEF i
   Dispose(self.columnInfo)
 

@@ -504,7 +504,7 @@ PROC editSettings(comp:PTR TO getFileObject) OF getFileSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF getFileObject
+EXPORT PROC createPreviewObject(scr) OF getFileObject
   self.previewObject:=GetFileObject,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,

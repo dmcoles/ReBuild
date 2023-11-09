@@ -490,7 +490,7 @@ PROC editSettings(comp:PTR TO fuelGaugeObject) OF fuelGaugeSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF fuelGaugeObject
+EXPORT PROC createPreviewObject(scr) OF fuelGaugeObject
   self.previewObject:=FuelGaugeObject,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

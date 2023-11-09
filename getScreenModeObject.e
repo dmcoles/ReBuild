@@ -654,7 +654,7 @@ PROC editSettings(comp:PTR TO getScreenModeObject) OF getScreenModeSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF getScreenModeObject
+EXPORT PROC createPreviewObject(scr) OF getScreenModeObject
   self.previewObject:=GetScreenModeObject,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,

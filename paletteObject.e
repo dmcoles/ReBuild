@@ -261,7 +261,7 @@ PROC editSettings(comp:PTR TO paletteObject) OF paletteSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF paletteObject
+EXPORT PROC createPreviewObject(scr) OF paletteObject
   self.previewObject:=PaletteObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

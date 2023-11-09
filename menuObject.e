@@ -670,7 +670,7 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF menuObject
+EXPORT PROC createPreviewObject(scr) OF menuObject
   DEF newMenu:PTR TO newmenu
   DEF i,n
   DEF count
@@ -727,7 +727,7 @@ EXPORT PROC create(parent) OF menuObject
   self.menuItems:=menuItems
   
   self.previewObject:=0
-  self.createPreviewObject()
+  self.createPreviewObject(0)
   self.previewChildAttrs:=0
 ENDPROC
 

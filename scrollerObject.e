@@ -294,7 +294,7 @@ PROC editSettings(comp:PTR TO scrollerObject) OF scrollerSettingsForm
   ENDIF
 ENDPROC res
 
-EXPORT PROC createPreviewObject() OF scrollerObject
+EXPORT PROC createPreviewObject(scr) OF scrollerObject
   self.previewObject:=ScrollerObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

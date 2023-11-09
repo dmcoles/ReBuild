@@ -413,7 +413,7 @@ PROC makeChooserList(id) OF chooserObject
   ENDIF
 ENDPROC chooserLabelsA(newlist)
 
-EXPORT PROC createPreviewObject() OF chooserObject
+EXPORT PROC createPreviewObject(scr) OF chooserObject
   self.previewObject:=ChooserObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

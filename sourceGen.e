@@ -58,6 +58,9 @@ PROC componentCreate(name:PTR TO CHAR) OF srcGen
   self.increaseIndent()
 ENDPROC
 
+PROC componentLibnameCreate(libname:PTR TO CHAR) OF srcGen
+ENDPROC
+
 PROC componentProperty(propName:PTR TO CHAR, propValue:PTR TO CHAR, isString) OF srcGen
   DEF str
   str:=String(StrLen(propName)+StrLen(propValue)+5)

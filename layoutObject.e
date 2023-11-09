@@ -51,7 +51,7 @@ EXPORT OBJECT layoutObject OF reactionObject
   deferLayout:CHAR
 ENDOBJECT
 
-EXPORT PROC createPreviewObject() OF layoutObject
+EXPORT PROC createPreviewObject(scr) OF layoutObject
 
   self.previewObject:=LayoutObject,
         LAYOUT_DEFERLAYOUT, FALSE, ->self.deferLayout,

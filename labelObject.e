@@ -298,7 +298,7 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF labelObject
+EXPORT PROC createPreviewObject(scr) OF labelObject
   self.previewObject:=LabelObject,
       LABEL_TEXT, self.name,
       LABEL_DISPOSEIMAGE, FALSE,

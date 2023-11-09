@@ -325,7 +325,7 @@ PROC makeClickTabsList(id) OF clickTabObject
   ENDIF
 ENDPROC clickTabsA(newlist)
 
-EXPORT PROC createPreviewObject() OF clickTabObject
+EXPORT PROC createPreviewObject(scr) OF clickTabObject
   self.previewObject:=ClickTabObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

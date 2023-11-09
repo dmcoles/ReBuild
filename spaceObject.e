@@ -8,7 +8,7 @@ OPT MODULE, OSVERSION=37
 EXPORT OBJECT spaceObject OF reactionObject
 ENDOBJECT
 
-EXPORT PROC createPreviewObject() OF spaceObject
+EXPORT PROC createPreviewObject(scr) OF spaceObject
   self.previewObject:=SpaceObject, SpaceEnd
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

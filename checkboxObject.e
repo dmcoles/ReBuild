@@ -353,7 +353,7 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF checkboxObject
+EXPORT PROC createPreviewObject(scr) OF checkboxObject
   self.previewObject:=CheckBoxObject,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

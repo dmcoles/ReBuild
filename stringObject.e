@@ -309,7 +309,7 @@ PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF stringObject
+EXPORT PROC createPreviewObject(scr) OF stringObject
   self.previewObject:=StringObject,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, self.tabCycle,

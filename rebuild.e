@@ -11,6 +11,7 @@ OPT OSVERSION=37,LARGE
         'requester','classes/requester',
         'images/bevel',
         'images/label',
+        '*bball',
         '*textfield',
         'getfile',
         'getfont',
@@ -29,7 +30,14 @@ OPT OSVERSION=37,LARGE
         'intuition/intuition','intuition/imageclass','intuition/gadgetclass','intuition/classusr'
 
   MODULE '*fileStreamer','*objectPicker','*cSourceGen', '*eSourceGen','*sourceGen','*codeGenForm','*listManagerForm','*reactionLists','*dialogs',
-         '*getScreenModeObject','*getFontObject','*getFileObject','*textFieldObject','*drawListObject','*fuelGaugeObject','*bevelObject','*listBrowserObject','*clickTabObject','*chooserObject','*radioObject','*menuObject','*rexxObject','*reactionListObject','*windowObject','*screenObject','*layoutObject','*paletteObject','*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject','*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm'
+         '*getScreenModeObject','*getFontObject','*getFileObject','*textFieldObject','*drawListObject','*fuelGaugeObject',
+         '*bevelObject','*listBrowserObject','*clickTabObject','*chooserObject','*radioObject','*menuObject',
+         '*rexxObject','*reactionListObject','*windowObject','*screenObject','*layoutObject','*paletteObject',
+         '*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject',
+         '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject'
+
+#define vernum '0.1.0-alpha'
+#date verstring '$VER:Rebuild 0.1.0-%Y%m%d%h%n%s-alpha'
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
@@ -84,6 +92,7 @@ OPT OSVERSION=37,LARGE
   DEF changes=FALSE
   DEF menus=0
   DEF filename[255]:STRING
+  DEF windowTitle[200]:STRING
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
@@ -110,6 +119,7 @@ PROC openClasses()
   IF (labelbase:=OpenLibrary('images/label.image',0))=NIL THEN Throw("LIB","labl")
   IF (bevelbase:=OpenLibrary('images/bevel.image',0))=NIL THEN Throw("LIB","bevl")
   IF (drawlistbase:=OpenLibrary('images/drawlist.image',0))=NIL THEN Throw("LIB","draw")
+  IF (boingballbase:=OpenLibrary('images/boingball.image',0))=NIL THEN Throw("LIB","ball")
 ENDPROC
 
 PROC closeClasses()
@@ -138,6 +148,7 @@ PROC closeClasses()
   IF labelbase THEN CloseLibrary(labelbase)
   IF bevelbase THEN CloseLibrary(bevelbase)
   IF drawlistbase THEN CloseLibrary(drawlistbase)
+  IF boingballbase THEN CloseLibrary(boingballbase)
 ENDPROC
 
 PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newnode:PTR TO LONG)
@@ -199,7 +210,7 @@ PROC addMembers(comp:PTR TO reactionObject,previewRootLayout)
   IF comp
     IF comp.parent  
       WriteF('adding comp \h \h\n',comp.parent.previewObject,comp.previewObject)
-      comp.createPreviewObject()
+      comp.createPreviewObject(win.wscreen)
       IF (comp.isImage())
         SetGadgetAttrsA(comp.parent.previewObject,0,0,[LAYOUT_ADDIMAGE, comp.previewObject, TAG_END])
       ELSE
@@ -209,7 +220,7 @@ PROC addMembers(comp:PTR TO reactionObject,previewRootLayout)
       WriteF('added comp \h \h\n',comp.parent.previewObject,comp.previewObject)
     ELSE
       WriteF('adding rootlayout \h \h\n',previewRootLayout,comp.previewObject)
-      comp.createPreviewObject()
+      comp.createPreviewObject(win.wscreen)
       SetGadgetAttrsA(previewRootLayout,0,0,[LAYOUT_ADDCHILD, comp.previewObject, TAG_END])
       IF comp.previewChildAttrs THEN SetGadgetAttrsA(previewRootLayout,0,0,comp.previewChildAttrs)
       WriteF('added rootlayout \h \h\n',previewRootLayout,comp.previewObject)
@@ -504,8 +515,10 @@ PROC createForm()
 
   remakePreviewMenus()
 
+  StringF(windowTitle,'ReBuild - Reaction UI Builder (\s)',vernum)
+
   mainWindow:=WindowObject,
-    WA_TITLE, 'ReBuild - Reaction UI Builder',
+    WA_TITLE, windowTitle,
     WA_LEFT, 100,
     WA_TOP, 100,
     WA_HEIGHT, 280,
@@ -871,14 +884,20 @@ ENDPROC n+1
 PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   DEF i
   DEF tempStr[200]:STRING
+  DEF libname
   IF comp.isImage()
     srcGen.componentAddImage()
   ELSE
     srcGen.componentAddChild()
   ENDIF
-  StringF(tempStr,'\sObject,',comp.getTypeName())
+
   srcGen.assignGadgetVar(n)
-  srcGen.componentCreate(tempStr)
+  IF (libname:=comp.libNameCreate())
+    srcGen.componentLibnameCreate(libname)
+  ELSE
+    StringF(tempStr,'\sObject,',comp.getTypeName())
+    srcGen.componentCreate(tempStr)
+  ENDIF
   comp.genCodeProperties(srcGen)
   FOR i:=0 TO comp.children.count()-1
     n++
@@ -1284,14 +1303,18 @@ ENDPROC res
 
 PROC showAbout()
   DEF reqmsg:PTR TO orrequest
+  DEF aboutStr[100]:STRING
   DEF reqobj
   
   setBusy()
 
+  StrCopy(aboutStr,'ReBuilder\n\nThe Reaction UI Builder Tool\nWritten By Darren Coles\n')
+  StrAdd(aboutStr,vernum)
+  
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
   reqmsg.window:=win
-  reqmsg.attrs:=[REQ_TITLETEXT,'About',REQ_BODYTEXT,'ReBuilder\n\nThe Reaction UI Builder Tool\nWritten By Darren Coles',REQ_GADGETTEXT,'_Ok',TAG_END]
+  reqmsg.attrs:=[REQ_TITLETEXT,'About',REQ_BODYTEXT,aboutStr,REQ_GADGETTEXT,'_Ok',TAG_END]
   reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])
   IF reqobj
     DoMethodA(reqobj, reqmsg)
@@ -1408,11 +1431,11 @@ PROC doEdit()
         IF selectedComp.type=TYPE_MENU
           pwin:=Gets(winObj.previewObject,WINDOW_WINDOW)
           IF pwin THEN ClearMenuStrip(pwin)
-          selectedComp.createPreviewObject()
+          selectedComp.createPreviewObject(win.wscreen)
         ENDIF
         
         IF selectedComp.type=TYPE_WINDOW 
-          selectedComp.createPreviewObject()
+          selectedComp.createPreviewObject(win.wscreen)
           RA_OpenWindow(selectedComp.previewObject)
         ENDIF
         rethinkPreviews()
@@ -1993,6 +2016,8 @@ PROC createObjectByObj(objType,comp)
       newObj:=createGetFontObject(comp)
     CASE OBJECT_GETSCREENMODE
       newObj:=createGetScreenModeObject(comp)
+    CASE OBJECT_BOINGBALL
+      newObj:=createBoingBallObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2051,6 +2076,8 @@ PROC createObjectByType(objType,comp)
       newObj:=createWindowObject(comp)
     CASE TYPE_MENU
       newObj:=createMenuObject(comp)
+    CASE TYPE_BOINGBALL
+      newObj:=createBoingBallObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2306,3 +2333,5 @@ EXCEPT DO
   closeClasses()
   WriteF('classes closed\n')
 ENDPROC
+
+CHAR verstring

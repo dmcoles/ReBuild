@@ -437,7 +437,7 @@ PROC editSettings(comp:PTR TO getFontObject) OF getFontSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF getFontObject
+EXPORT PROC createPreviewObject(scr) OF getFontObject
   self.previewObject:=GetFontObject,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,

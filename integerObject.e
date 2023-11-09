@@ -339,7 +339,7 @@ PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF integerObject
+EXPORT PROC createPreviewObject(scr) OF integerObject
   self.previewObject:=IntegerObject,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, self.tabCycle,

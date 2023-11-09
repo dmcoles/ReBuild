@@ -756,7 +756,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject() OF textFieldObject
+EXPORT PROC createPreviewObject(scr) OF textFieldObject
   self.previewObject:=NewObjectA(TextField_GetClass(), NIL,[
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,

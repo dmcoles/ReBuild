@@ -48,6 +48,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('      \adrawlist\a,\aimages/drawlist\a,')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('      \aglyph\a,\aimages/glyph\a,')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('      \alabel\a,\aimages/label\a,')
+  IF self.libsused AND LIB_BOINGBALL THEN self.writeLine('      \aimages/penmap\a,')
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
@@ -59,6 +60,11 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   ENDIF
   self.writeLine('      \aintuition/gadgetclass\a')
   self.writeLine('')
+  IF self.libsused AND LIB_BOINGBALL 
+    self.writeLine('#define BoingBallEnd LabelEnd')
+    self.writeLine('')
+  ENDIF
+  
   self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
   self.writeLine('')
   
@@ -451,6 +457,12 @@ ENDPROC
 PROC assignWindowVar() OF eSrcGen
   self.genIndent()
   self.write('windowObject:=')
+ENDPROC
+
+PROC componentLibnameCreate(libname:PTR TO CHAR) OF eSrcGen
+  DEF tempStr[200]:STRING
+  StringF(tempStr,'NewObjectA(NIL,\a\s\a,[TAG_IGNORE,0,',libname)
+  self.componentCreate(tempStr)
 ENDPROC
 
 PROC genScreenCreate(screenObject:PTR TO screenObject) OF eSrcGen

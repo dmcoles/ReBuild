@@ -63,6 +63,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('#include <proto/glyph.h>')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('#include <proto/label.h>')
+  IF self.libsused AND LIB_BOINGBALL THEN self.writeLine('#include <proto/penmap.h>')
   self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
@@ -246,6 +247,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused AND LIB_GLYPH THEN self.writeLine('               *GlyphBase = NULL,')
   IF self.libsused AND LIB_LABEL THEN self.writeLine('               *LabelBase = NULL,')
+  IF self.libsused AND LIB_BOINGBALL THEN self.writeLine('               *LabelBase = NULL,')
   self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
@@ -665,6 +667,12 @@ PROC assignGadgetVar(index) OF cSrcGen
   DEF tempStr[100]:STRING
   StringF(tempStr,'main_gadgets[\d] = ',index)
   self.write(tempStr)
+ENDPROC
+
+PROC componentLibnameCreate(libname:PTR TO CHAR) OF cSrcGen
+  DEF tempStr[200]:STRING
+  StringF(tempStr,'NewObject( NULL, \q\s\q,',libname)
+  self.componentCreate(tempStr)
 ENDPROC
 
 PROC genScreenCreate(screenObject:PTR TO screenObject) OF cSrcGen

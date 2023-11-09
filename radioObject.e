@@ -299,7 +299,7 @@ PROC makeRadioList(id) OF radioObject
   ENDIF
 ENDPROC radioButtonsA(newlist)
 
-EXPORT PROC createPreviewObject() OF radioObject
+EXPORT PROC createPreviewObject(scr) OF radioObject
   self.previewObject:=RadioButtonObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
