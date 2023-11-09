@@ -493,7 +493,7 @@ EXPORT PROC serialiseData() OF chooserObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF chooserObject
-
+  DEF tempStr[200]:STRING
   srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
@@ -512,6 +512,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF chooserObject
   IF self.width<>-1 THEN srcGen.componentPropertyInt('CHOOSER_Width',self.width)
 
   IF self.autofit THEN srcGen.componentProperty('CHOOSER_AutoFit','TRUE',FALSE)
+
+  IF self.listObjectId 
+    StringF(tempStr,'labels\d',self.id)
+    srcGen.componentProperty('CHOOSER_Labels',tempStr,FALSE)
+  ENDIF
 ENDPROC
 
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF chooserObject
@@ -528,37 +533,3 @@ EXPORT PROC createChooserObject(parent)
   
   NEW chooser.create(parent)
 ENDPROC chooser
-/*
-
-            CHOOSER_POPUP, TRUE,
-            CHOOSER_MAXLABELS, 12,
-            CHOOSER_ACTIVE, 0,
-            CHOOSER_WIDTH, -1,          
-            CHOOSER_LABELS, self.labels1:=chooserLabelsA(['TEXTFIELD_BORDER_NONE','TEXTFIELD_BORDER_BEVEL','TEXTFIELD_BORDER_DOUBLEBEVEL',0]),
-          ChooserEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, '_Border',
-          LabelEnd,
-
-
-struct List LB_aaa_list;
-UBYTE *aaa_str[] = { "i1", "i2", NULL };
-
-	NewList(&LB_aaa_list);
-	MakeListBrowserList1(&LB_aaa_list, aaa_str);
-
-
-				LAYOUT_AddChild, gMain_Gadgets[ 0 ] = ChooserObject,
-				  GA_ID, 0,
-				  GA_RelVerify, TRUE,
-				  GA_TabCycle, TRUE,
-				  GA_Disabled, TRUE,
-				  GA_ReadOnly, TRUE,
-				  CHOOSER_DropDown, TRUE,
-				  CHOOSER_AutoFit, TRUE,
-				  CHOOSER_MaxLabels, 14,
-				  CHOOSER_Active, 5,
-				  CHOOSER_Width, 4,
-				  CHOOSER_Labels, &C_aaa_list,
-				ChooserEnd,
-*/

@@ -2,6 +2,7 @@
 OPT MODULE
 
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist'
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject','*reactionLists'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -155,13 +156,16 @@ PROC genHeader() OF eSrcGen
   self.writeLine('')
 ENDPROC
 
-PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF eSrcGen
+PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF i
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
+  DEF listObjects:PTR TO stdlist
+  DEF reactionObject:PTR TO reactionObject
+  DEF listStr
 
   StrCopy(tempStr,windowObject.name)
   LowerStr(tempStr)
@@ -174,6 +178,43 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   IF menuObject.menuItems.count()>0
     self.writeLine('  DEF menuStrip=0,menuData=0:PTR TO newmenu')
   ENDIF
+  
+  NEW listObjects.stdlist(20)
+  layoutObject.findObjectsByType(listObjects,TYPE_CHOOSER)
+  layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
+  layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
+  layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
+  FOR i:=0 TO listObjects.count()-1
+    reactionObject:=listObjects.item(i)
+    StringF(tempStr,'  DEF labels\d=0',reactionObject.id)
+    self.writeLine(tempStr)
+  ENDFOR
+  self.writeLine('')
+  FOR i:=0 TO listObjects.count()-1
+    reactionObject:=listObjects.item(i)
+    SELECT reactionObject.type
+      CASE TYPE_CHOOSER
+        StringF(tempStr,'  labels\d:=chooserLabelsA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::chooserObject.listObjectId)
+      CASE TYPE_RADIO
+        StringF(tempStr,'  labels\d:=radioButtonsA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::radioObject.listObjectId)
+      CASE TYPE_CLICKTAB
+        StringF(tempStr,'  labels\d:=clickTabsA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::clickTabObject.listObjectId)
+      CASE TYPE_LISTBROWSER
+        StringF(tempStr,'  labels\d:=browserNodesA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::listBrowserObject.listObjectId)
+    ENDSELECT
+    IF listStr
+      self.writeLine(listStr)
+      DisposeLink(listStr)
+    ELSE
+      StringF(tempStr,'  labels\d:=0',reactionObject.id)
+      self.writeLine(tempStr)
+    ENDIF
+  ENDFOR
+  END listObjects
   self.writeLine('')
 
   IF menuObject.menuItems.count()>0
@@ -219,7 +260,12 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.indent:=2
 ENDPROC
 
-PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject) OF eSrcGen
+PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
+  DEF tempStr[200]:STRING
+  DEF listObjects:PTR TO stdlist
+  DEF reactionObject:PTR TO reactionObject
+  DEF i
+
   self.writeLine('')
   IF menuObject.menuItems.count()>0
     self.writeLine('  runWindow(windowObject,menuStrip)')
@@ -229,6 +275,28 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.writeLine('')
   self.writeLine('EXCEPT DO')
   self.writeLine('  IF windowObject THEN DisposeObject(windowObject);')
+
+  NEW listObjects.stdlist(20)
+  layoutObject.findObjectsByType(listObjects,TYPE_CHOOSER)
+  layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
+  layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
+  layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
+  FOR i:=0 TO listObjects.count()-1
+    reactionObject:=listObjects.item(i)
+    SELECT reactionObject.type
+      CASE TYPE_CHOOSER
+        StringF(tempStr,'  IF labels\d THEN freeChooserLabels(labels\d)',reactionObject.id,reactionObject.id)
+      CASE TYPE_RADIO
+        StringF(tempStr,'  IF labels\d THEN freeRadioButtons(labels\d)',reactionObject.id, reactionObject.id)
+      CASE TYPE_CLICKTAB
+        StringF(tempStr,'  IF labels\d THEN freeClickTabs(labels\d)',reactionObject.id,reactionObject.id)
+      CASE TYPE_LISTBROWSER
+        StringF(tempStr,'  IF labels\d THEN freeBrowserNodes(labels\d)',reactionObject.id,reactionObject.id)
+    ENDSELECT
+    self.writeLine(tempStr)
+  ENDFOR
+  END listObjects
+
   IF menuObject.menuItems.count()>0
     self.writeLine('  IF menuData THEN  END menuData[3]')
     self.writeLine('  IF menuStrip THEN FreeMenus(menuStrip)')
@@ -263,3 +331,45 @@ PROC assignGadgetVar(index) OF eSrcGen
   StringF(tempStr,'mainGadgets[\d]:=',index)
   self.write(tempStr)
 ENDPROC
+
+PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
+  DEF res=0
+  DEF totsize=0,linelen=0
+  DEF i,listitem=0:PTR TO reactionListObject
+  DEF foundid=-1
+  DEF items:PTR TO stringlist
+ 
+  FOR i:=0 TO reactionLists.count()-1
+    listitem:=reactionLists.item(i)
+    IF listitem.id=listid THEN foundid:=i
+  ENDFOR
+  
+  IF foundid<>-1
+    totsize:=StrLen(start)
+    listitem:=reactionLists.item(foundid)
+    FOR i:=0 TO listitem.items.count()-1
+      linelen:=linelen+EstrLen(listitem.items.item(i))+3
+      IF linelen>90
+        linelen:=0
+        totsize:=totsize+5
+      ENDIF
+      totsize:=totsize+EstrLen(listitem.items.item(i))+3
+    ENDFOR
+    res:=String(totsize+4)
+    StrCopy(res,start)
+    StrAdd(res,'[')
+    linelen:=0
+    FOR i:=0 TO listitem.items.count()-1
+      StrAdd(res,'\a')
+      StrAdd(res,listitem.items.item(i))
+      StrAdd(res,'\a,')
+      linelen:=linelen+EstrLen(listitem.items.item(i))+3
+      IF linelen>90
+        linelen:=0
+        StrAdd(res,'\n    ')
+      ENDIF
+    ENDFOR
+    StrAdd(res,'0])')
+  ENDIF
+  
+ENDPROC res

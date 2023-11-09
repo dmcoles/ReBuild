@@ -730,5 +730,17 @@ EXPORT PROC objectInitialise(n=1)
   objCount:=n
 ENDPROC
 
+PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
+  DEF i
+  DEF child:PTR TO reactionObject
+
+  IF self.type=type THEN res.add(self)
+  FOR i:=0 TO self.children.count()-1 
+    child:=self.children.item(i)
+    child.findObjectsByType(res,type)
+  ENDFOR
+ENDPROC
+
+
 EXPORT PROC getObjId() IS objCount
 

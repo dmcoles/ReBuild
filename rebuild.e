@@ -972,7 +972,7 @@ PROC genCode()
     layoutComp:=objectList.item(i+ROOT_LAYOUT_ITEM)
     count:=countGads(layoutComp)
   
-    srcGen.genWindowHeader(count,windowComp,menuComp)
+    srcGen.genWindowHeader(count,windowComp,menuComp,layoutComp, getReactionLists())
     srcGen.assignWindowVar()
     StringF(objectCreate,'\sObject,',windowComp.getTypeName())
     StringF(objectEnd,'\sEnd',windowComp.getTypeName())
@@ -986,7 +986,7 @@ PROC genCode()
     srcGen.componentEnd('LayoutEnd,') 
     srcGen.finalComponentEnd(objectEnd) 
     srcGen.decreaseIndent()
-    srcGen.genWindowFooter(count,windowComp,menuComp)
+    srcGen.genWindowFooter(count,windowComp,menuComp,layoutComp, getReactionLists())
     i+=3
   ENDWHILE
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
@@ -1079,7 +1079,6 @@ PROC loadFile() HANDLE
     ELSEIF StrCmp(tempStr,'VIEWTMP=',STRLEN)
       v:=Val(tempStr+STRLEN)
       IF Eor((v=TRUE),(bufferLayout<>0))
-        WriteF('toggle\n')
         toggleBuffer()
       ENDIF
     ELSEIF StrCmp(tempStr,'ADDSETT=',STRLEN)
@@ -1088,7 +1087,6 @@ PROC loadFile() HANDLE
         a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
         IF a
           IF v
-            WriteF('on\n')
             a.flags:=a.flags OR CHECKED
           ELSE
             a.flags:=a.flags AND Not(CHECKED)
@@ -1349,9 +1347,6 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
       
       IF win
         a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
-        WriteF('item=\h\n',a)
-        WriteF('flags=\h\n',a.flags)
-
       ENDIF
       IF (a<>0) ANDALSO (a.flags AND CHECKED)
         IF newObj.editSettings()
@@ -1926,6 +1921,7 @@ ENDPROC
 
 PROC editLists()
   DEF listManagerForm:PTR TO listManagerForm
+  DEF i
   DEF idx,mainRootLayout, previewRootLayout
   
   setBusy()

@@ -361,6 +361,7 @@ EXPORT PROC serialiseData() OF radioObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF radioObject
+  DEF tempStr[200]:STRING
 
   srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
@@ -369,6 +370,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF radioObject
   IF self.spacing<>1 THEN srcGen.componentPropertyInt('RADIOBUTTON_Spacing',self.spacing)
   IF self.selected THEN  srcGen.componentPropertyInt('RADIOBUTTON_Selected',self.selected)
   IF self.labelPlace<>1 THEN srcGen.componentProperty('RADIOBUTTON_LabelPlace',ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),FALSE)
+
+  IF self.listObjectId 
+    StringF(tempStr,'labels\d',self.id)
+    srcGen.componentProperty('RADIOBUTTON_Labels',tempStr,FALSE)
+  ENDIF
 ENDPROC
 
 EXPORT PROC getTypeName() OF radioObject

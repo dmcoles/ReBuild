@@ -393,6 +393,8 @@ EXPORT PROC serialiseData() OF clickTabObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
+  DEF tempStr[200]:STRING
+
   srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
@@ -401,6 +403,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
   srcGen.componentPropertyInt('GA_Top',self.top)
   srcGen.componentPropertyInt('GA_Height',self.height)
   IF self.current THEN srcGen.componentPropertyInt('CLICKTAB_Current',self.current)
+
+  IF self.listObjectId 
+    StringF(tempStr,'labels\d',self.id)
+    srcGen.componentProperty('CLICKTAB_Labels',tempStr,FALSE)
+  ENDIF
 ENDPROC
 
 EXPORT PROC getTypeName() OF clickTabObject

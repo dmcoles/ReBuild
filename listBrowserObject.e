@@ -1066,6 +1066,7 @@ EXPORT PROC serialiseData() OF listBrowserObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
+  DEF tempStr[200]:STRING
   srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
@@ -1079,6 +1080,12 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
   IF self.virtualWidth THEN srcGen.componentPropertyInt('LISTBROWSER_VirtualWidth',self.virtualWidth)
   IF self.spacing THEN srcGen.componentPropertyInt('LISTBROWSER_Spacing',self.spacing)
   IF self.selected<>-1 THEN srcGen.componentPropertyInt('LISTBROWSER_Selected',self.selected)
+
+  IF self.listObjectId 
+    StringF(tempStr,'labels\d',self.id)
+    srcGen.componentProperty('LISTBROWSER_Labels',tempStr,FALSE)
+  ENDIF
+  
 ENDPROC
 
   ->numColumns:INT

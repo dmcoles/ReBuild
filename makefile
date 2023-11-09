@@ -39,10 +39,10 @@ glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m sourceGen.m
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
 							$(compiler) spaceObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m
+cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m

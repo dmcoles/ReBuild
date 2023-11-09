@@ -18,6 +18,8 @@ PROC create(parent) OF reactionListObject
   SUPER self.create(parent)
   NEW items.stringlist(10)
   self.items:=items
+  WriteF('new list=\h\n',self)
+  WriteF('new list items=\h\n',self.items)
 ENDPROC
 
 PROC end() OF reactionListObject

@@ -190,5 +190,5 @@ ENDPROC
 
 PROC genHeader() OF srcGen IS -1
 PROC genFooter(windowObject) OF srcGen IS -1
-PROC genWindowHeader(count, windowObject, menuObject) OF srcGen IS -1
-PROC genWindowFooter(count, windowObject, menuObject) OF srcGen IS -1
+PROC genWindowHeader(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
+PROC genWindowFooter(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
