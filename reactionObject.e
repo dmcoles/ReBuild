@@ -11,6 +11,7 @@ OPT MODULE,OSVERSION=37
         'images/label','label',
         'amigalib/boopsi',
         'gadtools',
+        'penmap','images/penmap',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
@@ -27,23 +28,18 @@ EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU,
             TYPE_SPACE, TYPE_TEXTFIELD, TYPE_BEVEL, TYPE_DRAWLIST,
             TYPE_GLYPH, TYPE_LABEL,
 
-// These are not yet implemented but included here to define the ids            
+// These are not yet all implemented but included here to define the ids            
             TYPE_COLORWHEEL, TYPE_DATEBROWSER, TYPE_GETCOLOR, TYPE_GRADSLIDER,
             TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,TYPE_TAPEDECK,
             TYPE_TEXTEDITOR, TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_BOINGBALL, TYPE_LED,
-            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR
+            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR,
             
+            TYPE_MAX
             
-         
 EXPORT ENUM CHIGAD_MINWIDTH, CHIGAD_MINHEIGHT, CHIGAD_MAXWIDTH, CHIGAD_MAXHEIGHT,
       CHIGAD_WEIGHTEDWIDTH, CHIGAD_WEIGHTEDHEIGHT, CHIGAD_SCALEWIDTH, CHIGAD_SCALEHEIGHT,
       CHIGAD_NOMINALSIZE, CHIGAD_WEIGHTMINIMUM, CHIGAD_CACHEDOMAIN, CHIGAD_NODISPOSE,
       CHIGAD_OK, CHIGAD_CANCEL
-
-EXPORT SET LIB_BUTTON, LIB_CHECKBOX, LIB_CHOOSER, LIB_CLICKTAB, LIB_FUELGAUGE, LIB_GETFILE,
-            LIB_GETFONT, LIB_GETSCREEN, LIB_INTEGER, LIB_PALETTE, LIB_LISTB,
-            LIB_RADIO, LIB_SCROLLER, LIB_STRING, LIB_SPACE, LIB_TEXTFIELD,
-            LIB_BEVEL, LIB_DRAWLIST, LIB_GLYPH, LIB_LABEL, LIB_BOINGBALL
 
 EXPORT ENUM FIELDTYPE_CHAR=1, FIELDTYPE_INT=2, FIELDTYPE_LONG=3, FIELDTYPE_STR=4, FIELDTYPE_STRLIST=5, FIELDTYPE_INTLIST=6
 
@@ -55,7 +51,7 @@ EXPORT OBJECT reactionObject
   name[80]:ARRAY OF CHAR
   parent:PTR TO reactionObject
   children:PTR TO stdlist
-  libused:LONG
+  libsused:PTR TO LONG
   type:INT
   id:INT
   minWidth:LONG
@@ -92,7 +88,7 @@ PROC create() OF childSettingsForm
   self.gadgetActions:=gads
   
   self.windowObj:=WindowObject,
-    WA_TITLE, 'Label Attribute Setting',
+    WA_TITLE, 'Child Attribute Setting',
     WA_LEFT, 0,
     WA_TOP, 0,
     WA_HEIGHT, 80,
@@ -114,249 +110,177 @@ PROC create() OF childSettingsForm
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
 
     WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
       LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_DEFERLAYOUT, FALSE,
-        LAYOUT_SPACEOUTER, FALSE,
-        LAYOUT_BOTTOMSPACING, 2,
-        LAYOUT_TOPSPACING, 2,
-        LAYOUT_LEFTSPACING, 2,
-        LAYOUT_RIGHTSPACING, 2,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-        LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-        LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-        LAYOUT_BEVELSTATE, IDS_SELECTED,
-        LAYOUT_FIXEDHORIZ, TRUE,
-        LAYOUT_FIXEDVERT, TRUE,
-        LAYOUT_SHRINKWRAP, TRUE,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_EVENSIZE, TRUE,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MINWIDTH ]:=IntegerObject,
+          GA_ID, CHIGAD_MINWIDTH,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, -1,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'MinWidth',
+        LabelEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MINWIDTH ]:=IntegerObject,
-            GA_ID, CHIGAD_MINWIDTH,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, -1,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'MinWidth',
-          LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MINHEIGHT ]:=IntegerObject,
+          GA_ID, CHIGAD_MINHEIGHT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, -1,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'MinHeight',
+        LabelEnd,
+      LayoutEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MINHEIGHT ]:=IntegerObject,
-            GA_ID, CHIGAD_MINHEIGHT,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, -1,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'MinHeight',
-          LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MAXWIDTH ]:=IntegerObject,
-            GA_ID, CHIGAD_MAXWIDTH,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, -1,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'MaxWidth',
-          LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MAXWIDTH ]:=IntegerObject,
+          GA_ID, CHIGAD_MAXWIDTH,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, -1,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'MaxWidth',
+        LabelEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MAXHEIGHT ]:=IntegerObject,
-            GA_ID, CHIGAD_MAXHEIGHT,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, -1,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'MaxHeight',
-          LabelEnd,
-        LayoutEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_MAXHEIGHT ]:=IntegerObject,
+          GA_ID, CHIGAD_MAXHEIGHT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, -1,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'MaxHeight',
+        LabelEnd,
+      LayoutEnd,
 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
-          LAYOUT_EVENSIZE, TRUE,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_WEIGHTEDWIDTH ]:=IntegerObject,
-            GA_ID, CHIGAD_WEIGHTEDWIDTH,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 3,
-            INTEGER_MINIMUM, 0,
-            INTEGER_MAXIMUM, 100,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'WeightedWidth',
-          LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_WEIGHTEDWIDTH ]:=IntegerObject,
+          GA_ID, CHIGAD_WEIGHTEDWIDTH,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 3,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 100,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'WeightedWidth',
+        LabelEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_WEIGHTEDHEIGHT ]:=IntegerObject,
-            GA_ID, CHIGAD_WEIGHTEDHEIGHT,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 3,
-            INTEGER_MINIMUM, 0,
-            INTEGER_MAXIMUM, 100,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'WeightedHeight',
-          LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_WEIGHTEDHEIGHT ]:=IntegerObject,
+          GA_ID, CHIGAD_WEIGHTEDHEIGHT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 3,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 100,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'WeightedHeight',
+        LabelEnd,
+      LayoutEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_SCALEWIDTH ]:=IntegerObject,
-            GA_ID, CHIGAD_SCALEWIDTH,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, 0,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'ScaleWidth',
-          LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_SCALEHEIGHT ]:=IntegerObject,
-            GA_ID, CHIGAD_SCALEHEIGHT,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            INTEGER_MAXCHARS, 4,
-            INTEGER_MINIMUM, 0,
-            INTEGER_MAXIMUM, 9999,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'ScaleHeight',
-          LabelEnd,
-        LayoutEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_SCALEWIDTH ]:=IntegerObject,
+          GA_ID, CHIGAD_SCALEWIDTH,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'ScaleWidth',
+        LabelEnd,
 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_SCALEHEIGHT ]:=IntegerObject,
+          GA_ID, CHIGAD_SCALEHEIGHT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 4,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 9999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'ScaleHeight',
+        LabelEnd,
+      LayoutEnd,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_NOMINALSIZE ]:=CheckBoxObject,
-            GA_ID, CHIGAD_NOMINALSIZE,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            GA_TEXT, '_NominalSize',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
-            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-          CheckBoxEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_WEIGHTMINIMUM ]:=CheckBoxObject,
-            GA_ID, CHIGAD_WEIGHTMINIMUM,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            GA_TEXT, '_WeightMinimum',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
-            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-          CheckBoxEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_NOMINALSIZE ]:=CheckBoxObject,
+          GA_ID, CHIGAD_NOMINALSIZE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, '_NominalSize',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_CACHEDOMAIN ]:=CheckBoxObject,
-            GA_ID, CHIGAD_CACHEDOMAIN,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            GA_TEXT, '_CacheDomain',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
-            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-          CheckBoxEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_WEIGHTMINIMUM ]:=CheckBoxObject,
+          GA_ID, CHIGAD_WEIGHTMINIMUM,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, '_WeightMinimum',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+      LayoutEnd,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_NODISPOSE ]:=CheckBoxObject,
-            GA_ID, CHIGAD_NODISPOSE,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            GA_TEXT, 'No_Dispose',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
-            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-          CheckBoxEnd,
-        LayoutEnd,
- 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_OK ]:=ButtonObject,
-            GA_ID, CHIGAD_OK,
-            GA_TEXT, '_OK',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
-          ButtonEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_CACHEDOMAIN ]:=CheckBoxObject,
+          GA_ID, CHIGAD_CACHEDOMAIN,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, '_CacheDomain',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
 
-          LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_CANCEL ]:=ButtonObject,
-            GA_ID, CHIGAD_CANCEL,
-            GA_TEXT, '_Cancel',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
-          ButtonEnd,
-        LayoutEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_NODISPOSE ]:=CheckBoxObject,
+          GA_ID, CHIGAD_NODISPOSE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'No_Dispose',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_OK ]:=ButtonObject,
+          GA_ID, CHIGAD_OK,
+          GA_TEXT, '_OK',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHIGAD_CANCEL ]:=ButtonObject,
+          GA_ID, CHIGAD_CANCEL,
+          GA_TEXT, '_Cancel',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
       LayoutEnd,
     LayoutEnd,
   WindowEnd
@@ -636,7 +560,7 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
       ELSEIF StrCmp('MINHEIGHT: ',tempStr,STRLEN)
         self.minHeight:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MAXWIDTH: ',tempStr,STRLEN)
-        self.minHeight:=Val(tempStr+STRLEN)
+        self.maxWidth:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MAXHEIGHT: ',tempStr,STRLEN)
         self.maxHeight:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('WEIGHTEDWIDTH: ',tempStr,STRLEN)
@@ -736,6 +660,19 @@ EXPORT PROC isImage() OF reactionObject IS 0
 
 EXPORT PROC libNameCreate() OF reactionObject IS 0
 
+EXPORT PROC allowChildren() OF reactionObject IS 0
+
+EXPORT PROC addChildTag() OF reactionObject IS 0
+
+EXPORT PROC addImageTag() OF reactionObject IS 0
+
+EXPORT PROC removeChildTag() OF reactionObject IS 0
+
+EXPORT PROC addChildTo() OF reactionObject IS 0
+
+EXPORT PROC genChildObjectsHeader(srcGen:PTR TO srcGen) OF reactionObject IS 0
+
+EXPORT PROC genChildObjectsFooter(srcGen:PTR TO srcGen) OF reactionObject IS 0
 
 EXPORT PROC objectInitialise(n=1)
   objCount:=n
@@ -752,6 +689,29 @@ PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   ENDFOR
 ENDPROC
 
+EXPORT PROC createErrorObject(scr) OF reactionObject IS
+    NewObjectA(PenMap_GetClass(), NIL,
+                                  [PENMAP_RENDERDATA, {image_data},
+                                  PENMAP_SCREEN, scr,
+                                  TAG_DONE])
 
 EXPORT PROC getObjId() IS objCount
 
+image_data:
+CHAR   0,16, 0,16
+     CHAR	$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01
+     CHAR	$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00
+     CHAR	$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00
+     CHAR	$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$00
+     CHAR	$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00
+     CHAR	$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00
+     CHAR	$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00
+     CHAR	$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01

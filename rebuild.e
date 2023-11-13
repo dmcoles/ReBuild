@@ -13,13 +13,15 @@ OPT OSVERSION=37,LARGE
         'images/label',
         '*bball',
         '*textfield',
+        'penmap',
+        'bitmap',
         'getfile',
         'getfont',
         'getscreenmode',
         'fuelgauge',
         'radiobutton',
         'clicktab',
-        'scroller','glyph',
+        'scroller','glyph','slider',
         'gadtools','libraries/gadtools',
         'dos/dos',
         'exec',
@@ -34,7 +36,8 @@ OPT OSVERSION=37,LARGE
          '*bevelObject','*listBrowserObject','*clickTabObject','*chooserObject','*radioObject','*menuObject',
          '*rexxObject','*reactionListObject','*windowObject','*screenObject','*layoutObject','*paletteObject',
          '*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject',
-         '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject'
+         '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject',
+         '*penMapObject','*sliderObject','*bitmapObject'
 
 #define vernum '0.1.0-alpha'
 #date verstring '$VER:Rebuild 0.1.0-%Y%m%d%h%n%s-alpha'
@@ -84,8 +87,8 @@ OPT OSVERSION=37,LARGE
   DEF appPort=0
   DEF win:PTR TO window
   DEF gMain_Gadgets[GAD_COUNT]:ARRAY OF LONG
-  DEF objectList:PTR TO stdlist
-  DEF bufferList:PTR TO stdlist
+  DEF objectList=0:PTR TO stdlist
+  DEF bufferList=0:PTR TO stdlist
   DEF selectedComp:PTR TO reactionObject
   DEF selectedBuffComp:PTR TO reactionObject
   DEF list=0,list2=0
@@ -115,11 +118,14 @@ PROC openClasses()
   IF (getfilebase:=OpenLibrary('gadgets/getfile.gadget',0))=NIL THEN Throw("LIB","file")
   IF (getfontbase:=OpenLibrary('gadgets/getfont.gadget',0))=NIL THEN Throw("LIB","font")
   IF (getscreenmodebase:=OpenLibrary('gadgets/getscreenmode.gadget',0))=NIL THEN Throw("LIB","scrn")
+  IF (sliderbase:=OpenLibrary('gadgets/slider.gadget',0))=NIL THEN Throw("LIB","sldr")
   IF (glyphbase:=OpenLibrary('images/glyph.image',0))=NIL THEN Throw("LIB","glyp")
   IF (labelbase:=OpenLibrary('images/label.image',0))=NIL THEN Throw("LIB","labl")
   IF (bevelbase:=OpenLibrary('images/bevel.image',0))=NIL THEN Throw("LIB","bevl")
   IF (drawlistbase:=OpenLibrary('images/drawlist.image',0))=NIL THEN Throw("LIB","draw")
-  IF (boingballbase:=OpenLibrary('images/boingball.image',0))=NIL THEN Throw("LIB","ball")
+  IF (penmapbase:=OpenLibrary('images/penmap.image',0))=NIL THEN Throw("LIB","penm")
+  IF (bitmapbase:=OpenLibrary('images/bitmap.image',0))=NIL THEN Throw("LIB","bitm")
+  boingballbase:=OpenLibrary('images/boingball.image',0)
 ENDPROC
 
 PROC closeClasses()
@@ -143,11 +149,14 @@ PROC closeClasses()
   IF getfilebase THEN CloseLibrary(getfilebase)
   IF getfontbase THEN CloseLibrary(getfontbase)
   IF getscreenmodebase THEN CloseLibrary(getscreenmodebase)
-  
+  IF sliderbase THEN CloseLibrary(sliderbase)
+ 
   IF glyphbase THEN CloseLibrary(glyphbase)
   IF labelbase THEN CloseLibrary(labelbase)
   IF bevelbase THEN CloseLibrary(bevelbase)
   IF drawlistbase THEN CloseLibrary(drawlistbase)
+  IF penmapbase THEN CloseLibrary(penmapbase)
+  IF bitmapbase THEN CloseLibrary(bitmapbase)
   IF boingballbase THEN CloseLibrary(boingballbase)
 ENDPROC
 
@@ -164,72 +173,53 @@ PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newn
     StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
   ENDIF
   StringF(idStr,'\d',comp.id)
-  StringF(typeStr,'\s Object',comp.getTypeName())
-  IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.type=TYPE_LAYOUT) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+  StringF(typeStr,'\s',comp.getTypeName())
+  IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
   comp.node:=n
   
   IF comp=selcomp THEN newnode[]:=n
   
-  IF comp.type=TYPE_LAYOUT
+  IF comp.allowChildren()
     FOR i:=0 TO comp.children.count()-1
       makeComponentList(comp.children.item(i),generation+1,list, selcomp, newnode)
     ENDFOR
   ENDIF
 ENDPROC
 
-PROC removeMembers(comp:PTR TO reactionObject,previewRootLayout)
-  DEF i 
+PROC removeMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
+  DEF i, parent:PTR TO reactionObject
   IF comp
-    IF comp.type=TYPE_LAYOUT
-      FOR i:=0 TO comp.children.count()-1
-        removeMembers(comp.children.item(i),previewRootLayout)
-      ENDFOR
+    FOR i:=0 TO comp.children.count()-1
+      removeMembers(comp.children.item(i),window)
+    ENDFOR
+    IF comp.parent THEN parent:=comp.parent ELSE parent:=window
+    WriteF('removing comp \h \h\n',parent.addChildTo(), comp.previewObject)
+    IF comp.previewObject
+      Sets(parent.addChildTo(),parent.removeChildTag(), comp.previewObject)
+      comp.previewObject:=0
+      comp.previewChildAttrs:=0
     ENDIF
-    IF comp.parent  
-      WriteF('removing comp \h \h\n',comp.parent.previewObject, comp.previewObject)
-      IF comp.previewObject
-        Sets(comp.parent.previewObject,LAYOUT_REMOVECHILD, comp.previewObject)
-        comp.previewObject:=0
-        comp.previewChildAttrs:=0
-      ENDIF
-      WriteF('removed comp \h \h\n',comp.parent.previewObject, comp.previewObject)
-    ELSE
-      WriteF('removing rootlayout \h \h\n',previewRootLayout, comp.previewObject)
-      IF comp.previewObject
-        Sets(previewRootLayout,LAYOUT_REMOVECHILD, comp.previewObject)
-        comp.previewObject:=0
-        comp.previewChildAttrs:=0
-      ENDIF
-      WriteF('removed rootlayout \h \h\n',previewRootLayout, comp.previewObject)
-    ENDIF
+    WriteF('removed comp \h \h\n',parent.addChildTo(), comp.previewObject)
   ENDIF
 ENDPROC
 
-PROC addMembers(comp:PTR TO reactionObject,previewRootLayout)
-  DEF i 
+PROC addMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
+  DEF i, parent:PTR TO reactionObject
   IF comp
-    IF comp.parent  
-      WriteF('adding comp \h \h\n',comp.parent.previewObject,comp.previewObject)
-      comp.createPreviewObject(win.wscreen)
-      IF (comp.isImage())
-        SetGadgetAttrsA(comp.parent.previewObject,0,0,[LAYOUT_ADDIMAGE, comp.previewObject, TAG_END])
-      ELSE
-        SetGadgetAttrsA(comp.parent.previewObject,0,0,[LAYOUT_ADDCHILD, comp.previewObject, TAG_END])
-      ENDIF
-      IF comp.previewChildAttrs THEN SetGadgetAttrsA(comp.parent.previewObject,0,0,comp.previewChildAttrs)
-      WriteF('added comp \h \h\n',comp.parent.previewObject,comp.previewObject)
+    IF comp.parent THEN parent:=comp.parent ELSE parent:=window
+    WriteF('adding comp \h \h\n',parent.addChildTo(),comp.previewObject)
+    comp.createPreviewObject(win.wscreen)
+    IF (comp.isImage())
+      SetGadgetAttrsA(parent.addChildTo(),0,0,[parent.addImageTag(), comp.previewObject, TAG_END])
     ELSE
-      WriteF('adding rootlayout \h \h\n',previewRootLayout,comp.previewObject)
-      comp.createPreviewObject(win.wscreen)
-      SetGadgetAttrsA(previewRootLayout,0,0,[LAYOUT_ADDCHILD, comp.previewObject, TAG_END])
-      IF comp.previewChildAttrs THEN SetGadgetAttrsA(previewRootLayout,0,0,comp.previewChildAttrs)
-      WriteF('added rootlayout \h \h\n',previewRootLayout,comp.previewObject)
+      SetGadgetAttrsA(parent.addChildTo(),0,0,[parent.addChildTag(), comp.previewObject, TAG_END])
     ENDIF
-    IF comp.type=TYPE_LAYOUT
-      FOR i:=0 TO comp.children.count()-1
-        addMembers(comp.children.item(i),previewRootLayout)
-      ENDFOR
-    ENDIF
+    IF comp.previewChildAttrs THEN SetGadgetAttrsA(parent.previewObject,0,0,comp.previewChildAttrs)
+    WriteF('added comp \h \h\n',parent.previewObject,comp.previewObject)
+
+    FOR i:=0 TO comp.children.count()-1
+      addMembers(comp.children.item(i),window)
+    ENDFOR
   ENDIF
 ENDPROC
 
@@ -247,15 +237,15 @@ PROC makeList(selcomp=0)
     IF objectList.item(i)=0
       SELECT i
         CASE ROOT_APPLICATION_ITEM
-          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application Begin', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application Begin', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_REXX_ITEM
-          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Rexx', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Rexx', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_SCREEN_ITEM
-          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Screen', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Screen', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_WINDOW_ITEM
-          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 3, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Window - Main', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT,'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 3, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Window - Main', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT,'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_MENU_ITEM
-          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 4, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Menu', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 4, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Menu', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
       ENDSELECT
     ELSE
       IF i=ROOT_REXX_ITEM
@@ -290,16 +280,16 @@ PROC makeList(selcomp=0)
     ENDIF
   ENDFOR
 
-  IF (n:=AllocListBrowserNodeA(3, [LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application End', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System Object',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+  IF (n:=AllocListBrowserNodeA(3, [LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application End', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
 -> Reattach the list
   SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_LABELS,list,0])
   IF win 
     IF newnode
       SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newnode,0])
-      updateSel(win,newnode)
+      updateSel(newnode)
     ELSE
       SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTED, -1,0])
-      updateSel(win,0)
+      updateSel(0)
     ENDIF
   ENDIF
   
@@ -311,18 +301,27 @@ PROC menuDisable(win,menu,item,subitem,flag)
   IF flag THEN OffMenu(win,menuCode(menu,item,subitem)) ELSE OnMenu(win,menuCode(menu,item,subitem))
 ENDPROC
 
-PROC updateSel(win,node)
+PROC updateSel(node)
   DEF comp=0:PTR TO reactionObject
+  DEF child:PTR TO reactionObject
   DEF dis,idx
   DEF check,i
   DEF dismoveup,dismovedown,disdel
+  DEF menuItem
+  DEF type
   
   IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
   IF comp
     selectedComp:=comp
-    FOR i:=0 TO NUM_OBJECT_TYPES-1
-      check:=(i=1) OR (i=11) OR (i=16) OR (i=17) OR (i=18)
-      menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,((comp.parent=0) AND (comp.type<>TYPE_LAYOUT)) OR check)
+    FOR i:=0 TO 31
+      menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_ADD,i))
+      IF menuItem
+        type:=GTMENUITEM_USERDATA(menuItem)
+        IF type<>-1
+          check:=((comp.parent=0) AND (comp.allowChildren()=FALSE)) OR (type==[TYPE_SPEEDBAR, TYPE_STATUSBAR])
+          menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,check)
+        ENDIF
+      ENDIF
     ENDFOR
     
     IF comp.parent=0
@@ -347,11 +346,11 @@ PROC updateSel(win,node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,dismoveup)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,dismovedown)
     
-    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.allowChildren()=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
 
     IF bufferLayout
-      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.type<>TYPE_LAYOUT) AND (comp.type<>TYPE_WINDOW),TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.allowChildren()=FALSE) AND (comp.type<>TYPE_WINDOW),TAG_END])
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW)) OR comp.children.count()),TAG_END])
     ENDIF
 
@@ -360,7 +359,8 @@ PROC updateSel(win,node)
     IF comp.parent
       idx:=comp.getChildIndex()
       IF (idx<(comp.parent.children.count()-1))
-        IF ((comp.parent.children.item(idx+1)::reactionObject.type)=TYPE_LAYOUT)
+        child:=comp.parent.children.item(idx+1)
+        IF ((child.allowChildren()))
           dis:=FALSE
         ENDIF
       ENDIF
@@ -376,8 +376,12 @@ PROC updateSel(win,node)
     ENDIF
   ELSE
     selectedComp:=0
-    FOR i:=0 TO NUM_OBJECT_TYPES-1
-      menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,TRUE)
+    FOR i:=0 TO 31
+      menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_ADD,i))
+      IF menuItem
+        type:=GTMENUITEM_USERDATA(menuItem)
+        IF type<>-1 THEN menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,TRUE)
+      ENDIF
     ENDFOR
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,TRUE)
@@ -407,7 +411,7 @@ PROC updateBufferSel(win,node)
   IF bufferLayout
     IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
     IF comp AND selectedComp
-      dis:=(selectedComp.parent=0) AND (selectedComp.type<>TYPE_LAYOUT) AND (selectedComp.type<>TYPE_SCREEN) AND (selectedComp.type<>TYPE_WINDOW)
+      dis:=(selectedComp.parent=0) AND (selectedComp.allowChildren()=FALSE) AND (selectedComp.type<>TYPE_SCREEN) AND (selectedComp.type<>TYPE_WINDOW)
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,dis,TAG_END])
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,dis,TAG_END])
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_REMOVE],win,0,[GA_DISABLED,dis,TAG_END])
@@ -424,7 +428,6 @@ ENDPROC
 
 PROC createBufferGads()
   bufferLayout:=LayoutObject,
-    LAYOUT_DEFERLAYOUT, FALSE,
     LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
     
     LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMPLIST]:=ListBrowserObject,
@@ -489,16 +492,16 @@ PROC createForm()
 
   list:=browserNodesA([0])
   list2:=browserNodesA([0])
-  columninfo[0].width:=2
-  columninfo[0].title:='Object Name'
+  columninfo[0].width:=8
+  columninfo[0].title:='Name'
   columninfo[0].flags:=CIF_WEIGHTED
 
-  columninfo[1].width:=1
-  columninfo[1].title:='Object Type'
+  columninfo[1].width:=3
+  columninfo[1].title:='Type'
   columninfo[1].flags:=CIF_WEIGHTED
 
-  columninfo[2].width:=1
-  columninfo[2].title:='Object ID'
+  columninfo[2].width:=2
+  columninfo[2].title:='ID'
   columninfo[2].flags:=CIF_WEIGHTED
 
   columninfo[3].width:=-1
@@ -541,120 +544,102 @@ PROC createForm()
     ->WA_NOCAREREFRESH, TRUE,
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR IDCMP_MENUPICK,
     WINDOW_PARENTGROUP, VLayoutObject,
-    LAYOUT_DEFERLAYOUT, TRUE,
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_DEFERLAYOUT, FALSE,
-        LAYOUT_BOTTOMSPACING, 2,
-        LAYOUT_TOPSPACING, 2,
-        LAYOUT_LEFTSPACING, 2,
-        LAYOUT_RIGHTSPACING, 2,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-        
+      LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_SPACEOUTER, TRUE,
+          
       LAYOUT_ADDCHILD, mainWindowLayout:=LayoutObject,
-        LAYOUT_DEFERLAYOUT, FALSE,
-        
-          LAYOUT_ADDCHILD, gMain_Gadgets[GAD_COMPONENTLIST]:=ListBrowserObject,
-            GA_ID, GAD_COMPONENTLIST,
-            GA_RELVERIFY, TRUE,
-            LISTBROWSER_POSITION, 0,
-            LISTBROWSER_SHOWSELECTED, TRUE,
-            LISTBROWSER_VERTSEPARATORS, TRUE,
-            LISTBROWSER_SEPARATORS, TRUE,
-            LISTBROWSER_COLUMNTITLES, TRUE,
-            LISTBROWSER_COLUMNINFO, columninfo,
-            LISTBROWSER_VERTICALPROP, TRUE,
-            LISTBROWSER_HIERARCHICAL, TRUE,
-            LISTBROWSER_LABELS, list,
-          ListBrowserEnd,
-        LayoutEnd,
-
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, TRUE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_ADD]:=ButtonObject,
-            GA_ID, GAD_ADD,
-            GA_TEXT, '_Add',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENMINUS]:=ButtonObject,
-            GA_ID, GAD_GENMINUS,
-            GA_TEXT, 'Gen _-',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENPLUS]:=ButtonObject,
-            GA_ID, GAD_GENPLUS,
-            GA_TEXT, 'Gen _+',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_DELETE]:=ButtonObject,
-            GA_ID, GAD_DELETE,
-            GA_TEXT, '_Delete',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEUP]:=ButtonObject,
-            GA_ID, GAD_MOVEUP,
-            GA_TEXT, '_Up',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEDOWN]:=ButtonObject,
-            GA_ID, GAD_MOVEDOWN,
-            GA_TEXT, 'Do_wn',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LISTS]:=ButtonObject,
-            GA_ID, GAD_LISTS,
-            GA_TEXT, 'L_ists',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_CODE]:=ButtonObject,
-            GA_ID, GAD_CODE,
-            GA_TEXT, '_Code',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LOAD]:=ButtonObject,
-            GA_ID, GAD_LOAD,
-            GA_TEXT, '_Open',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_SAVE]:=ButtonObject,
-            GA_ID, GAD_SAVE,
-            GA_TEXT, '_Save',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-
-          LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_NEW]:=ButtonObject,
-            GA_ID, GAD_NEW,
-            GA_TEXT, '_New',
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-          ButtonEnd,
-        LayoutEnd,
-          CHILD_WEIGHTEDHEIGHT, 0,
+        LAYOUT_ADDCHILD, gMain_Gadgets[GAD_COMPONENTLIST]:=ListBrowserObject,
+          GA_ID, GAD_COMPONENTLIST,
+          GA_RELVERIFY, TRUE,
+          LISTBROWSER_POSITION, 0,
+          LISTBROWSER_SHOWSELECTED, TRUE,
+          LISTBROWSER_COLUMNTITLES, TRUE,
+          LISTBROWSER_COLUMNINFO, columninfo,
+          LISTBROWSER_VERTICALPROP, TRUE,
+          LISTBROWSER_HIERARCHICAL, TRUE,
+          LISTBROWSER_LABELS, list,
+        ListBrowserEnd,
       LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_ADD]:=ButtonObject,
+          GA_ID, GAD_ADD,
+          GA_TEXT, '_Add',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENMINUS]:=ButtonObject,
+          GA_ID, GAD_GENMINUS,
+          GA_TEXT, 'Gen _-',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_GENPLUS]:=ButtonObject,
+          GA_ID, GAD_GENPLUS,
+          GA_TEXT, 'Gen _+',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_DELETE]:=ButtonObject,
+          GA_ID, GAD_DELETE,
+          GA_TEXT, '_Delete',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEUP]:=ButtonObject,
+          GA_ID, GAD_MOVEUP,
+          GA_TEXT, '_Up',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_MOVEDOWN]:=ButtonObject,
+          GA_ID, GAD_MOVEDOWN,
+          GA_TEXT, 'Do_wn',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LISTS]:=ButtonObject,
+          GA_ID, GAD_LISTS,
+          GA_TEXT, 'L_ists',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_CODE]:=ButtonObject,
+          GA_ID, GAD_CODE,
+          GA_TEXT, '_Code',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_LOAD]:=ButtonObject,
+          GA_ID, GAD_LOAD,
+          GA_TEXT, '_Open',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_SAVE]:=ButtonObject,
+          GA_ID, GAD_SAVE,
+          GA_TEXT, '_Save',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_NEW]:=ButtonObject,
+          GA_ID, GAD_NEW,
+          GA_TEXT, '_New',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+      LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT, 0,
     LayoutEnd,
   WindowEnd
   
@@ -663,34 +648,36 @@ PROC createForm()
 ENDPROC
 
 PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout
+  DEF window
   
-  IF parent.type=TYPE_LAYOUT
+  IF parent.allowChildren()
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     parent.addChild(newobj)
     makeList(newobj)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
 ENDPROC
 
 PROC removeObject(parent:PTR TO reactionObject,child:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout
   DEF comp2:PTR TO reactionObject
+  DEF window
   
-  IF parent.type=TYPE_LAYOUT
+  IF parent.allowChildren()
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(objectList.item(ROOT_LAYOUT_ITEM),previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(objectList.item(ROOT_LAYOUT_ITEM),window)
     idx:=child.getChildIndex()
     parent.removeChild(child)
     END child
     makeList()
-    addMembers(objectList.item(ROOT_LAYOUT_ITEM),previewRootLayout)
+    addMembers(objectList.item(ROOT_LAYOUT_ITEM),window)
     rethinkPreviews()
     IF (idx<parent.children.count())
       comp2:=parent.children.item(idx)
@@ -698,7 +685,7 @@ PROC removeObject(parent:PTR TO reactionObject,child:PTR TO reactionObject)
       comp2:=parent
     ENDIF
     SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, comp2.node, TAG_END])
-    updateSel(win,comp2.node)
+    updateSel(comp2.node)
   ENDIF
 ENDPROC
 
@@ -706,7 +693,7 @@ PROC removeWindow(win:PTR TO reactionObject)
   DEF idx,comp:PTR TO reactionObject
   idx:=findWindowIndex(win)
   idx:=(idx*3)
-  removeMembers(objectList.item(idx+ROOT_LAYOUT_ITEM),objectList.item(idx+ROOT_WINDOW_ITEM)::windowObject.previewRootLayout)
+  removeMembers(objectList.item(idx+ROOT_LAYOUT_ITEM),objectList.item(idx+ROOT_WINDOW_ITEM))
   comp:=objectList.item(idx+ROOT_WINDOW_ITEM) 
   END comp
   comp:=objectList.item(idx+ROOT_LAYOUT_ITEM)
@@ -721,38 +708,38 @@ PROC removeWindow(win:PTR TO reactionObject)
 ENDPROC
 
 PROC doGenUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout, window
 
-  IF (parent.type=TYPE_LAYOUT) AND (parent.parent<>0)
+  IF (parent.allowChildren()) AND (parent.parent<>0)
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     parent.removeChild(child)
     parent.parent.addChild(child)
     child.parent:=parent.parent
     makeList(child)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
 ENDPROC
 
 PROC doGenDown(parent:PTR TO reactionObject, child:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout, window
   DEF newparent: PTR TO reactionObject
 
   changes:=TRUE
   idx:=findWindowIndex(selectedComp)
   mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-  previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-  removeMembers(mainRootLayout,previewRootLayout)
+  window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+  removeMembers(mainRootLayout,window)
   idx:=child.getChildIndex()
   newparent:=parent.children.item(idx+1)
   parent.removeChild(child)
   newparent.addChild(child)
   makeList(child)
-  addMembers(mainRootLayout,previewRootLayout)
+  addMembers(mainRootLayout,window)
   rethinkPreviews()
 ENDPROC
 
@@ -776,57 +763,57 @@ PROC swapWindows(idx1,idx2)
 ENDPROC
 
 PROC moveUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout, window
 
   IF parent=0
     idx:=findWindowIndex(child)
 
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     swapWindows(idx,idx-1)
     makeList(child)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     RETURN
   ENDIF
 
-  IF parent.type=TYPE_LAYOUT
+  IF parent.allowChildren()
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     parent.swapChildren(child.getChildIndex(),child.getChildIndex()-1)
     makeList(child)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
 ENDPROC
 
 PROC moveDown(parent:PTR TO reactionObject,child:PTR TO reactionObject)
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout, window
 
   IF parent=0
     idx:=findWindowIndex(child)
 
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     swapWindows(idx,idx+1)
     makeList(child)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     RETURN
   ENDIF
 
-  IF parent.type=TYPE_LAYOUT
+  IF parent.allowChildren()
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-    previewRootLayout:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
     parent.swapChildren(child.getChildIndex(),child.getChildIndex()+1)
     makeList(child)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
 ENDPROC
@@ -851,7 +838,7 @@ PROC findWindowIndex(comp:PTR TO reactionObject)
     ENDWHILE
   ELSE 
     WHILE comp.parent DO comp:=comp.parent
-    IF comp.type<>TYPE_LAYOUT
+    IF comp.allowChildren()=FALSE
       RETURN -1
     ENDIF
   
@@ -866,10 +853,9 @@ PROC findWindowIndex(comp:PTR TO reactionObject)
   ENDIF
 ENDPROC -1
 
-PROC findLibsUsed(from=0:PTR TO reactionObject,libsused=0)
+PROC findLibsUsed(from:PTR TO reactionObject,libsused:PTR TO CHAR)
   DEF i
-  IF from=0 THEN from:=objectList.item(ROOT_LAYOUT_ITEM)
-  libsused:=libsused OR from.libused
+  FOR i:=0 TO ListLen(from.libsused)-1 DO libsused[ListItem(from.libsused,i)]:=TRUE
 
   FOR i:=0 TO from.children.count()-1 DO libsused:=findLibsUsed(from.children.item(i),libsused)
 ENDPROC libsused
@@ -884,11 +870,13 @@ ENDPROC n+1
 PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   DEF i
   DEF tempStr[200]:STRING
-  DEF libname
+  DEF libname,addTag
   IF comp.isImage()
-    srcGen.componentAddImage()
+    IF comp.parent THEN addTag:=comp.parent.addImageTag() ELSE addTag:=LAYOUT_ADDIMAGE
+    srcGen.componentAddImage(addTag)
   ELSE
-    srcGen.componentAddChild()
+    IF comp.parent THEN addTag:=comp.parent.addChildTag() ELSE addTag:=LAYOUT_ADDCHILD
+    srcGen.componentAddChild(addTag)
   ENDIF
 
   srcGen.assignGadgetVar(n)
@@ -899,10 +887,14 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
     srcGen.componentCreate(tempStr)
   ENDIF
   comp.genCodeProperties(srcGen)
-  FOR i:=0 TO comp.children.count()-1
-    n++
-    genComponentCode(comp.children.item(i),n,srcGen)
-  ENDFOR
+  IF comp.children.count()>0
+    comp.genChildObjectsHeader(srcGen)
+    FOR i:=0 TO comp.children.count()-1
+      n++
+      genComponentCode(comp.children.item(i),n,srcGen)
+    ENDFOR
+    comp.genChildObjectsFooter(srcGen)
+  ENDIF
   StrCopy(tempStr,comp.getTypeEndName())
   IF EstrLen(tempStr)=0
     StringF(tempStr,'\sEnd',comp.getTypeName())
@@ -920,7 +912,7 @@ PROC genCode()
   DEF eSrcGen: PTR TO eSrcGen
   DEF cSrcGen: PTR TO cSrcGen
   DEF srcGen:PTR TO srcGen
-  DEF count,libsused
+  DEF count
   DEF objectCreate[50]:STRING
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
@@ -929,6 +921,7 @@ PROC genCode()
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
   DEF screenComp:PTR TO screenObject
+  DEF libsused[TYPE_MAX]:ARRAY OF CHAR
   
   setBusy()
   NEW codeGenForm.create()
@@ -959,13 +952,13 @@ PROC genCode()
   IF tags THEN FastDisposeList(tags)
   IF aslbase THEN CloseLibrary(aslbase)
   
+  FOR i:=0 TO TYPE_MAX-1 DO libsused[i]:=0
+
   i:=ROOT_LAYOUT_ITEM
-  libsused:=0
   WHILE i<objectList.count()
-    libsused:=libsused OR findLibsUsed(objectList.item(i))
+    findLibsUsed(objectList.item(i),libsused)
     i+=3
   ENDWHILE
-  WriteF('libsused=\d\n',libsused)
   
   IF FileLength(fname)>=0
     IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
@@ -1004,6 +997,7 @@ PROC genCode()
       srcGen.componentProperty('WA_CustomScreen','gScreen',FALSE)
     ENDIF
     srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
+    srcGen.componentProperty('LAYOUT_SpaceOuter','TRUE',FALSE)
     srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
     srcGen.increaseIndent()
     genComponentCode(layoutComp,0,srcGen)
@@ -1128,7 +1122,7 @@ PROC loadFile() HANDLE
   
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
-    removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i)::windowObject.previewRootLayout)
+    removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
   disposeObjects()
@@ -1185,7 +1179,7 @@ PROC loadFile() HANDLE
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
-    addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i)::windowObject.previewRootLayout)
+    addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
   remakePreviewMenus()
@@ -1352,37 +1346,61 @@ ENDPROC
 
 PROC doAddWindow()
   DEF newwin:PTR TO windowObject
+  DEF a:PTR TO menuitem
 
-  objectList.add(newwin:=createWindowObject(0))  ->extra window
-  objectList.add(createMenuObject(0)) ->extra menu
-  objectList.add(createLayoutObject(0)) ->extra layout
-  makeList()
-  RA_OpenWindow(newwin.previewObject)
-  remakePreviewMenus()
-  changes:=TRUE
+  newwin:=createWindowObject(0)
+  IF newwin
+    setBusy()
+    IF win
+      a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
+    ENDIF
+    IF (a<>0) ANDALSO (a.flags AND CHECKED)
+      IF newwin.editSettings()=FALSE
+        objectInitialise(newwin.id)
+        END newwin
+      ENDIF
+    ENDIF
+    IF newwin
+      objectList.add(newwin)  ->extra window
+      objectList.add(createMenuObject(0)) ->extra menu
+      objectList.add(createLayoutObject(0)) ->extra layout
+      makeList()
+      SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newwin.node, TAG_END])
+      updateSel(newwin.node)
+      RA_OpenWindow(newwin.previewObject)
+      remakePreviewMenus()
+      changes:=TRUE
+    ENDIF
+    clearBusy()
+  ENDIF
+    
 ENDPROC
 
-PROC doAddComp(comp:PTR TO reactionObject, objType)
+PROC doAddComp(comp:PTR TO reactionObject, objType, compType=-1)
   DEF newObj:PTR TO reactionObject
   DEF a=0:PTR TO menuitem
-  changes:=TRUE
   newObj:=0
-  WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
+  WHILE (comp<>0) AND (comp.allowChildren()=FALSE) DO comp:=comp.parent
   IF comp
-    newObj:=createObjectByObj(objType,comp)
+    IF compType>-1
+      newObj:=createObjectByType(compType,comp)
+    ELSE
+      newObj:=createObjectByObj(objType,comp)
+    ENDIF
     IF newObj 
       setBusy()
-      
       IF win
         a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
       ENDIF
       IF (a<>0) ANDALSO (a.flags AND CHECKED)
-        IF newObj.editSettings()
-          addObject(comp,newObj)
-        ELSE
+        IF newObj.editSettings()=FALSE
+          objectInitialise(newObj.id)
           END newObj
+          newObj:=NIL
         ENDIF
-      ELSE
+      ENDIF
+      IF newObj
+        changes:=TRUE
         addObject(comp,newObj)
       ENDIF
       clearBusy()
@@ -1411,7 +1429,7 @@ PROC doAdd()
 ENDPROC
 
 PROC doEdit()
-  DEF idx, mainRootLayout, previewRootLayout
+  DEF idx, mainRootLayout
   DEF winObj:PTR TO windowObject
   DEF pwin
   IF selectedComp
@@ -1422,11 +1440,10 @@ PROC doEdit()
       IF idx<>-1
         mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
         winObj:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
-        previewRootLayout:=winObj.previewRootLayout
-        removeMembers(mainRootLayout,previewRootLayout)
+        removeMembers(mainRootLayout,winObj)
         IF selectedComp.type=TYPE_WINDOW THEN RA_CloseWindow(selectedComp.previewObject)
         makeList(selectedComp)
-        addMembers(mainRootLayout,previewRootLayout)
+        addMembers(mainRootLayout,winObj)
 
         IF selectedComp.type=TYPE_MENU
           pwin:=Gets(winObj.previewObject,WINDOW_WINDOW)
@@ -1527,11 +1544,11 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   END fs
 
   comp:=selectedComp
-  WHILE (comp<>0) AND (comp.type<>TYPE_LAYOUT) DO comp:=comp.parent
+  WHILE (comp<>0) AND (comp.allowChildren()=FALSE) DO comp:=comp.parent
   IF comp 
     addObject(comp,newObj)
     SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newObj.node, TAG_END])
-    updateSel(win,newObj.node)
+    updateSel(newObj.node)
   ELSE 
     END newObj
   ENDIF
@@ -1595,22 +1612,27 @@ PROC disposeObjects()
   DEF i
   
   reactionLists:=getReactionLists()
-  FOR i:=0 TO reactionLists.count()-1
-    comp:=reactionLists.item(i)
-    IF comp THEN END comp
-  ENDFOR
-  reactionLists.clear()
+  IF reactionLists
+    FOR i:=0 TO reactionLists.count()-1
+      comp:=reactionLists.item(i)
+      IF comp THEN END comp
+    ENDFOR
+    reactionLists.clear()
+  ENDIF
 
-  FOR i:=0 TO objectList.count()-1
-    comp:=objectList.item(i)
-    IF comp THEN END comp
-  ENDFOR
-  objectList.clear()
+  IF objectList
+    FOR i:=0 TO objectList.count()-1
+      comp:=objectList.item(i)
+      IF comp THEN END comp
+    ENDFOR
+    objectList.clear()
+  ENDIF
 ENDPROC
 
 PROC disposeBufferObjects()
   DEF comp:PTR TO reactionObject
   DEF i
+
   FOR i:=0 TO bufferList.count()-1
     comp:=bufferList.item(i)
     IF comp THEN END comp
@@ -1624,7 +1646,7 @@ PROC newProject()
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
-    removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i)::windowObject.previewRootLayout)
+    removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
 
@@ -1641,7 +1663,7 @@ PROC newProject()
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
-    addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i)::windowObject.previewRootLayout)
+    addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
   rethinkPreviews()
@@ -1770,62 +1792,92 @@ PROC remakePreviewMenus()
   menuData[11].label:='Edit'
   menuData[12].type:=NM_ITEM
   menuData[12].label:='Add'
+  menuData[12].userdata:=-1
+
   menuData[13].type:=NM_SUB
   menuData[13].label:='Button'
+  menuData[13].userdata:=TYPE_BUTTON
   menuData[14].type:=NM_SUB
   menuData[14].label:='Bitmap'
+  menuData[14].userdata:=TYPE_BITMAP
   menuData[15].type:=NM_SUB
   menuData[15].label:='CheckBox'
+  menuData[15].userdata:=TYPE_CHECKBOX
   menuData[16].type:=NM_SUB
   menuData[16].label:='Chooser'
+  menuData[16].userdata:=TYPE_CHOOSER
   menuData[17].type:=NM_SUB
   menuData[17].label:='ClickTab'
+  menuData[17].userdata:=TYPE_CLICKTAB
   menuData[18].type:=NM_SUB
   menuData[18].label:='FuelGauge'
+  menuData[18].userdata:=TYPE_FUELGAUGE
   menuData[19].type:=NM_SUB
   menuData[19].label:='GetFile'
+  menuData[19].userdata:=TYPE_GETFILE
   menuData[20].type:=NM_SUB
   menuData[20].label:='GetFont'
+  menuData[20].userdata:=TYPE_GETFONT
   menuData[21].type:=NM_SUB
   menuData[21].label:='GetScreenMode'
+  menuData[21].userdata:=TYPE_GETSCREENMODE
   menuData[22].type:=NM_SUB
   menuData[22].label:='Integer'
+  menuData[22].userdata:=TYPE_INTEGER
   menuData[23].type:=NM_SUB
   menuData[23].label:='Palette'
+  menuData[23].userdata:=TYPE_PALETTE
   menuData[24].type:=NM_SUB
   menuData[24].label:='PenMap'
+  menuData[24].userdata:=TYPE_PENMAP
   menuData[25].type:=NM_SUB
   menuData[25].label:='Layout'
+  menuData[25].userdata:=TYPE_LAYOUT
   menuData[26].type:=NM_SUB
   menuData[26].label:='ListBrowser'
+  menuData[26].userdata:=TYPE_LISTBROWSER
   menuData[27].type:=NM_SUB
   menuData[27].label:='RadioButton'
+  menuData[27].userdata:=TYPE_RADIO
   menuData[28].type:=NM_SUB
   menuData[28].label:='Scroller'
+  menuData[28].userdata:=TYPE_SCROLLER
   menuData[29].type:=NM_SUB
   menuData[29].label:='SpeedBar'
+  menuData[29].userdata:=TYPE_SPEEDBAR
   menuData[30].type:=NM_SUB
   menuData[30].label:='Slider'
+  menuData[30].userdata:=TYPE_SLIDER
   menuData[31].type:=NM_SUB
   menuData[31].label:='StatusBar'
+  menuData[31].userdata:=TYPE_STATUSBAR
   menuData[32].type:=NM_SUB
   menuData[32].label:='String'
+  menuData[32].userdata:=TYPE_STRING
   menuData[33].type:=NM_SUB
   menuData[33].label:='Space'
+  menuData[33].userdata:=TYPE_SPACE
   menuData[34].type:=NM_SUB
   menuData[34].label:='TextField'
+  menuData[34].userdata:=TYPE_TEXTFIELD
   menuData[35].type:=NM_SUB
   menuData[35].label:='Bevel'
+  menuData[35].userdata:=TYPE_BEVEL
   menuData[36].type:=NM_SUB
   menuData[36].label:='DrawList'
+  menuData[36].userdata:=TYPE_DRAWLIST
   menuData[37].type:=NM_SUB
   menuData[37].label:='Glyph'
+  menuData[37].userdata:=TYPE_GLYPH
   menuData[38].type:=NM_SUB
   menuData[38].label:='Label'
+  menuData[38].userdata:=TYPE_LABEL
   menuData[39].type:=NM_SUB
   menuData[39].label:=NM_BARLABEL
+  menuData[39].userdata:=-1
   menuData[40].type:=NM_SUB
   menuData[40].label:='Window'
+  menuData[40].userdata:=TYPE_WINDOW
   menuData[41].type:=NM_ITEM
   menuData[41].label:='Edit'
   menuData[42].type:=NM_ITEM
@@ -1878,7 +1930,7 @@ PROC remakePreviewMenus()
   FreeVisualInfo(visInfo)
   IF win 
     SetMenuStrip(win,menus)
-    updateSel(win,Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTEDNODE))
+    updateSel(Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTEDNODE))
   ENDIF
 ENDPROC
 
@@ -1907,14 +1959,14 @@ ENDPROC
 
 PROC closePreviews()
   DEF previewWin,i
-  
+  IF objectList=NIL THEN RETURN
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
     previewWin:=objectList.item(i)::windowObject.previewObject
-    RA_CloseWindow(previewWin)
+    IF previewWin THEN RA_CloseWindow(previewWin)
     i+=3
   ENDWHILE
-  remakePreviewMenus()
+  IF win THEN remakePreviewMenus()
 ENDPROC
 
 PROC openPreviews()
@@ -1950,7 +2002,7 @@ ENDPROC
 PROC editLists()
   DEF listManagerForm:PTR TO listManagerForm
   DEF i
-  DEF idx,mainRootLayout, previewRootLayout
+  DEF idx,mainRootLayout, window
   
   setBusy()
   NEW listManagerForm.create()
@@ -1962,10 +2014,10 @@ PROC editLists()
   idx:=ROOT_WINDOW_ITEM
   WHILE idx<objectList.count()
     mainRootLayout:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_LAYOUT_ITEM)
-    previewRootLayout:=objectList.item(idx)::windowObject.previewRootLayout
-    removeMembers(mainRootLayout,previewRootLayout)
+    window:=objectList.item(idx)
+    removeMembers(mainRootLayout,window)
     makeList(selectedComp)
-    addMembers(mainRootLayout,previewRootLayout)
+    addMembers(mainRootLayout,window)
     rethinkPreviews()
     idx+=3
   ENDWHILE
@@ -2018,6 +2070,12 @@ PROC createObjectByObj(objType,comp)
       newObj:=createGetScreenModeObject(comp)
     CASE OBJECT_BOINGBALL
       newObj:=createBoingBallObject(comp)
+    CASE OBJECT_PENMAP
+      newObj:=createPenMapObject(comp)
+    CASE OBJECT_BITMAP
+      newObj:=createBitmapObject(comp)
+    CASE OBJECT_SLIDER
+      newObj:=createSliderObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2078,6 +2136,12 @@ PROC createObjectByType(objType,comp)
       newObj:=createMenuObject(comp)
     CASE TYPE_BOINGBALL
       newObj:=createBoingBallObject(comp)
+    CASE TYPE_PENMAP
+      newObj:=createPenMapObject(comp)
+    CASE TYPE_BITMAP
+      newObj:=createBitmapObject(comp)
+    CASE TYPE_SLIDER
+      newObj:=createPenMapObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2102,6 +2166,7 @@ PROC main() HANDLE
   DEF menu,menuitem,subitem
   DEF reactionList:PTR TO reactionListObject
   DEF i
+  DEF item,type
 
   openClasses()
   NEW objectList.stdlist(20)
@@ -2150,10 +2215,14 @@ PROC main() HANDLE
                 CASE MENU_EDIT
                   SELECT menuitem
                     CASE MENU_EDIT_ADD  ->Add
-                      IF subitem>OBJECT_LABEL
-                        doAddWindow()
-                      ELSE
-                        doAddComp(selectedComp,subitem)
+                      item:=ItemAddress(win.menustrip,result)
+                      type:=GTMENUITEM_USERDATA(item)
+                      IF type<>-1
+                        IF type=TYPE_WINDOW
+                          doAddWindow()
+                        ELSE
+                          doAddComp(selectedComp,-1,type)
+                        ENDIF
                       ENDIF
                     CASE MENU_EDIT_EDIT ->Edit
                       doEdit()
@@ -2177,7 +2246,7 @@ PROC main() HANDLE
                 CASE GAD_COMPONENTLIST
                   tmp:=Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_RELEVENT)
                   IF tmp=LBRE_NORMAL
-                    updateSel(win,Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTEDNODE))
+                    updateSel(Gets(gMain_Gadgets[GAD_COMPONENTLIST],LISTBROWSER_SELECTEDNODE))
                   ELSEIF tmp=LBRE_DOUBLECLICK
                     doEdit()
                   ENDIF
@@ -2286,6 +2355,8 @@ EXCEPT DO
           errorRequest(0,'Error','Unable to open getfont.gadget')
         CASE "scrn"
           errorRequest(0,'Error','Unable to open getscreenmode.gadget')
+        CASE "sldr"
+          errorRequest(0,'Error','Unable to open slider.gadget')
         CASE "glyp"
           errorRequest(0,'Error','Unable to open glyph.image')
         CASE "labl"
@@ -2294,39 +2365,47 @@ EXCEPT DO
           errorRequest(0,'Error','Unable to open bevel.image')
         CASE "draw"
           errorRequest(0,'Error','Unable to open drawlist.image')
+        CASE "penm"
+          errorRequest(0,'Error','Unable to open penmap.image')
+        CASE "bitm"
+          errorRequest(0,'Error','Unable to open bitmap.image')
         CASE "ASL"
           errorRequest(0,'Error','Unable to open asl.library')
       ENDSELECT
   ENDSELECT
   WriteF('shutdown\n')
-  RA_CloseWindow(mainWindow)
+  IF mainWindow THEN RA_CloseWindow(mainWindow)
   win:=0
   WriteF('window closed\n')
   closePreviews()
   WriteF('previews closed\n')
-  i:=ROOT_WINDOW_ITEM
-  WHILE i<objectList.count()
-    removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i)::windowObject.previewRootLayout)
-    i+=3
-  ENDWHILE
+  IF objectList
+    i:=ROOT_WINDOW_ITEM
+    WHILE i<objectList.count()
+      removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
+      i+=3
+    ENDWHILE
+  ENDIF
   WriteF('members removed\n')
-  FreeMenus(menus)
+  IF menus THEN FreeMenus(menus)
   WriteF('menus freed\n')
   disposeObjects()
   WriteF('objects disposed\n')
-  END objectList
+  IF objectList THEN END objectList
   WriteF('objects freed\n')
-  disposeBufferObjects()
-  WriteF('buffer objects disposed\n')
-  END bufferList
+  IF bufferList 
+    disposeBufferObjects()
+    WriteF('buffer objects disposed\n')
+    END bufferList
+  ENDIF
   WriteF('buffer freed\n')
   freeReactionLists()
   WriteF('reactionlists freed\n')
-  freeBrowserNodes( list )
+  IF list THEN freeBrowserNodes( list )
   WriteF('browsernodes disposed\n')
-  freeBrowserNodes( list2 )
+  IF list2 THEN freeBrowserNodes( list2 )
   WriteF('browsernodes2 disposed\n')
-  DisposeObject(mainWindow)
+  IF mainWindow THEN DisposeObject(mainWindow)
   WriteF('mainwindow disposed\n')
   IF (appPort) THEN DeleteMsgPort(appPort)
   WriteF('appport deleted\n')

@@ -1,5 +1,4 @@
-
-OPT MODULE
+OPT MODULE,LARGE
 
   MODULE 'images/drawlist'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
@@ -43,27 +42,27 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('')
   self.writeLine('#include <proto/window.h>')
   self.writeLine('#include <proto/layout.h>')
-  IF self.libsused AND LIB_BUTTON THEN self.writeLine('#include <proto/button.h>')
-  IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('#include <proto/checkbox.h>')
-  IF self.libsused AND LIB_CHOOSER THEN self.writeLine('#include <proto/chooser.h>')
-  IF self.libsused AND LIB_CLICKTAB THEN self.writeLine('#include <proto/clicktab.h>')
-  IF self.libsused AND LIB_FUELGAUGE THEN self.writeLine('#include <proto/fuelgauge.h>')
-  IF self.libsused AND LIB_GETFILE THEN self.writeLine('#include <proto/getfile.h>')
-  IF self.libsused AND LIB_GETFONT THEN self.writeLine('#include <proto/getfont.h>')
-  IF self.libsused AND LIB_GETSCREEN THEN self.writeLine('#include <proto/getscreenmode.h>')
-  IF self.libsused AND LIB_INTEGER THEN self.writeLine('#include <proto/integer.h>')
-  IF self.libsused AND LIB_PALETTE THEN self.writeLine('#include <proto/palette.h>')
-  IF self.libsused AND LIB_LISTB THEN self.writeLine('#include <proto/listbrowser.h>')
-  IF self.libsused AND LIB_RADIO THEN self.writeLine('#include <proto/radiobutton.h>')
-  IF self.libsused AND LIB_SCROLLER THEN self.writeLine('#include <proto/scroller.h>')
-  IF self.libsused AND LIB_STRING THEN self.writeLine('#include <proto/string.h>')
-  IF self.libsused AND LIB_SPACE THEN self.writeLine('#include <proto/space.h>')
-  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('#include <proto/textfield.h>')
-  IF self.libsused AND LIB_BEVEL THEN self.writeLine('#include <proto/bevel.h>')
-  IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('#include <proto/drawlist.h>')
-  IF self.libsused AND LIB_GLYPH THEN self.writeLine('#include <proto/glyph.h>')
-  IF self.libsused AND LIB_LABEL THEN self.writeLine('#include <proto/label.h>')
-  IF self.libsused AND LIB_BOINGBALL THEN self.writeLine('#include <proto/penmap.h>')
+  IF self.libsused[TYPE_BUTTON] THEN self.writeLine('#include <proto/button.h>')
+  IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('#include <proto/checkbox.h>')
+  IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('#include <proto/chooser.h>')
+  IF self.libsused[TYPE_CLICKTAB] THEN self.writeLine('#include <proto/clicktab.h>')
+  IF self.libsused[TYPE_FUELGAUGE] THEN self.writeLine('#include <proto/fuelgauge.h>')
+  IF self.libsused[TYPE_GETFILE] THEN self.writeLine('#include <proto/getfile.h>')
+  IF self.libsused[TYPE_GETFONT] THEN self.writeLine('#include <proto/getfont.h>')
+  IF self.libsused[TYPE_GETSCREENMODE] THEN self.writeLine('#include <proto/getscreenmode.h>')
+  IF self.libsused[TYPE_INTEGER] THEN self.writeLine('#include <proto/integer.h>')
+  IF self.libsused[TYPE_PALETTE] THEN self.writeLine('#include <proto/palette.h>')
+  IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('#include <proto/listbrowser.h>')
+  IF self.libsused[TYPE_RADIO] THEN self.writeLine('#include <proto/radiobutton.h>')
+  IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('#include <proto/scroller.h>')
+  IF self.libsused[TYPE_STRING] THEN self.writeLine('#include <proto/string.h>')
+  IF self.libsused[TYPE_SPACE] THEN self.writeLine('#include <proto/space.h>')
+  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('#include <proto/textfield.h>')
+  IF self.libsused[TYPE_BEVEL] THEN self.writeLine('#include <proto/bevel.h>')
+  IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('#include <proto/drawlist.h>')
+  IF self.libsused[TYPE_GLYPH] THEN self.writeLine('#include <proto/glyph.h>')
+  IF self.libsused[TYPE_LABEL] THEN self.writeLine('#include <proto/label.h>')
+  IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('#include <proto/penmap.h>')
   self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
@@ -75,7 +74,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('#include <exec/memory.h>')
   self.writeLine('')
 
-  IF self.libsused AND LIB_CHOOSER
+  IF self.libsused[TYPE_CHOOSER]
     self.writeLine('struct List *ChooserLabelsA(STRPTR *nameList)')
     self.writeLine('{')
     self.writeLine('  struct List *newList;')
@@ -113,7 +112,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine('')
   ENDIF
 
-  IF self.libsused AND LIB_CLICKTAB
+  IF self.libsused[TYPE_CLICKTAB]
     self.writeLine('struct List *ClickTabsA(STRPTR *nameList)')
     self.writeLine('{')
     self.writeLine('  struct List *newList;')
@@ -152,7 +151,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   ENDIF
 
 
-  IF self.libsused AND LIB_RADIO
+  IF self.libsused[TYPE_RADIO]
     self.writeLine('struct List *RadioButtonsA(STRPTR *nameList)')
     self.writeLine('{')
     self.writeLine('  struct List *newList;')
@@ -190,7 +189,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine('')
   ENDIF
 
-  IF self.libsused AND LIB_LISTB
+  IF self.libsused[TYPE_LISTBROWSER]
     self.writeLine('struct List *BrowserNodesA(STRPTR *nameList)')
     self.writeLine('{')
     self.writeLine('  struct List *newList;')
@@ -227,27 +226,28 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('')
 
   self.writeLine('struct Library *WindowBase = NULL,')
-  IF self.libsused AND LIB_BUTTON THEN self.writeLine('               *ButtonBase = NULL,')
-  IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('               *CheckBoxBase = NULL,')
-  IF self.libsused AND LIB_CHOOSER THEN self.writeLine('               *ChooserBase = NULL,')
-  IF self.libsused AND LIB_CLICKTAB THEN self.writeLine('               *ClickTabBase  = NULL,')
-  IF self.libsused AND LIB_FUELGAUGE THEN self.writeLine('               *FuelGaugeBase = NULL,')
-  IF self.libsused AND LIB_GETFILE THEN self.writeLine('               *GetFileBase = NULL,')
-  IF self.libsused AND LIB_GETFONT THEN self.writeLine('               *GetFontBase = NULL,')
-  IF self.libsused AND LIB_GETSCREEN THEN self.writeLine('               *GetScreenModeBase = NULL,')
-  IF self.libsused AND LIB_INTEGER THEN self.writeLine('               *IntegerBase = NULL,')
-  IF self.libsused AND LIB_PALETTE THEN self.writeLine('               *PaletteBase = NULL,')
-  IF self.libsused AND LIB_LISTB THEN self.writeLine('               *ListBrowserBase = NULL,')
-  IF self.libsused AND LIB_RADIO THEN self.writeLine('               *RadioButtonBase = NULL,')
-  IF self.libsused AND LIB_SCROLLER THEN self.writeLine('               *ScrollerBase = NULL,')
-  IF self.libsused AND LIB_STRING THEN self.writeLine('               *StringBase = NULL,')
-  IF self.libsused AND LIB_SPACE THEN self.writeLine('               *SpaceBase = NULL,')
-  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('               *TextFieldBase = NULL,')
-  IF self.libsused AND LIB_BEVEL THEN self.writeLine('               *BevelBase = NULL,')
-  IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('               *DrawListBase = NULL,')
-  IF self.libsused AND LIB_GLYPH THEN self.writeLine('               *GlyphBase = NULL,')
-  IF self.libsused AND LIB_LABEL THEN self.writeLine('               *LabelBase = NULL,')
-  IF self.libsused AND LIB_BOINGBALL THEN self.writeLine('               *LabelBase = NULL,')
+  IF self.libsused[TYPE_BUTTON] THEN self.writeLine('               *ButtonBase = NULL,')
+  IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('               *CheckBoxBase = NULL,')
+  IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('               *ChooserBase = NULL,')
+  IF self.libsused[TYPE_CLICKTAB] THEN self.writeLine('               *ClickTabBase  = NULL,')
+  IF self.libsused[TYPE_FUELGAUGE] THEN self.writeLine('               *FuelGaugeBase = NULL,')
+  IF self.libsused[TYPE_GETFILE] THEN self.writeLine('               *GetFileBase = NULL,')
+  IF self.libsused[TYPE_GETFONT] THEN self.writeLine('               *GetFontBase = NULL,')
+  IF self.libsused[TYPE_GETSCREENMODE] THEN self.writeLine('               *GetScreenModeBase = NULL,')
+  IF self.libsused[TYPE_INTEGER] THEN self.writeLine('               *IntegerBase = NULL,')
+  IF self.libsused[TYPE_PALETTE] THEN self.writeLine('               *PaletteBase = NULL,')
+  IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('               *ListBrowserBase = NULL,')
+  IF self.libsused[TYPE_RADIO] THEN self.writeLine('               *RadioButtonBase = NULL,')
+  IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('               *ScrollerBase = NULL,')
+  IF self.libsused[TYPE_STRING] THEN self.writeLine('               *StringBase = NULL,')
+  IF self.libsused[TYPE_SPACE] THEN self.writeLine('               *SpaceBase = NULL,')
+  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('               *TextFieldBase = NULL,')
+  IF self.libsused[TYPE_BEVEL] THEN self.writeLine('               *BevelBase = NULL,')
+  IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('               *DrawListBase = NULL,')
+  IF self.libsused[TYPE_GLYPH] THEN self.writeLine('               *GlyphBase = NULL,')
+  IF self.libsused[TYPE_LABEL] THEN self.writeLine('               *LabelBase = NULL,')
+  IF self.libsused[TYPE_BOINGBALL] THEN self.writeLine('               *LabelBase = NULL,')
+  IF self.libsused[TYPE_PENMAP] THEN self.writeLine('               *PenMapBase = NULL,')
   self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
@@ -259,85 +259,90 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('  if( !(WindowBase = (struct Library*) OpenLibrary("window.class",0L) ) ) return 0;')
   self.writeLine('  if( !(LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) ) ) return 0;')
 
-  IF self.libsused AND LIB_BUTTON
+  IF self.libsused[TYPE_BUTTON]
     self.writeLine('  if( !(ButtonBase = (struct Library*) OpenLibrary("gadgets/button.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_CHECKBOX
+  IF self.libsused[TYPE_CHECKBOX]
     self.writeLine('  if( !(CheckBoxBase = (struct Library*) OpenLibrary("gadgets/checkbox.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_CHOOSER
+  IF self.libsused[TYPE_CHOOSER]
     self.writeLine('  if( !(ChooserBase = (struct Library*) OpenLibrary("gadgets/chooser.gadget",0L) ) ) return 0;')
   ENDIF
   
-  IF self.libsused AND LIB_CLICKTAB
+  IF self.libsused[TYPE_CLICKTAB]
     self.writeLine('  if( !(ClickTabBase = (struct Library*) OpenLibrary("gadgets/clicktab.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_FUELGAUGE
+  IF self.libsused[TYPE_FUELGAUGE]
     self.writeLine('  if( !(FuelGaugeBase = (struct Library*) OpenLibrary("gadgets/fuelgauge.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_GETFILE
+  IF self.libsused[TYPE_GETFILE]
     self.writeLine('  if( !(GetFileBase = (struct Library*) OpenLibrary("gadgets/getfile.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_GETFONT
+  IF self.libsused[TYPE_GETFONT]
     self.writeLine('  if( !(GetFontBase = (struct Library*) OpenLibrary("gadgets/getfont.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_GETSCREEN
+  IF self.libsused[TYPE_GETSCREENMODE]
     self.writeLine('  if( !(GetScreenModeBase = (struct Library*) OpenLibrary("gadgets/getscreenmode.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_INTEGER
+  IF self.libsused[TYPE_INTEGER]
     self.writeLine('  if( !(IntegerBase = (struct Library*) OpenLibrary("gadgets/integer.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_PALETTE
+  IF self.libsused[TYPE_PALETTE]
     self.writeLine('  if( !(PaletteBase = (struct Library*) OpenLibrary("gadgets/palette.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_LISTB
+  IF self.libsused[TYPE_LISTBROWSER]
     self.writeLine('  if( !(ListBrowserBase = (struct Library*) OpenLibrary("gadgets/listbrowser.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_RADIO
+  IF self.libsused[TYPE_RADIO]
     self.writeLine('  if( !(RadioButtonBase = (struct Library*) OpenLibrary("gadgets/radiobutton.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_SCROLLER
+  IF self.libsused[TYPE_SCROLLER]
     self.writeLine('  if( !(ScrollerBase = (struct Library*) OpenLibrary("gadgets/scroller.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_STRING
+  IF self.libsused[TYPE_STRING]
     self.writeLine('  if( !(StringBase = (struct Library*) OpenLibrary("gadgets/string.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_SPACE
+  IF self.libsused[TYPE_SPACE]
     self.writeLine('  if( !(SpaceBase = (struct Library*) OpenLibrary("gadgets/space.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_TEXTFIELD
+  IF self.libsused[TYPE_TEXTFIELD]
     self.writeLine('  if( !(TextFieldBase = (struct Library*) OpenLibrary("gadgets/textfield.gadget",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_BEVEL
+  IF self.libsused[TYPE_BEVEL]
     self.writeLine('  if( !(BevelBase = (struct Library*) OpenLibrary("images/bevel.image",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_DRAWLIST
+  IF self.libsused[TYPE_DRAWLIST]
     self.writeLine('  if( !(DrawListBase = (struct Library*) OpenLibrary("images/drawlist.image",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_GLYPH
+  IF self.libsused[TYPE_GLYPH]
     self.writeLine('  if( !(GlyphBase = (struct Library*) OpenLibrary("images/glyph.image",0L) ) ) return 0;')
   ENDIF
 
-  IF self.libsused AND LIB_LABEL
+  IF self.libsused[TYPE_LABEL]
     self.writeLine('  if( !(LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) ) ) return 0;')
   ENDIF
+
+  IF self.libsused[TYPE_PENMAP]
+    self.writeLine('  if( !(PenMapBase = (struct Library*) OpenLibrary("images/penmap.image",0L) ) ) return 0;')
+  ENDIF
+
   self.genScreenCreate(screenObject)
   self.writeLine('  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;')
   self.writeLine('  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;')
@@ -356,26 +361,27 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('')
   self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
   self.writeLine('  if (IntuitionBase) CloseLibrary( (struct Library *)IntuitionBase );')
-  IF self.libsused AND LIB_BUTTON THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );')
-  IF self.libsused AND LIB_CHECKBOX THEN self.writeLine('  if (CheckBoxBase) CloseLibrary( (struct Library *)CheckBoxBase );')
-  IF self.libsused AND LIB_CHOOSER THEN self.writeLine('  if (ChooserBase) CloseLibrary( (struct Library *)ChooserBase );')
-  IF self.libsused AND LIB_CLICKTAB THEN self.writeLine('  if (ClickTabBase) CloseLibrary( (struct Library *)ClickTabBase );')
-  IF self.libsused AND LIB_FUELGAUGE THEN self.writeLine('  if (FuelGaugeBase) CloseLibrary( (struct Library *)FuelGaugeBase );')
-  IF self.libsused AND LIB_GETFILE THEN self.writeLine('  if (GetFileBase) CloseLibrary( (struct Library *)GetFileBase );')
-  IF self.libsused AND LIB_GETFONT THEN self.writeLine('  if (GetFontBase) CloseLibrary( (struct Library *)GetFontBase );')
-  IF self.libsused AND LIB_GETSCREEN THEN self.writeLine('  if (GetScreenModeBase) CloseLibrary( (struct Library *)GetScreenModeBase );')
-  IF self.libsused AND LIB_INTEGER THEN self.writeLine('  if (IntegerBase) CloseLibrary( (struct Library *)IntegerBase );')
-  IF self.libsused AND LIB_PALETTE THEN self.writeLine('  if (PaletteBase) CloseLibrary( (struct Library *)PaletteBase );')
-  IF self.libsused AND LIB_LISTB THEN self.writeLine('  if (ListBrowserBase) CloseLibrary( (struct Library *)ListBrowserBase );')
-  IF self.libsused AND LIB_RADIO THEN self.writeLine('  if (RadioButtonBase) CloseLibrary( (struct Library *)RadioButtonBase );')
-  IF self.libsused AND LIB_SCROLLER THEN self.writeLine('  if (ScrollerBase) CloseLibrary( (struct Library *)ScrollerBase );')
-  IF self.libsused AND LIB_STRING THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
-  IF self.libsused AND LIB_SPACE THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
-  IF self.libsused AND LIB_TEXTFIELD THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)TextFieldBase );')
-  IF self.libsused AND LIB_BEVEL THEN self.writeLine('  if (BevelBase) CloseLibrary( (struct Library *)BevelBase );')
-  IF self.libsused AND LIB_DRAWLIST THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
-  IF self.libsused AND LIB_GLYPH THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
-  IF self.libsused AND LIB_LABEL THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
+  IF self.libsused[TYPE_BUTTON] THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );')
+  IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('  if (CheckBoxBase) CloseLibrary( (struct Library *)CheckBoxBase );')
+  IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('  if (ChooserBase) CloseLibrary( (struct Library *)ChooserBase );')
+  IF self.libsused[TYPE_CLICKTAB] THEN self.writeLine('  if (ClickTabBase) CloseLibrary( (struct Library *)ClickTabBase );')
+  IF self.libsused[TYPE_FUELGAUGE] THEN self.writeLine('  if (FuelGaugeBase) CloseLibrary( (struct Library *)FuelGaugeBase );')
+  IF self.libsused[TYPE_GETFILE] THEN self.writeLine('  if (GetFileBase) CloseLibrary( (struct Library *)GetFileBase );')
+  IF self.libsused[TYPE_GETFONT] THEN self.writeLine('  if (GetFontBase) CloseLibrary( (struct Library *)GetFontBase );')
+  IF self.libsused[TYPE_GETSCREENMODE] THEN self.writeLine('  if (GetScreenModeBase) CloseLibrary( (struct Library *)GetScreenModeBase );')
+  IF self.libsused[TYPE_INTEGER] THEN self.writeLine('  if (IntegerBase) CloseLibrary( (struct Library *)IntegerBase );')
+  IF self.libsused[TYPE_PALETTE] THEN self.writeLine('  if (PaletteBase) CloseLibrary( (struct Library *)PaletteBase );')
+  IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  if (ListBrowserBase) CloseLibrary( (struct Library *)ListBrowserBase );')
+  IF self.libsused[TYPE_RADIO] THEN self.writeLine('  if (RadioButtonBase) CloseLibrary( (struct Library *)RadioButtonBase );')
+  IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  if (ScrollerBase) CloseLibrary( (struct Library *)ScrollerBase );')
+  IF self.libsused[TYPE_STRING] THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
+  IF self.libsused[TYPE_SPACE] THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
+  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  IF self.libsused[TYPE_BEVEL] THEN self.writeLine('  if (BevelBase) CloseLibrary( (struct Library *)BevelBase );')
+  IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
+  IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
+  IF self.libsused[TYPE_LABEL] THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
+  IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  if (PenMapBase) CloseLibrary( (struct Library *)PenMapBase );')
   self.writeLine('  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );')
   self.writeLine('  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );')
   self.writeLine('}')

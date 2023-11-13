@@ -9,6 +9,7 @@ OPT MODULE, OSVERSION=37
         'string',
         'checkbox','gadgets/checkbox',
         'clicktab','gadgets/clicktab',
+        'gadgets/page',
         'gadgets/integer','integer',
         'images/label','label',
         'amigalib/boopsi',
@@ -35,6 +36,7 @@ EXPORT OBJECT clickTabObject OF reactionObject
   current:INT
   disabled:CHAR
   labels1:PTR TO LONG
+  pageObject:PTR TO reactionObject
 ENDOBJECT
 
 OBJECT clickTabSettingsForm OF reactionForm
@@ -72,49 +74,20 @@ PROC create() OF clickTabSettingsForm
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
 
     WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
       LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_DEFERLAYOUT, FALSE,
-        LAYOUT_SPACEOUTER, FALSE,
-        LAYOUT_BOTTOMSPACING, 2,
-        LAYOUT_TOPSPACING, 2,
-        LAYOUT_LEFTSPACING, 2,
-        LAYOUT_RIGHTSPACING, 2,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-        LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-        LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-        LAYOUT_BEVELSTATE, IDS_SELECTED,
-        LAYOUT_FIXEDHORIZ, TRUE,
-        LAYOUT_FIXEDVERT, TRUE,
-        LAYOUT_SHRINKWRAP, TRUE,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_LISTSELECT ]:=ButtonObject,
           GA_ID, CLICKTAB_GAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          BUTTON_TEXTPEN, 1,
-          BUTTON_BACKGROUNDPEN, 0,
-          BUTTON_FILLTEXTPEN, 1,
-          BUTTON_FILLPEN, 3,
-          BUTTON_BEVELSTYLE, BVS_BUTTON,
-          BUTTON_JUSTIFICATION, BCJ_CENTER,
         ButtonEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
-
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_TOP ]:=IntegerObject,
             GA_ID, CLICKTAB_GAD_TOP,
             GA_RELVERIFY, TRUE,
@@ -147,19 +120,7 @@ PROC create() OF clickTabSettingsForm
         LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
-
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_CURRENT ]:=IntegerObject,
             GA_ID, CLICKTAB_GAD_CURRENT,
             GA_RELVERIFY, TRUE,
@@ -175,39 +136,19 @@ PROC create() OF clickTabSettingsForm
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
             GA_TEXT, '_Disabled',
-            CHECKBOX_TEXTPEN, 1,
-            CHECKBOX_BACKGROUNDPEN, 0,
-            CHECKBOX_FILLTEXTPEN, 1,
             CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
           CheckBoxEnd,
 
         LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_DEFERLAYOUT, FALSE,
-          LAYOUT_SPACEOUTER, FALSE,
-          LAYOUT_BOTTOMSPACING, 2,
-          LAYOUT_TOPSPACING, 2,
-          LAYOUT_LEFTSPACING, 2,
-          LAYOUT_RIGHTSPACING, 2,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_HORIZALIGNMENT, LALIGN_LEFT,
-          LAYOUT_VERTALIGNMENT, LALIGN_TOP,
-          LAYOUT_BEVELSTATE, IDS_SELECTED,
-          LAYOUT_FIXEDHORIZ, TRUE,
-          LAYOUT_FIXEDVERT, TRUE,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_OK ]:=ButtonObject,
             GA_ID, CLICKTAB_GAD_OK,
             GA_TEXT, '_OK',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_CHILD ]:=ButtonObject,
@@ -215,12 +156,6 @@ PROC create() OF clickTabSettingsForm
             GA_TEXT, 'C_hild',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_CANCEL ]:=ButtonObject,
@@ -228,12 +163,6 @@ PROC create() OF clickTabSettingsForm
             GA_TEXT, '_Cancel',
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            BUTTON_TEXTPEN, 1,
-            BUTTON_BACKGROUNDPEN, 0,
-            BUTTON_FILLTEXTPEN, 1,
-            BUTTON_FILLPEN, 3,
-            BUTTON_BEVELSTYLE, BVS_BUTTON,
-            BUTTON_JUSTIFICATION, BCJ_CENTER,
           ButtonEnd,
         LayoutEnd,
       LayoutEnd,
@@ -335,6 +264,9 @@ EXPORT PROC createPreviewObject(scr) OF clickTabObject
       GA_HEIGHT, self.height,
       CLICKTAB_CURRENT, self.current,
       CLICKTAB_LABELS, self.labels1:=self.makeClickTabsList(self.listObjectId),
+      CLICKTAB_PAGEGROUP, self.pageObject:=PageObject,
+        LAYOUT_DEFERLAYOUT, TRUE,
+      PageEnd,
    ClickTabEnd
 
   self.previewChildAttrs:=[
@@ -364,7 +296,7 @@ EXPORT PROC create(parent) OF clickTabObject
   self.disabled:=0
 
   self.labels1:=0
-  self.libused:=LIB_CLICKTAB
+  self.libsused:=[TYPE_CLICKTAB]
 ENDPROC
 
 PROC end() OF clickTabObject
@@ -410,9 +342,30 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
   ENDIF
 ENDPROC
 
+EXPORT PROC genChildObjectsHeader(srcGen:PTR TO srcGen) OF clickTabObject
+  srcGen.componentProperty('CLICKTAB_PageGroup','PageObject',FALSE)
+  srcGen.componentProperty('LAYOUT_DEFERLAYOUT','TRUE',FALSE)
+ENDPROC
+
+EXPORT PROC genChildObjectsFooter(srcGen:PTR TO srcGen) OF clickTabObject
+  srcGen.componentEnd('PageEnd,')
+ENDPROC
+
+
 EXPORT PROC getTypeName() OF clickTabObject
   RETURN 'ClickTab'
 ENDPROC
+
+EXPORT PROC allowChildren() OF clickTabObject IS -1
+
+EXPORT PROC addChildTag() OF clickTabObject IS PAGE_ADD
+
+EXPORT PROC removeChildTag() OF clickTabObject IS PAGE_REMOVE
+
+EXPORT PROC addImageTag() OF clickTabObject IS PAGE_ADD
+
+EXPORT PROC addChildTo() OF clickTabObject IS self.pageObject
+
 
 EXPORT PROC createClickTabObject(parent)
   DEF clickTab:PTR TO clickTabObject

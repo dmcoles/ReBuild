@@ -29,7 +29,7 @@ EXPORT PROC create(parent) OF spaceObject
   self.type:=TYPE_SPACE
   SUPER self.create(parent)
 
-  self.libused:=LIB_SPACE
+  self.libsused:=[TYPE_SPACE]
 ENDPROC
 
 EXPORT PROC editSettings() OF spaceObject IS TRUE

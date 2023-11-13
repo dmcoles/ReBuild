@@ -1,6 +1,8 @@
 
 OPT MODULE
 
+  MODULE 'gadgets/layout'
+
   MODULE '*fileStreamer','*stringlist'
 
 EXPORT ENUM NONE, ESOURCE_GEN, CSOURCE_GEN
@@ -8,7 +10,7 @@ EXPORT ENUM NONE, ESOURCE_GEN, CSOURCE_GEN
 EXPORT OBJECT srcGen
   type:INT
   fser:PTR TO fileStreamer
-  libsused:LONG
+  libsused:PTR TO CHAR
   stringDelimiter:CHAR
   orOperator:PTR TO CHAR
   extraPadding:CHAR
@@ -18,7 +20,7 @@ EXPORT OBJECT srcGen
   indent:INT
 ENDOBJECT
 
-PROC create(fser:PTR TO fileStreamer,libsused) OF srcGen
+PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR) OF srcGen
   self.type:=NONE
   self.fser:=fser
   self.libsused:=libsused
@@ -149,18 +151,33 @@ PROC componentAddChildLabel(text) OF srcGen
   ENDIF
 ENDPROC
 
-PROC componentAddChild() OF srcGen
+PROC componentAddChild(addChildTag) OF srcGen
   DEF tempStr[20]:STRING
   self.genIndent()
-  StrCopy(tempStr,'LAYOUT_AddChild, ')
+  
+  IF addChildTag=LAYOUT_ADDCHILD
+    StrCopy(tempStr,'LAYOUT_AddChild, ')
+  ELSEIF addChildTag=PAGE_ADD
+    StrCopy(tempStr,'PAGE_Add, ')
+  ELSE
+    StrCopy(tempStr,'LAYOUT_AddChild, ')
+  ENDIF
+  
   IF self.upperCaseProperties THEN UpperStr(tempStr)
   self.write(tempStr)
 ENDPROC
 
-PROC componentAddImage() OF srcGen
+PROC componentAddImage(addImageTag) OF srcGen
   DEF tempStr[20]:STRING
   self.genIndent()
-  StrCopy(tempStr,'LAYOUT_AddImage, ')
+
+  IF addImageTag=LAYOUT_ADDIMAGE
+    StrCopy(tempStr,'LAYOUT_AddImage, ')
+  ELSEIF addImageTag=PAGE_ADD
+    StrCopy(tempStr,'PAGE_Add, ')
+  ELSE
+    StrCopy(tempStr,'LAYOUT_AddImage, ')
+  ENDIF
   IF self.upperCaseProperties THEN UpperStr(tempStr)
   self.write(tempStr)
 ENDPROC

@@ -6,9 +6,8 @@ OPT MODULE, OSVERSION=37
         'reaction/reaction_lib',
         'button','gadgets/button',
         'images/bevel',
-        'images/penmap',
         'string',
-        '*bball',
+        'penmap','images/penmap',
         'gadgets/integer','integer',
         'gadgets/checkbox','checkbox',
         'images/label','label',
@@ -20,13 +19,13 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
 
-EXPORT ENUM BBGAD_NAME, BBGAD_LEFTEDGE, BBGAD_TOPEDGE,
-            BBGAD_WIDTH, BBGAD_HEIGHT, BBGAD_BGPEN, BBGAD_TRANSPARENT, 
-      BBGAD_OK, BBGAD_CHILD, BBGAD_CANCEL
+EXPORT ENUM PENMAPGAD_NAME, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
+            PENMAPGAD_WIDTH, PENMAPGAD_HEIGHT, PENMAPGAD_BGPEN, PENMAPGAD_TRANSPARENT, 
+      PENMAPGAD_OK, PENMAPGAD_CHILD, PENMAPGAD_CANCEL
 
-CONST NUM_BB_GADS=BBGAD_CANCEL+1
+CONST NUM_PENMAP_GADS=PENMAPGAD_CANCEL+1
 
-EXPORT OBJECT boingBallObject OF reactionObject
+EXPORT OBJECT penMapObject OF reactionObject
   leftEdge:INT
   topEdge:INT
   width:INT
@@ -35,22 +34,22 @@ EXPORT OBJECT boingBallObject OF reactionObject
   transparent:CHAR
 ENDOBJECT
 
-OBJECT boingBallSettingsForm OF reactionForm
-  boingBallObject:PTR TO boingBallObject
+OBJECT penMapSettingsForm OF reactionForm
+  penMapObject:PTR TO penMapObject
   tempBgPen:INT
   labels1:PTR TO LONG
 ENDOBJECT
 
-PROC create() OF boingBallSettingsForm
+PROC create() OF penMapSettingsForm
   DEF gads:PTR TO LONG
   
-  NEW gads[NUM_BB_GADS]
+  NEW gads[NUM_PENMAP_GADS]
   self.gadgetList:=gads
-  NEW gads[NUM_BB_GADS]
+  NEW gads[NUM_PENMAP_GADS]
   self.gadgetActions:=gads
   
   self.windowObj:=WindowObject,
-    WA_TITLE, 'BoingBall Attribute Setting',
+    WA_TITLE, 'PenMap Attribute Setting',
     WA_LEFT, 0,
     WA_TOP, 0,
     WA_HEIGHT, 80,
@@ -73,11 +72,12 @@ PROC create() OF boingBallSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_LEFTEDGE ]:=IntegerObject,
-          GA_ID, BBGAD_LEFTEDGE,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_LEFTEDGE ]:=IntegerObject,
+          GA_ID, PENMAPGAD_LEFTEDGE,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           INTEGER_MAXCHARS, 4,
@@ -88,8 +88,8 @@ PROC create() OF boingBallSettingsForm
           LABEL_TEXT, '_LeftEdge',
         LabelEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_TOPEDGE ]:=IntegerObject,
-          GA_ID, BBGAD_TOPEDGE,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_TOPEDGE ]:=IntegerObject,
+          GA_ID, PENMAPGAD_TOPEDGE,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           INTEGER_MAXCHARS, 4,
@@ -104,8 +104,8 @@ PROC create() OF boingBallSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_WIDTH ]:=IntegerObject,
-          GA_ID, BBGAD_WIDTH,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_WIDTH ]:=IntegerObject,
+          GA_ID, PENMAPGAD_WIDTH,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           INTEGER_MAXCHARS, 4,
@@ -116,8 +116,8 @@ PROC create() OF boingBallSettingsForm
           LABEL_TEXT, 'Width',
         LabelEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_HEIGHT ]:=IntegerObject,
-          GA_ID, BBGAD_HEIGHT,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_HEIGHT ]:=IntegerObject,
+          GA_ID, PENMAPGAD_HEIGHT,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           INTEGER_MAXCHARS, 4,
@@ -132,15 +132,15 @@ PROC create() OF boingBallSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_BGPEN ]:=ButtonObject,
-          GA_ID, BBGAD_BGPEN,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_BGPEN ]:=ButtonObject,
+          GA_ID, PENMAPGAD_BGPEN,
           GA_TEXT, '_Background Pen',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ BBGAD_TRANSPARENT ]:=CheckBoxObject,
-          GA_ID, BBGAD_TRANSPARENT,
+        LAYOUT_ADDCHILD, self.gadgetList[ PENMAPGAD_TRANSPARENT ]:=CheckBoxObject,
+          GA_ID, PENMAPGAD_TRANSPARENT,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           GA_TEXT, 'Transparent',
@@ -152,22 +152,22 @@ PROC create() OF boingBallSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_OK ]:=ButtonObject,
-          GA_ID, BBGAD_OK,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_OK ]:=ButtonObject,
+          GA_ID, PENMAPGAD_OK,
           GA_TEXT, '_OK',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_CHILD ]:=ButtonObject,
-          GA_ID, BBGAD_CHILD,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_CHILD ]:=ButtonObject,
+          GA_ID, PENMAPGAD_CHILD,
           GA_TEXT, 'C_hild',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ BBGAD_CANCEL ]:=ButtonObject,
-          GA_ID, BBGAD_CANCEL,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PENMAPGAD_CANCEL ]:=ButtonObject,
+          GA_ID, PENMAPGAD_CANCEL,
           GA_TEXT, '_Cancel',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
@@ -176,25 +176,25 @@ PROC create() OF boingBallSettingsForm
     LayoutEnd,
   WindowEnd
 
-  self.gadgetActions[BBGAD_BGPEN]:={selectPen}
-  self.gadgetActions[BBGAD_CHILD]:={editChildSettings}
-  self.gadgetActions[BBGAD_CANCEL]:=MR_CANCEL
-  self.gadgetActions[BBGAD_OK]:=MR_OK
+  self.gadgetActions[PENMAPGAD_BGPEN]:={selectPen}
+  self.gadgetActions[PENMAPGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[PENMAPGAD_CANCEL]:=MR_CANCEL
+  self.gadgetActions[PENMAPGAD_OK]:=MR_OK
 ENDPROC
 
-PROC editChildSettings(nself,gadget,id,code) OF boingBallSettingsForm
+PROC editChildSettings(nself,gadget,id,code) OF penMapSettingsForm
   self:=nself
   self.setBusy()
-  self.boingBallObject.editChildSettings()
+  self.penMapObject.editChildSettings()
   self.clearBusy()
 ENDPROC
 
-PROC end() OF boingBallSettingsForm
-  END self.gadgetList[NUM_BB_GADS]
-  END self.gadgetActions[NUM_BB_GADS]
+PROC end() OF penMapSettingsForm
+  END self.gadgetList[NUM_PENMAP_GADS]
+  END self.gadgetActions[NUM_PENMAP_GADS]
 ENDPROC
 
-PROC selectPen(nself,gadget,id,code) OF boingBallSettingsForm
+PROC selectPen(nself,gadget,id,code) OF penMapSettingsForm
   DEF frmColourPicker:PTR TO colourPickerForm
   DEF selColour
   DEF colourProp:PTR TO INT
@@ -203,7 +203,7 @@ PROC selectPen(nself,gadget,id,code) OF boingBallSettingsForm
 
   self.setBusy()
   SELECT id
-    CASE BBGAD_BGPEN
+    CASE PENMAPGAD_BGPEN
       colourProp:={self.tempBgPen}
   ENDSELECT
 
@@ -215,35 +215,32 @@ PROC selectPen(nself,gadget,id,code) OF boingBallSettingsForm
   self.clearBusy()
 ENDPROC
 
-PROC editSettings(comp:PTR TO boingBallObject) OF boingBallSettingsForm
+PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
   DEF res
 
-  self.boingBallObject:=comp
+  self.penMapObject:=comp
 
   self.tempBgPen:=comp.bgPen
-  SetGadgetAttrsA(self.gadgetList[ BBGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
-  SetGadgetAttrsA(self.gadgetList[ BBGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
-  SetGadgetAttrsA(self.gadgetList[ BBGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
-  SetGadgetAttrsA(self.gadgetList[ BBGAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0])
-  SetGadgetAttrsA(self.gadgetList[ BBGAD_TRANSPARENT  ],0,0,[CHECKBOX_CHECKED,comp.transparent,0]) 
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0])
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_TRANSPARENT  ],0,0,[CHECKBOX_CHECKED,comp.transparent,0]) 
 
   res:=self.showModal()
   IF res=MR_OK
-    comp.leftEdge:=Gets(self.gadgetList[ BBGAD_LEFTEDGE ],INTEGER_NUMBER)
-    comp.topEdge:=Gets(self.gadgetList[ BBGAD_TOPEDGE ],INTEGER_NUMBER)
-    comp.width:=Gets(self.gadgetList[ BBGAD_WIDTH ],INTEGER_NUMBER)
-    comp.height:=Gets(self.gadgetList[ BBGAD_HEIGHT ],INTEGER_NUMBER)
+    comp.leftEdge:=Gets(self.gadgetList[ PENMAPGAD_LEFTEDGE ],INTEGER_NUMBER)
+    comp.topEdge:=Gets(self.gadgetList[ PENMAPGAD_TOPEDGE ],INTEGER_NUMBER)
+    comp.width:=Gets(self.gadgetList[ PENMAPGAD_WIDTH ],INTEGER_NUMBER)
+    comp.height:=Gets(self.gadgetList[ PENMAPGAD_HEIGHT ],INTEGER_NUMBER)
     comp.bgPen:=self.tempBgPen
-    comp.transparent:=Gets(self.gadgetList[ BBGAD_TRANSPARENT ],CHECKBOX_CHECKED)
+    comp.transparent:=Gets(self.gadgetList[ PENMAPGAD_TRANSPARENT ],CHECKBOX_CHECKED)
   ENDIF
 ENDPROC res=MR_OK
 
-EXPORT PROC createPreviewObject(scr) OF boingBallObject
+EXPORT PROC createPreviewObject(scr) OF penMapObject
 
-  IF (boingballbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
-    self.previewObject:=NewObjectA(BoingBall_GetClass(),NIL,[TAG_IGNORE,0,
+    self.previewObject:=NewObjectA(PenMap_GetClass(),NIL,[TAG_IGNORE,0,
         IA_LEFT, self.leftEdge,
         IA_TOP, self.topEdge,
         IA_WIDTH, self.width,
@@ -251,9 +248,9 @@ EXPORT PROC createPreviewObject(scr) OF boingBallObject
         IA_BGPEN, self.bgPen,
         PENMAP_TRANSPARENT, self.transparent,
         PENMAP_SCREEN, scr,
+        PENMAP_RENDERDATA, {image_data},
         ->LABEL_DRAWINFO, self.drawInfo,
       TAG_DONE])
-  ENDIF
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
@@ -270,7 +267,7 @@ EXPORT PROC createPreviewObject(scr) OF boingBallObject
     TAG_END]
 ENDPROC
 
-EXPORT PROC create(parent) OF boingBallObject
+EXPORT PROC create(parent) OF penMapObject
   self.type:=TYPE_BOINGBALL
   SUPER self.create(parent)
   self.leftEdge:=0
@@ -279,11 +276,11 @@ EXPORT PROC create(parent) OF boingBallObject
   self.height:=0
   self.bgPen:=0
   self.transparent:=TRUE
-  self.libsused:=[TYPE_BOINGBALL]
+  self.libsused:=[TYPE_PENMAP]
 ENDPROC
 
-EXPORT PROC editSettings() OF boingBallObject
-  DEF editForm:PTR TO boingBallSettingsForm
+EXPORT PROC editSettings() OF penMapObject
+  DEF editForm:PTR TO penMapSettingsForm
   DEF res
   
   NEW editForm.create()
@@ -293,7 +290,7 @@ ENDPROC res
 
 #define makeProp(a,b) 'a',{self.a},b
 
-EXPORT PROC serialiseData() OF boingBallObject IS
+EXPORT PROC serialiseData() OF penMapObject IS
 [
   makeProp(leftEdge,FIELDTYPE_INT),
   makeProp(topEdge,FIELDTYPE_INT),
@@ -303,7 +300,7 @@ EXPORT PROC serialiseData() OF boingBallObject IS
   makeProp(transparent,FIELDTYPE_CHAR)
 ]
 
-EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF boingBallObject
+EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF penMapObject
 
   srcGen.componentPropertyInt('IA_Left',self.leftEdge)
   srcGen.componentPropertyInt('IA_Top',self.topEdge)
@@ -315,16 +312,33 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF boingBallObject
   IF self.transparent=FALSE THEN srcGen.componentProperty('PENMAP_Transparent','FALSE',FALSE)
 ENDPROC
 
-EXPORT PROC getTypeName() OF boingBallObject
-  RETURN 'BoingBall'
+EXPORT PROC getTypeName() OF penMapObject
+  RETURN 'PenMap'
 ENDPROC
 
-EXPORT PROC libNameCreate() OF boingBallObject IS 'boingball.image'
+EXPORT PROC isImage() OF penMapObject IS TRUE
 
-EXPORT PROC isImage() OF boingBallObject IS TRUE
-
-EXPORT PROC createBoingBallObject(parent)
-  DEF bball:PTR TO boingBallObject
+EXPORT PROC createPenMapObject(parent)
+  DEF penmap:PTR TO penMapObject
   
-  NEW bball.create(parent)
-ENDPROC bball
+  NEW penmap.create(parent)
+ENDPROC penmap
+
+image_data:
+CHAR   0,16, 0,16
+     CHAR	$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
+     CHAR	$01,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
+     CHAR	$01,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$01
+     CHAR	$01,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$01
+     CHAR	$01,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$01
+     CHAR	$01,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$01
+     CHAR	$01,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
+     CHAR	$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01

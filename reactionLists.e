@@ -9,7 +9,7 @@
   ENDPROC
   
   EXPORT PROC freeReactionLists()
-    END reactionLists
+    IF reactionLists THEN END reactionLists
   ENDPROC
   
   EXPORT PROC getReactionLists() IS reactionLists
