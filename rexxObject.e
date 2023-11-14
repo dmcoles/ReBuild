@@ -37,6 +37,7 @@ EXPORT OBJECT rexxObject OF reactionObject
 ENDOBJECT
 
 OBJECT rexxSettingsForm OF reactionForm
+PRIVATE
   rexxObject:PTR TO rexxObject
   tempCommands:PTR TO stringlist
 ENDOBJECT

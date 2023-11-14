@@ -48,6 +48,7 @@ EXPORT OBJECT getFontObject OF reactionObject
 ENDOBJECT
 
 OBJECT getFontSettingsForm OF reactionForm
+PRIVATE
   getFontObject:PTR TO getFontObject
 ENDOBJECT
 

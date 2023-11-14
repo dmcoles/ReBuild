@@ -36,6 +36,7 @@ EXPORT OBJECT checkboxObject OF reactionObject
 ENDOBJECT
 
 OBJECT checkboxSettingsForm OF reactionForm
+PRIVATE
   checkboxObject:PTR TO checkboxObject
   tempTextPen:INT
   tempBgPen:INT

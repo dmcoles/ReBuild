@@ -35,6 +35,7 @@ EXPORT OBJECT penMapObject OF reactionObject
 ENDOBJECT
 
 OBJECT penMapSettingsForm OF reactionForm
+PRIVATE
   penMapObject:PTR TO penMapObject
   tempBgPen:INT
   labels1:PTR TO LONG

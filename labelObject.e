@@ -31,6 +31,7 @@ EXPORT OBJECT labelObject OF reactionObject
 ENDOBJECT
 
 OBJECT labelSettingsForm OF reactionForm
+PRIVATE
   labelObject:PTR TO labelObject
   tempFgPen:INT
   tempBgPen:INT

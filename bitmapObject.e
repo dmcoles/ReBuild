@@ -36,6 +36,7 @@ EXPORT OBJECT bitmapObject OF reactionObject
 ENDOBJECT
 
 OBJECT bitmapSettingsForm OF reactionForm
+PRIVATE
   bitmapObject:PTR TO bitmapObject
 ENDOBJECT
 

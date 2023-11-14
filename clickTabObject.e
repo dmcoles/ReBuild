@@ -35,11 +35,13 @@ EXPORT OBJECT clickTabObject OF reactionObject
   height:INT
   current:INT
   disabled:CHAR
+PRIVATE
   labels1:PTR TO LONG
   pageObject:PTR TO reactionObject
 ENDOBJECT
 
 OBJECT clickTabSettingsForm OF reactionForm
+PRIVATE
   clickTabObject:PTR TO clickTabObject
   selectedListId:LONG
 ENDOBJECT

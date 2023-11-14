@@ -37,6 +37,7 @@ EXPORT OBJECT scrollerObject OF reactionObject
 ENDOBJECT
 
 OBJECT scrollerSettingsForm OF reactionForm
+PRIVATE
   scrollerObject:PTR TO scrollerObject
   labels1:PTR TO LONG
 ENDOBJECT

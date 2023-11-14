@@ -15,7 +15,7 @@ all:					rebuild
 release:				options=$(releaseoptions)
 release:				rebuild
 
-rebuild:			rebuild.e dialogs.m reactionLists.m sliderObject.m bitmapObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m drawListObject.m fuelGaugeObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listManagerForm.m codeGenForm.m eSourceGen.m cSourceGen.m sourcegen.m fileStreamer.m reactionForm.m objectPicker.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m stringlist.m
+rebuild:			rebuild.e dialogs.m libraryVersions.m reactionLists.m speedBarObject.m sliderObject.m bitmapObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m drawListObject.m fuelGaugeObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listManagerForm.m codeGenForm.m eSourceGen.m cSourceGen.m sourcegen.m fileStreamer.m reactionForm.m objectPicker.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m stringlist.m
 							$(compiler) rebuild $(options)
 
 reactionLists.m:			reactionLists.e stringlist.m
@@ -51,7 +51,7 @@ sliderObject.m:			sliderObject.e reactionObject.m reactionForm.m sourceGen.m
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
 							$(compiler) spaceObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m speedBarObject.m
 							$(compiler) eSourceGen $(options)
 
 cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m
@@ -86,6 +86,12 @@ menuObject.m:			menuObject.e reactionObject.m reactionForm.m stringlist.m fileSt
 
 buttonObject.m:			buttonObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m
 							$(compiler) buttonObject $(options)
+
+speedBarObject.m:			speedBarObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m stringlist.m
+							$(compiler) speedBarObject $(options)
+              
+libraryVersions.m:			libraryVersions.e reactionForm.m
+							$(compiler) libraryVersions $(options)
 
 bevelObject.m:			bevelObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m
 							$(compiler) bevelObject $(options)
@@ -151,4 +157,4 @@ reactionForm.m:			reactionForm.e
 							$(compiler) reactionForm $(options)
 
 clean:
-							delete dialogs.m sliderObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m fuelGaugeObject.m drawListObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listPicker.m reactionForm.m listManagerForm.m codeGenForm.m cSourcegen.m eSourceGen.m sourceGen.m objectPicker.m colourPicker.m fileStreamer.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m reactionLists.m stringlist.m rebuild
+							delete dialogs.m libraryVersions.m speedBarObject.m sliderObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m fuelGaugeObject.m drawListObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listPicker.m reactionForm.m listManagerForm.m codeGenForm.m cSourcegen.m eSourceGen.m sourceGen.m objectPicker.m colourPicker.m fileStreamer.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m reactionLists.m stringlist.m rebuild

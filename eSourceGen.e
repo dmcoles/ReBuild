@@ -2,7 +2,8 @@
 OPT MODULE
   MODULE 'images/drawlist'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
-  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject','*reactionLists','*drawlistObject'
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject',
+         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -43,6 +44,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('      \ascroller\a,\agadgets/scroller\a,')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('      \astring\a,\agadgets/string\a,')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('      \aspace\a,')
+  IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('      \aspeedbar\a,\agadgets/speedbar\a,')
   IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('      \atextfield\a,\agadgets/textfield\a,')
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('      \abevel\a,')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('      \adrawlist\a,\aimages/drawlist\a,')
@@ -52,6 +54,11 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
+  IF self.libsused[TYPE_SPEEDBAR]
+    self.writeLine('      \aexec/lists\a,\aexec/nodes\a,')
+    self.writeLine('      \aexec/memory\a,')
+    self.writeLine('      \aamigalib/lists\a,')
+  ENDIF
   self.writeLine('      \aintuition/intuition\a,')
   self.writeLine('      \aintuition/imageclass\a,')
   IF (screenObject.custom)
@@ -86,6 +93,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  IF (listbrowserbase:=OpenLibrary(\agadgets/listbrowser.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlist\q)')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('  IF (radiobuttonbase:=OpenLibrary(\agadgets/radiobutton.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qrbtn\q)')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  IF (scrollerbase:=OpenLibrary(\agadgets/scroller.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qscrl\q)')
+  IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF (speedbarbase:=OpenLibrary(\agadgets/speedbar.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspdb\q)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF (stringbase:=OpenLibrary(\agadgets/string.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qstrn\q)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF (spacebase:=OpenLibrary(\agadgets/space.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspce\q)')
   IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/textfield.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
@@ -122,6 +130,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  IF listbrowserbase THEN CloseLibrary(listbrowserbase)')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('  IF radiobuttonbase THEN CloseLibrary(radiobuttonbase)')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  IF scrollerbase THEN CloseLibrary(scrollerbase)')
+  IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF speedbarbase THEN CloseLibrary(speedbarbase)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF stringbase THEN CloseLibrary(stringbase)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF spacebase THEN CloseLibrary(spacebase)')
   IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
@@ -132,7 +141,59 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  IF penmapbase THEN CloseLibrary(penmapbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
+
+  IF self.libsused[TYPE_SPEEDBAR]
+    self.writeLine('PROC speedBarNodesA(text:PTR TO LONG)')
+    self.writeLine('  DEF list:PTR TO lh')
+    self.writeLine('  DEF node:PTR TO ln')
+    self.writeLine('  DEF label')
+    self.writeLine('  DEF i=0')
+    self.writeLine('')
+    self.writeLine('  IF (list:=AllocMem( SIZEOF lh, MEMF_PUBLIC ))')
+    self.writeLine('    newList(list)')
+    self.writeLine('')
+    self.writeLine('    WHILE (text[])')
+    self.writeLine('      label:=LabelObject,')
+    self.writeLine('          LABEL_TEXT, text[],')
+    self.writeLine('          LabelEnd')
+    self.writeLine('')
+    self.writeLine('      IF (node:=AllocSpeedButtonNodeA(')
+    self.writeLine('        i,[SBNA_IMAGE, label,')
+    self.writeLine('        SBNA_ENABLED, TRUE,')
+    self.writeLine('        SBNA_SPACING, 2,')
+    self.writeLine('        SBNA_HIGHLIGHT, SBH_RECESS,')
+    self.writeLine('        TAG_DONE]))=FALSE')
+    self.writeLine('')
+    self.writeLine('        freeSpeedBarNodes(list)')
+    self.writeLine('        RETURN NIL')
+    self.writeLine('      ENDIF')
+    self.writeLine('      AddTail(list,node)')
+    self.writeLine('      i++')
+    self.writeLine('      text++')
+    self.writeLine('    ENDWHILE')
+    self.writeLine('  ENDIF')
+    self.writeLine('ENDPROC list')
   
+    self.writeLine('')
+    self.writeLine('PROC freeSpeedBarNodes(list:PTR TO lh)')
+    self.writeLine('  DEF node:PTR TO ln')
+    self.writeLine('  DEF nextnode:PTR TO ln')
+    self.writeLine('  DEF i,label')
+    self.writeLine('')
+    self.writeLine('  IF list')
+    self.writeLine('    node:= list.head')
+    self.writeLine('   WHILE (nextnode := node.succ)')
+    self.writeLine('    GetSpeedButtonNodeAttrsA(node,[SBNA_IMAGE,{label},TAG_END])')
+    self.writeLine('    DisposeObject(label)')
+    self.writeLine('    FreeSpeedButtonNode(node)')
+    self.writeLine('      node := nextnode')
+    self.writeLine('   ENDWHILE')
+    self.writeLine('   FreeMem(list,SIZEOF lh)')
+    self.writeLine('  ENDIF')
+    self.writeLine('ENDPROC')
+    self.writeLine('')
+  ENDIF
+
   self.writeLine('PROC runWindow(windowObject,menuStrip) HANDLE')
   self.writeLine('  DEF running=TRUE')
   self.writeLine('  DEF win:PTR TO window,wsig,code,msg,sig,result')
@@ -204,6 +265,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
+  layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
   
   NEW listObjects2.stdlist(20)
   layoutObject.findObjectsByType(listObjects2,TYPE_DRAWLIST)
@@ -213,7 +275,11 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
-    StringF(tempStr,'  DEF labels\d=0',reactionObject.id)
+    IF reactionObject.type=TYPE_SPEEDBAR
+      StringF(tempStr,'  DEF buttons\d=0',reactionObject.id)
+    ELSE
+      StringF(tempStr,'  DEF labels\d=0',reactionObject.id)
+    ENDIF
     self.writeLine(tempStr)
   ENDFOR
 
@@ -256,6 +322,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_LISTBROWSER
         StringF(tempStr,'  labels\d:=browserNodesA(',reactionObject.id)
         listStr:=self.makeList(tempStr,reactionLists,reactionObject::listBrowserObject.listObjectId)
+      CASE TYPE_SPEEDBAR
+        StringF(tempStr,'  buttons\d:=speedBarNodesA(',reactionObject.id)
+        listStr:=self.makeList2(tempStr,reactionObject::speedBarObject.buttonList)
     ENDSELECT
     IF listStr
       self.writeLine(listStr)
@@ -416,6 +485,7 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
+  layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
     SELECT reactionObject.type
@@ -427,6 +497,8 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         StringF(tempStr,'  IF labels\d THEN freeClickTabs(labels\d)',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTBROWSER
         StringF(tempStr,'  IF labels\d THEN freeBrowserNodes(labels\d)',reactionObject.id,reactionObject.id)
+      CASE TYPE_SPEEDBAR
+        StringF(tempStr,'  IF buttons\d THEN freeSpeedBarNodes(buttons\d)',reactionObject.id,reactionObject.id)
     ENDSELECT
     self.writeLine(tempStr)
   ENDFOR
@@ -506,7 +578,6 @@ PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
   DEF totsize=0,linelen=0
   DEF i,listitem=0:PTR TO reactionListObject
   DEF foundid=-1
-  DEF items:PTR TO stringlist
  
   FOR i:=0 TO reactionLists.count()-1
     listitem:=reactionLists.item(i)
@@ -542,3 +613,35 @@ PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
   ENDIF
   
 ENDPROC res
+
+PROC makeList2(start:PTR TO CHAR,list:PTR TO stringlist) OF eSrcGen
+  DEF res=0
+  DEF totsize=0,linelen=0
+  DEF i
+
+  totsize:=StrLen(start)
+  FOR i:=0 TO list.count()-1
+    linelen:=linelen+EstrLen(list.item(i))+3
+    IF linelen>90
+      linelen:=0
+      totsize:=totsize+5
+    ENDIF
+    totsize:=totsize+EstrLen(list.item(i))+3
+  ENDFOR
+  res:=String(totsize+4)
+  StrCopy(res,start)
+  StrAdd(res,'[')
+  linelen:=0
+  FOR i:=0 TO list.count()-1
+    StrAdd(res,'\a')
+    StrAdd(res,list.item(i))
+    StrAdd(res,'\a,')
+    linelen:=linelen+EstrLen(list.item(i))+3
+    IF linelen>90
+      linelen:=0
+      StrAdd(res,'\n    ')
+    ENDIF
+  ENDFOR
+  StrAdd(res,'0])')
+ENDPROC res
+

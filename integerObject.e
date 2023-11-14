@@ -39,6 +39,7 @@ EXPORT OBJECT integerObject OF reactionObject
 ENDOBJECT
 
 OBJECT integerSettingsForm OF reactionForm
+PRIVATE
   integerObject:PTR TO integerObject
 ENDOBJECT
 
@@ -230,7 +231,9 @@ ENDPROC
 
 PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   DEF res
-
+  
+  self.integerObject:=comp
+  
   SetGadgetAttrsA(self.gadgetList[ INTGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ INTGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,comp.maxChars,0])
   SetGadgetAttrsA(self.gadgetList[ INTGAD_VALUE ],0,0,[INTEGER_NUMBER,comp.value,0])

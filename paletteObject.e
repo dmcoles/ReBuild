@@ -34,6 +34,7 @@ EXPORT OBJECT paletteObject OF reactionObject
 ENDOBJECT
 
 OBJECT paletteSettingsForm OF reactionForm
+PRIVATE
   paletteObject:PTR TO paletteObject
 ENDOBJECT
 

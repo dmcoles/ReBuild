@@ -40,6 +40,7 @@ EXPORT OBJECT drawListObject OF reactionObject
 ENDOBJECT
 
 OBJECT drawListSettingsForm OF reactionForm
+PRIVATE
   drawListObject:PTR TO drawListObject
   tmpPen1:INT
   tmpPen2:INT

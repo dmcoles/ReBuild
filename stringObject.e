@@ -37,6 +37,7 @@ EXPORT OBJECT stringObject OF reactionObject
 ENDOBJECT
 
 OBJECT stringSettingsForm OF reactionForm
+PRIVATE
   stringObject:PTR TO stringObject
 ENDOBJECT
 

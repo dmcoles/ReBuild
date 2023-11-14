@@ -42,6 +42,7 @@ EXPORT OBJECT screenObject OF reactionObject
 ENDOBJECT
 
 OBJECT screenSettingsForm OF reactionForm
+PRIVATE
   screenObject:PTR TO screenObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG

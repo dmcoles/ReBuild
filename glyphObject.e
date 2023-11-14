@@ -31,6 +31,7 @@ EXPORT OBJECT glyphObject OF reactionObject
 ENDOBJECT
 
 OBJECT glyphSettingsForm OF reactionForm
+PRIVATE
   glyphObject:PTR TO glyphObject
   labels1:PTR TO LONG
 ENDOBJECT

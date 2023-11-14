@@ -42,6 +42,7 @@ EXPORT OBJECT buttonObject OF reactionObject
 ENDOBJECT
 
 OBJECT buttonSettingsForm OF reactionForm
+PRIVATE
   buttonObject:PTR TO buttonObject
   tmpTextPen:INT
   tmpBgPen:INT

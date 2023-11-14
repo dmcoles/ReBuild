@@ -61,6 +61,7 @@ EXPORT OBJECT getScreenModeObject OF reactionObject
 ENDOBJECT
 
 OBJECT getScreenModeSettingsForm OF reactionForm
+PRIVATE
   getScreenModeObject:PTR TO getScreenModeObject
   labels1:LONG
   labels2:LONG
@@ -105,26 +106,29 @@ PROC create() OF getScreenModeSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_NAME ]:=StringObject,
-        GA_ID, GETSCREENGAD_NAME,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_NAME ]:=StringObject,
+          GA_ID, GETSCREENGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'GetFont _Name',
-      LabelEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'GetScreenMode _Name',
+        LabelEnd,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_TITLE ]:=StringObject,
-        GA_ID, GETSCREENGAD_TITLE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'GetFont _Title',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_TITLE ]:=StringObject,
+          GA_ID, GETSCREENGAD_TITLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'GetScreenMode _Title',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -327,6 +331,7 @@ PROC create() OF getScreenModeSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
         LAYOUT_FIXEDHORIZ, FALSE,
+        LAYOUT_INNERSPACING,0,
         LAYOUT_SHRINKWRAP, TRUE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_PROPFLAGS ]:=ChooserObject,
@@ -336,7 +341,6 @@ PROC create() OF getScreenModeSettingsForm
           CHOOSER_POPUP, TRUE,
           CHOOSER_MAXLABELS, 12,
           CHOOSER_ACTIVE, 0,
-          CHOOSER_WIDTH, -1,
           CHOOSER_LABELS, self.labels3:=chooserLabelsA(['DIPF_IS_LACE','DIPF_IS_DUALPF','DIPF_IS_PF2PRI','DIPF_IS_HAM','DIPF_IS_ECS6','DIPF_IS_AA','DIPF_IS_PAL','DIPF_IS_SPRITES',
     'DIPF_IS_GENLOCK','DIPF_IS_WB','DIPF_IS_DRAGGABLE','DIPF_IS_PANELLED','DIPF_IS_BEAMSYNC','DIPF_IS_EXTRAHALFBRITE',
     'DIPF_IS_SPRITES_ATT','DIPF_IS_SPRITES_CHNG_RES','DIPF_IS_SPRITES_BORDER','DIPF_IS_SCANDBL','DIPF_IS_SPRITES_CHNG_BASE',
@@ -344,7 +348,7 @@ PROC create() OF getScreenModeSettingsForm
             
         ChooserEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Property_Flags',
+          LABEL_TEXT, 'Prop_Flags',
         LabelEnd,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_PROPMASK ]:=ChooserObject,
@@ -358,7 +362,7 @@ PROC create() OF getScreenModeSettingsForm
           CHOOSER_LABELS, self.labels3,
         ChooserEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Property_Mask',
+          LABEL_TEXT, 'Prop_Mask',
         LabelEnd,
       LayoutEnd,
 

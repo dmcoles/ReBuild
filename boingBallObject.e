@@ -36,6 +36,7 @@ EXPORT OBJECT boingBallObject OF reactionObject
 ENDOBJECT
 
 OBJECT boingBallSettingsForm OF reactionForm
+PRIVATE
   boingBallObject:PTR TO boingBallObject
   tempBgPen:INT
   labels1:PTR TO LONG

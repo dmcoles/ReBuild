@@ -19,6 +19,7 @@ EXPORT ENUM LISTPICK_SELECTOR, LISTPICK_OK, LISTPICK_CANCEL
 CONST NUMGADS=LISTPICK_CANCEL+1
 
 EXPORT OBJECT listPickerForm OF reactionForm
+PRIVATE
   selectedColour:LONG
   columninfo[3]:ARRAY OF columninfo
   browserlist:PTR TO LONG
@@ -54,7 +55,7 @@ EXPORT PROC create() OF listPickerForm
     WA_TITLE, 'Select a List',
     WA_LEFT, 0,
     WA_TOP, 0,
-    WA_HEIGHT, 80,
+    WA_HEIGHT, 180,
     WA_WIDTH, 350,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,

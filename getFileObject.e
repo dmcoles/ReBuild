@@ -52,6 +52,7 @@ EXPORT OBJECT getFileObject OF reactionObject
 ENDOBJECT
 
 OBJECT getFileSettingsForm OF reactionForm
+PRIVATE
   getFileObject:PTR TO getFileObject
 ENDOBJECT
 

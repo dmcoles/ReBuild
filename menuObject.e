@@ -41,6 +41,7 @@ EXPORT OBJECT menuObject OF reactionObject
 ENDOBJECT
 
 OBJECT menuSettingsForm OF reactionForm
+PRIVATE
   menuObject:PTR TO menuObject
   selectedItem:LONG
   tempMenuItems:PTR TO stdlist
@@ -229,8 +230,8 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, menuItem.type , TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, menuItem.menuBar , TAG_END])
-    DoMethod(self.windowObj, WM_RETHINK)
   ENDIF
+  DoMethod(self.windowObj, WM_RETHINK)
 ENDPROC
 
 PROC addItem(nself,gadget,id,code) OF menuSettingsForm

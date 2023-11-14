@@ -47,6 +47,7 @@ EXPORT OBJECT fuelGaugeObject OF reactionObject
 ENDOBJECT
 
 OBJECT fuelGaugeSettingsForm OF reactionForm
+PRIVATE
   fuelGaugeObject:PTR TO fuelGaugeObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG

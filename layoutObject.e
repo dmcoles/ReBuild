@@ -117,6 +117,7 @@ EXPORT PROC create(parent) OF layoutObject
 ENDPROC
 
 OBJECT layoutSettingsForm OF reactionForm
+PRIVATE
   layoutObject:PTR TO layoutObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG

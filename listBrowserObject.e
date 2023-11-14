@@ -59,11 +59,13 @@ EXPORT OBJECT listBrowserObject OF reactionObject
   colWidths:PTR TO stdlist
   colTitles:PTR TO stringlist
 
+PRIVATE
   columnInfo:PTR TO columninfo
   browsernodes:PTR TO LONG
 ENDOBJECT
 
 OBJECT listBrowserSettingsForm OF reactionForm
+PRIVATE
   listBrowserObject:PTR TO listBrowserObject
   colTitles:PTR TO stringlist
   colWidths:PTR TO stdlist

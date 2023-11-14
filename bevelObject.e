@@ -49,9 +49,10 @@ EXPORT OBJECT bevelObject OF reactionObject
 ENDOBJECT
 
 OBJECT bevelSettingsForm OF reactionForm
-  bevelObject:PTR TO bevelObject
+PRIVATE
   tmpFillPen:INT
   tmpTextPen:INT
+  bevelObject:PTR TO bevelObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG
   labels3:PTR TO LONG

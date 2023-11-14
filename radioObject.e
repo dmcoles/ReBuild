@@ -31,10 +31,12 @@ EXPORT OBJECT radioObject OF reactionObject
   labelPlace:INT
   spacing:INT
   selected:INT
+PRIVATE
   labels1:PTR TO LONG
 ENDOBJECT
 
 OBJECT radioSettingsForm OF reactionForm
+PRIVATE
   radioObject:PTR TO radioObject
   labels1:PTR TO LONG
   selectedListId:LONG

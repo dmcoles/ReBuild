@@ -79,6 +79,7 @@ EXPORT OBJECT windowObject OF reactionObject
 ENDOBJECT
 
 OBJECT windowSettingsForm OF reactionForm
+PRIVATE
   windowObject:PTR TO windowObject
   tmpRefreshType:CHAR
   tmpFlags:LONG

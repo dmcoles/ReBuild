@@ -128,6 +128,7 @@ EXPORT OBJECT textFieldObject OF reactionObject
 ENDOBJECT
 
 OBJECT textFieldSettingsForm OF reactionForm
+PRIVATE
   textFieldObject:PTR TO textFieldObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG

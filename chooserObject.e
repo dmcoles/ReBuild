@@ -38,10 +38,12 @@ EXPORT OBJECT chooserObject OF reactionObject
   autofit:CHAR
   popup:CHAR
   dropdown:CHAR
+PRIVATE
   labels1:PTR TO LONG
 ENDOBJECT
 
 OBJECT chooserSettingsForm OF reactionForm
+PRIVATE
   chooserObject:PTR TO chooserObject
   selectedListId:LONG
 ENDOBJECT
