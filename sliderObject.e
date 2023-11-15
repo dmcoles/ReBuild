@@ -390,7 +390,7 @@ EXPORT PROC create(parent) OF sliderObject
   self.levelJustify:=0
   self.disabled:=0
 
-  self.libsused:=[TYPE_SLIDER]
+  self.libsused:=[TYPE_SLIDER, TYPE_LABEL]
 ENDPROC
 
 EXPORT PROC editSettings() OF sliderObject
@@ -437,6 +437,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sliderObject
 
   srcGen.componentProperty('SLIDER_LevelPlace',ListItem(['PLACETEXT_LEFT', 'PLACETEXT_RIGHT'],self.levelPlace),FALSE)
   srcGen.componentProperty('SLIDER_LevelJustify',ListItem(['SLJ_LEFT', 'SLJ_CENTER', 'SLJ_RIGHT'],self.levelJustify),FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF sliderObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF sliderObject

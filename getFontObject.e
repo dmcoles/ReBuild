@@ -456,6 +456,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFontObject
   IF self.fixedWidthOnly THEN srcGen.componentProperty('GETFONT_FixedWidthOnly','TRUE',FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF getFontObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC getTypeName() OF getFontObject
   RETURN 'GetFont'
 ENDPROC

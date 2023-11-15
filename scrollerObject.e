@@ -305,6 +305,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF scrollerObject
   srcGen.componentProperty('SCROLLER_Orientation',ListItem(['SORIENT_HORIZ','SORIENT_VERT'],self.orientation),FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF scrollerObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC getTypeName() OF scrollerObject
   RETURN 'Scroller'
 ENDPROC

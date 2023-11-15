@@ -624,13 +624,10 @@ PROC editColumns(titles:PTR TO stringlist, widths:PTR TO stdlist) OF editColumns
   
   res:=self.showModal()
   IF res=MR_OK
-    WriteF('count=\d\n',self.count)
     FOR i:=0 TO self.count-1
     
       titles.setItem(i,Gets(self.gadgetList[ ((i+1) << 1)+1 ],STRINGA_TEXTVAL))
-      WriteF('title[\d]=\s\n',i,titles.item(i))
       widths.setItem(i,Gets(self.gadgetList[ (i+1) << 1 ],INTEGER_NUMBER))
-      WriteF('width[\d]=\d\n',i,widths.item(i))
     ENDFOR
   ENDIF
 ENDPROC res=MR_OK

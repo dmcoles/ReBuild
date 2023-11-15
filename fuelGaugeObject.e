@@ -421,7 +421,7 @@ EXPORT PROC create(parent) OF fuelGaugeObject
   self.emptyPen:=7
   self.fillPen:=5
 
-  self.libsused:=[TYPE_FUELGAUGE]
+  self.libsused:=[TYPE_FUELGAUGE, TYPE_LABEL]
 ENDPROC
 
 EXPORT PROC editSettings() OF fuelGaugeObject

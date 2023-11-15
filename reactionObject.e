@@ -659,6 +659,7 @@ ENDPROC
 EXPORT PROC isImage() OF reactionObject IS 0
 
 EXPORT PROC libNameCreate() OF reactionObject IS 0
+EXPORT PROC libTypeCreate() OF reactionObject IS 0
 
 EXPORT PROC allowChildren() OF reactionObject IS 0
 

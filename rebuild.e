@@ -46,10 +46,11 @@ OPT OSVERSION=37,LARGE
          '*rexxObject','*reactionListObject','*windowObject','*screenObject','*layoutObject','*paletteObject',
          '*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject',
          '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject',
-         '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject'
+         '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject','*colorWheelObject','*dateBrowserObject',
+         '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject'
 
-#define vernum '0.1.0-alpha'
-#date verstring '$VER:Rebuild 0.1.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.2.0-alpha'
+#date verstring '$VER:Rebuild 0.2.0-%Y%m%d%h%n%s-alpha'
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
@@ -112,7 +113,6 @@ OPT OSVERSION=37,LARGE
   DEF progressbase=0
   DEF statusbarbase=0
   DEF tapedeckbase=0
-  DEF texteditorbase=0
   DEF textentrybase=0
   DEF ledbase=0
   DEF smartbitmapbase=0
@@ -156,7 +156,7 @@ PROC openClasses()
   sketchboardbase:=OpenLibrary('gadgets/sketchboard.gadget',0)
   statusbarbase:=OpenLibrary('gadgets/statusbar.gadget',0)
   tapedeckbase:=OpenLibrary('gadgets/tapedeck.gadget',0)
-  texteditorbase:=OpenLibrary('gadgets/texteditor.gadget',0)
+  textfieldbase:=OpenLibrary('gadgets/texteditor.gadget',0)
   textentrybase:=OpenLibrary('gadgets/textentry.gadget',0)
   virtualbase:=OpenLibrary('gadgets/virtual.gadget',0)
   boingballbase:=OpenLibrary('images/boingball.image',0)
@@ -205,7 +205,7 @@ PROC closeClasses()
   IF sketchboardbase THEN CloseLibrary(sketchboardbase)
   IF statusbarbase THEN CloseLibrary(statusbarbase)
   IF tapedeckbase THEN CloseLibrary(tapedeckbase)
-  IF texteditorbase THEN CloseLibrary(texteditorbase)
+  IF textfieldbase THEN CloseLibrary(textfieldbase)
   IF textentrybase THEN CloseLibrary(textentrybase)
   IF virtualbase THEN CloseLibrary(virtualbase)
   IF boingballbase THEN CloseLibrary(boingballbase)
@@ -247,13 +247,11 @@ PROC removeMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
       removeMembers(comp.children.item(i),window)
     ENDFOR
     IF comp.parent THEN parent:=comp.parent ELSE parent:=window
-    WriteF('removing comp \h \h\n',parent.addChildTo(), comp.previewObject)
     IF comp.previewObject
       Sets(parent.addChildTo(),parent.removeChildTag(), comp.previewObject)
       comp.previewObject:=0
       comp.previewChildAttrs:=0
     ENDIF
-    WriteF('removed comp \h \h\n',parent.addChildTo(), comp.previewObject)
   ENDIF
 ENDPROC
 
@@ -261,7 +259,6 @@ PROC addMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
   DEF i, parent:PTR TO reactionObject
   IF comp
     IF comp.parent THEN parent:=comp.parent ELSE parent:=window
-    WriteF('adding comp \h \h\n',parent.addChildTo(),comp.previewObject)
     comp.createPreviewObject(win.wscreen)
     IF (comp.isImage())
       SetGadgetAttrsA(parent.addChildTo(),0,0,[parent.addImageTag(), comp.previewObject, TAG_END])
@@ -269,7 +266,6 @@ PROC addMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
       SetGadgetAttrsA(parent.addChildTo(),0,0,[parent.addChildTag(), comp.previewObject, TAG_END])
     ENDIF
     IF comp.previewChildAttrs THEN SetGadgetAttrsA(parent.previewObject,0,0,comp.previewChildAttrs)
-    WriteF('added comp \h \h\n',parent.previewObject,comp.previewObject)
 
     FOR i:=0 TO comp.children.count()-1
       addMembers(comp.children.item(i),window)
@@ -374,11 +370,8 @@ PROC updateSel(node)
           type:=GTMENUITEM_USERDATA(menuItem)
           IF type<>-1
             check:=((comp.parent=0) AND (comp.allowChildren()=FALSE)) OR (type==[TYPE_STATUSBAR,
-              TYPE_COLORWHEEL, TYPE_DATEBROWSER, TYPE_GETCOLOR, TYPE_GRADSLIDER,
-              TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,TYPE_TAPEDECK,
-              TYPE_TEXTEDITOR, TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_LED,
-              TYPE_SMARTBITMAP, TYPE_TITLEBAR])
-            
+              TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,
+              TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
             menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,check)
           ENDIF
         ENDIF
@@ -931,7 +924,7 @@ ENDPROC n+1
 PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   DEF i
   DEF tempStr[200]:STRING
-  DEF libname,addTag
+  DEF libname,libtype,addTag
   IF comp.isImage()
     IF comp.parent THEN addTag:=comp.parent.addImageTag() ELSE addTag:=LAYOUT_ADDIMAGE
     srcGen.componentAddImage(addTag)
@@ -941,7 +934,9 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   ENDIF
 
   srcGen.assignGadgetVar(n)
-  IF (libname:=comp.libNameCreate())
+  IF (libtype:=comp.libTypeCreate())
+    srcGen.componentLibtypeCreate(libtype)
+  ELSEIF (libname:=comp.libNameCreate())
     srcGen.componentLibnameCreate(libname)
   ELSE
     StringF(tempStr,'\sObject,',comp.getTypeName())
@@ -2215,6 +2210,20 @@ PROC createObjectByObj(objType,comp)
       newObj:=createSliderObject(comp)
     CASE OBJECT_SPEEDBAR
       newObj:=createSpeedBarObject(comp)
+    CASE OBJECT_COLORWHEEL
+      newObj:=createColorWheelObject(comp)
+    CASE OBJECT_DATEBROWSER
+      newObj:=createDateBrowserObject(comp)
+    CASE OBJECT_GETCOLOR
+      newObj:=createGetColorObject(comp)
+    CASE OBJECT_GRADSLIDER
+      newObj:=createGradSliderObject(comp)
+    CASE OBJECT_TAPEDECK
+      newObj:=createTapeDeckObject(comp)
+    CASE OBJECT_TEXTEDITOR
+      newObj:=createTextEditorObject(comp)
+    CASE OBJECT_LED
+      newObj:=createLedObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2283,6 +2292,20 @@ PROC createObjectByType(objType,comp)
       newObj:=createPenMapObject(comp)
     CASE TYPE_SPEEDBAR
       newObj:=createSpeedBarObject(comp)
+    CASE TYPE_COLORWHEEL
+      newObj:=createColorWheelObject(comp)
+    CASE TYPE_DATEBROWSER
+      newObj:=createDateBrowserObject(comp)
+    CASE TYPE_GETCOLOR
+      newObj:=createGetColorObject(comp)
+    CASE TYPE_GRADSLIDER
+      newObj:=createGradSliderObject(comp)
+    CASE TYPE_TAPEDECK
+      newObj:=createTapeDeckObject(comp)
+    CASE TYPE_TEXTEDITOR
+      newObj:=createTextEditorObject(comp)
+    CASE TYPE_LED
+      newObj:=createLedObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2522,12 +2545,9 @@ EXCEPT DO
           errorRequest(0,'Error','Unable to open asl.library')
       ENDSELECT
   ENDSELECT
-  WriteF('shutdown\n')
   IF mainWindow THEN RA_CloseWindow(mainWindow)
   win:=0
-  WriteF('window closed\n')
   closePreviews()
-  WriteF('previews closed\n')
   IF objectList
     i:=ROOT_WINDOW_ITEM
     WHILE i<objectList.count()
@@ -2535,31 +2555,19 @@ EXCEPT DO
       i+=3
     ENDWHILE
   ENDIF
-  WriteF('members removed\n')
   IF menus THEN FreeMenus(menus)
-  WriteF('menus freed\n')
   disposeObjects()
-  WriteF('objects disposed\n')
   IF objectList THEN END objectList
-  WriteF('objects freed\n')
   IF bufferList 
     disposeBufferObjects()
-    WriteF('buffer objects disposed\n')
     END bufferList
   ENDIF
-  WriteF('buffer freed\n')
   freeReactionLists()
-  WriteF('reactionlists freed\n')
   IF list THEN freeBrowserNodes( list )
-  WriteF('browsernodes disposed\n')
   IF list2 THEN freeBrowserNodes( list2 )
-  WriteF('browsernodes2 disposed\n')
   IF mainWindow THEN DisposeObject(mainWindow)
-  WriteF('mainwindow disposed\n')
   IF (appPort) THEN DeleteMsgPort(appPort)
-  WriteF('appport deleted\n')
   closeClasses()
-  WriteF('classes closed\n')
 ENDPROC
 
 CHAR verstring

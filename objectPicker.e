@@ -41,7 +41,6 @@ ENDOBJECT
 
 PROC gadgetClick(nself,gadget,id,code) OF objectPickerForm
   self:=nself
-  WriteF('click\n')
   self.modalResult:=MR_OK
   self.selectedItem:=id
 ENDPROC
@@ -337,21 +336,18 @@ EXPORT PROC create() OF objectPickerForm
               
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_COLORWHEEL]:=ButtonObject,
                 GA_ID, OBJECT_COLORWHEEL,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'ColorWheel',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
               ButtonEnd,
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_DATEBROWSER]:=ButtonObject,
                 GA_ID, OBJECT_DATEBROWSER,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'DateBrowser',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
               ButtonEnd,
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_GETCOLOR]:=ButtonObject,
                 GA_ID, OBJECT_GETCOLOR,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'GetColor',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
@@ -365,7 +361,6 @@ EXPORT PROC create() OF objectPickerForm
 
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_GRADSLIDER]:=ButtonObject,
                 GA_ID, OBJECT_GRADSLIDER,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'GradientSlider',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
@@ -402,14 +397,12 @@ EXPORT PROC create() OF objectPickerForm
               ButtonEnd,
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_TAPEDECK]:=ButtonObject,
                 GA_ID, OBJECT_TAPEDECK,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'TapeDeck',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
               ButtonEnd,
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_TEXTEDITOR]:=ButtonObject,
                 GA_ID, OBJECT_TEXTEDITOR,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'TextEditor',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
@@ -450,7 +443,6 @@ EXPORT PROC create() OF objectPickerForm
 
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_LED]:=ButtonObject,
                 GA_ID, OBJECT_LED,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'LED',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,

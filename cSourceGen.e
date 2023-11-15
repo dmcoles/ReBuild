@@ -63,6 +63,13 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('#include <proto/glyph.h>')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('#include <proto/label.h>')
   IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('#include <proto/penmap.h>')
+  IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('#include <proto/colorwheel.h>')
+  IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('#include <proto/datebrowser.h>')
+  IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('#include <proto/getcolor.h>')
+  IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('#include <gadgets/gradientslider.h>')
+  IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('#include <gadgets/tapedeck.h>')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('#include <proto/texteditor.h>')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('#include <images/led.h>')
   self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
@@ -248,6 +255,13 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('               *LabelBase = NULL,')
   IF self.libsused[TYPE_BOINGBALL] THEN self.writeLine('               *LabelBase = NULL,')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('               *PenMapBase = NULL,')
+  IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('               *ColorWheelBase = NULL,')
+  IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('               *DateBrowserBase = NULL,')
+  IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('               *GetColorBase = NULL,')
+  IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('               *GradientSliderBase = NULL,')
+  IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('               *TapeDeckBase = NULL,')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('               *TextEditorBase = NULL,')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('               *LedBase = NULL,')
   self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
@@ -343,6 +357,34 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine('  if( !(PenMapBase = (struct Library*) OpenLibrary("images/penmap.image",0L) ) ) return 0;')
   ENDIF
 
+  IF self.libsused[TYPE_COLORWHEEL]
+    self.writeLine('  if( !(ColorWheelBase = (struct Library*) OpenLibrary("gadgets/colorwheel.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_DATEBROWSER]
+    self.writeLine('  if( !(DateBrowserBase = (struct Library*) OpenLibrary("gadgets/datebrowser.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_GETCOLOR]
+    self.writeLine('  if( !(GetColorBase = (struct Library*) OpenLibrary("gadgets/getcolor.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_GRADSLIDER]
+    self.writeLine('  if( !(GradientSliderBase = (struct Library*) OpenLibrary("gadgets/gradientslider.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_TAPEDECK]
+    self.writeLine('  if( !(TapeDeckBase = (struct Library*) OpenLibrary("gadgets/tapedeck.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_TEXTEDITOR]
+    self.writeLine('  if( !(TextEditorBase = (struct Library*) OpenLibrary("gadgets/texteditor.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_LED]
+    self.writeLine('  if( !(LedBase = (struct Library*) OpenLibrary("images/led.image",0L) ) ) return 0;')
+  ENDIF
+
   self.genScreenCreate(screenObject)
   self.writeLine('  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;')
   self.writeLine('  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;')
@@ -382,6 +424,14 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  if (PenMapBase) CloseLibrary( (struct Library *)PenMapBase );')
+
+  IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('  if (ColorWheelBase) CloseLibrary( (struct Library *)ColorWheelBase );')
+  IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('  if (DateBrowserBase) CloseLibrary( (struct Library *)DateBrowserBase );')
+  IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  if (GetColorBase) CloseLibrary( (struct Library *)GetColorBase );')
+  IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  if (GradientSliderBase) CloseLibrary( (struct Library *)GradientSliderBase );')
+  IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  if (TapeDeckBase) CloseLibrary( (struct Library *)TapeDeckBase );')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  if (TextEditorBase) CloseLibrary( (struct Library *)TextEditorBase );')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('  if (LedBase) CloseLibrary( (struct Library *)LedBase );')
   self.writeLine('  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );')
   self.writeLine('  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );')
   self.writeLine('}')
@@ -554,6 +604,11 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine('  };')
     self.writeLine('')
   ENDFOR
+  IF self.libsused[TYPE_LED]
+    self.writeLine('  int ledValues[4]={12,34,56,78};')  
+    self.writeLine('')
+  ENDIF
+  
 
   listObjects2.clear()
   layoutObject.findObjectsByType(listObjects2,TYPE_LISTBROWSER)
@@ -678,6 +733,12 @@ ENDPROC
 PROC componentLibnameCreate(libname:PTR TO CHAR) OF cSrcGen
   DEF tempStr[200]:STRING
   StringF(tempStr,'NewObject( NULL, \q\s\q,',libname)
+  self.componentCreate(tempStr)
+ENDPROC
+
+PROC componentLibtypeCreate(libtype:PTR TO CHAR) OF cSrcGen
+  DEF tempStr[200]:STRING
+  StringF(tempStr,'NewObject( \s, NULL, ',libtype)
   self.componentCreate(tempStr)
 ENDPROC
 

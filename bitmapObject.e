@@ -251,7 +251,7 @@ EXPORT PROC createPreviewObject(scr) OF bitmapObject
 ENDPROC
 
 EXPORT PROC create(parent) OF bitmapObject
-  self.type:=TYPE_BOINGBALL
+  self.type:=TYPE_BITMAP
   SUPER self.create(parent)
   self.leftEdge:=0
   self.topEdge:=0

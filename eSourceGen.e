@@ -1,5 +1,5 @@
+OPT MODULE,LARGE
 
-OPT MODULE
   MODULE 'images/drawlist'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject',
@@ -51,6 +51,13 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('      \aglyph\a,\aimages/glyph\a,')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('      \alabel\a,\aimages/label\a,')
   IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('      \aimages/penmap\a,')
+  IF self.libsused[TYPE_COLORWHEEL]  THEN self.writeLine('      \acolorwheel\a,\agadgets/colorwheel\a,')
+  IF self.libsused[TYPE_DATEBROWSER]  THEN self.writeLine('      \adatebrowser\a,\agadgets/datebrowser\a,')
+  IF self.libsused[TYPE_GETCOLOR]  THEN self.writeLine('      \agetcolor\a,\agadgets/getcolor\a,')
+  IF self.libsused[TYPE_GRADSLIDER]  THEN self.writeLine('      \agadgets/gradientslider\a,')
+  IF self.libsused[TYPE_TAPEDECK]  THEN self.writeLine('      \agadgets/tapedeck\a,')
+  IF self.libsused[TYPE_TEXTEDITOR]  THEN self.writeLine('      \agadgets/texteditor\a,\atexteditor\a,')
+  IF self.libsused[TYPE_LED]  THEN self.writeLine('      \aimages/led\a,')
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
@@ -70,6 +77,24 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_BOINGBALL]
     self.writeLine('#define BoingBallEnd LabelEnd')
     self.writeLine('')
+  ENDIF
+  IF self.libsused[TYPE_TAPEDECK]
+    self.writeLine('#define TapeDeckEnd LabelEnd')
+    self.writeLine('')
+  ENDIF
+  IF self.libsused[TYPE_TEXTEDITOR]
+    self.writeLine('#define TextEditorEnd LabelEnd')
+    self.writeLine('')
+  ENDIF
+
+  IF self.libsused[TYPE_GRADSLIDER]
+    self.writeLine('DEF gradientsliderbase')
+  ENDIF
+  IF self.libsused[TYPE_TAPEDECK]
+    self.writeLine('DEF tapedeckbase')
+  ENDIF
+  IF self.libsused[TYPE_LED]
+    self.writeLine('DEF ledbase')
   ENDIF
   
   self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
@@ -102,6 +127,14 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  IF (glyphbase:=OpenLibrary(\aimages/glyph.image\a,0))=NIL THEN Throw(\qLIB\q,\qglyp\q)')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('  IF (labelbase:=OpenLibrary(\aimages/label.image\a,0))=NIL THEN Throw(\qLIB\q,\qlabl\q)')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  IF (penmapbase:=OpenLibrary(\aimages/penmap.image\a,0))=NIL THEN Throw(\qLIB\q,\qpenm\q)')
+  IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('  IF (colorwheelbase:=OpenLibrary(\agadgets/colorwheel.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qcwhe\q)')
+  IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('  IF (datebrowserbase:=OpenLibrary(\agadgets/datebrowser.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qdbro\q)')
+  IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  IF (getcolorbase:=OpenLibrary(\agadgets/getcolor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qgcol\q)')
+  IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  IF (gradientsliderbase:=OpenLibrary(\agadgets/gradientslider.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qgsld\q)')
+  IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF (tapedeckbase:=OpenLibrary(\agadgets/tapedeck.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtape\q)')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/texteditor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('  IF (ledbase:=OpenLibrary(\aimages/led.image\a,0))=NIL THEN Throw(\qLIB\q,\qed\q)')
+
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
   self.writeLine('  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")')
@@ -139,6 +172,14 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  IF glyphbase THEN CloseLibrary(glyphbase)')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('  IF labelbase THEN CloseLibrary(labelbase)')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  IF penmapbase THEN CloseLibrary(penmapbase)')
+
+  IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('  IF colorwheelbase THEN CloseLibrary(colorwheelbase)')
+  IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('  IF datebrowserbase THEN CloseLibrary(datebrowserbase)')
+  IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  IF getcolorbase THEN CloseLibrary(getcolorbase)')
+  IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  IF gradientsliderbase THEN CloseLibrary(gradientsliderbase)')
+  IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF tapedeckbase THEN CloseLibrary(tapedeckbase)')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('  IF ledbase THEN CloseLibrary(ledbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
 
@@ -536,6 +577,12 @@ ENDPROC
 PROC componentLibnameCreate(libname:PTR TO CHAR) OF eSrcGen
   DEF tempStr[200]:STRING
   StringF(tempStr,'NewObjectA(NIL,\a\s\a,[TAG_IGNORE,0,',libname)
+  self.componentCreate(tempStr)
+ENDPROC
+
+PROC componentLibtypeCreate(libtype:PTR TO CHAR) OF eSrcGen
+  DEF tempStr[200]:STRING
+  StringF(tempStr,'NewObjectA(\s,NIL,[TAG_IGNORE,0,',libtype)
   self.componentCreate(tempStr)
 ENDPROC
 

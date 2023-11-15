@@ -508,6 +508,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFileObject
   IF self.readOnly=FALSE THEN srcGen.componentProperty(' GETFILE_ReadOnly','FALSE',FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF getFileObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC getTypeName() OF getFileObject
   RETURN 'GetFile'
 ENDPROC
