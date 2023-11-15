@@ -177,7 +177,10 @@ PROC editSettings(comp:PTR TO dateBrowserObject) OF dateBrowserSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
-  self.previewObject:=NewObjectA(DateBrowser_GetClass(), NIL,[TAG_IGNORE,0,
+  IF (datebrowserbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=NewObjectA(DateBrowser_GetClass(), NIL,[TAG_IGNORE,0,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_DISABLED, self.disabled,
@@ -185,6 +188,7 @@ EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
       DATEBROWSER_MULTISELECT, self.multiSelect,
       DATEBROWSER_SHOWTITLE, self.showTitle,
     TAG_DONE])
+  ENDIF
         
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

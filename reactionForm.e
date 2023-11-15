@@ -17,9 +17,7 @@ ENDOBJECT
 
 EXPORT PROC gadgetPress(id,code) OF reactionForm
   DEF action,gadget
-  WriteF('press id =\d code=\d\n',id,code)
   IF (action:=self.gadgetActions[id])
-    WriteF('do action\n')
     IF (action=MR_OK) OR (action=MR_CANCEL)
       self.modalResult:=action
     ELSE

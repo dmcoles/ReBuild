@@ -24,6 +24,8 @@ OPT MODULE, OSVERSION=37
 EXPORT ENUM TAPEGAD_ANIM,TAPEGAD_MODE,TAPEGAD_FRAMES,TAPEGAD_CURRFRAME,
       TAPEGAD_OK, TAPEGAD_CHILD, TAPEGAD_CANCEL
       
+EXPORT DEF tapedeckbase
+
 
 CONST NUM_TAPE_GADS=TAPEGAD_CANCEL+1
 
@@ -200,12 +202,16 @@ PROC editSettings(comp:PTR TO tapeDeckObject) OF tapeDeckSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF tapeDeckObject
-  self.previewObject:=NewObjectA( NIL, 'tapedeck.gadget',[TAG_IGNORE,0,
-    TDECK_TAPE, ListItem([TRUE,FALSE],self.anim),
-    TDECK_MODE, ListItem([BUT_REWIND,BUT_PLAY, BUT_FORWARD, BUT_STOP, BUT_PAUSE],self.mode),
-    TDECK_FRAMES, self.frames,
-    TDECK_CURRENTFRAME, self.currFrame,
-    TAG_END])
+  IF (tapedeckbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=NewObjectA( NIL, 'tapedeck.gadget',[TAG_IGNORE,0,
+      TDECK_TAPE, ListItem([TRUE,FALSE],self.anim),
+      TDECK_MODE, ListItem([BUT_REWIND,BUT_PLAY, BUT_FORWARD, BUT_STOP, BUT_PAUSE],self.mode),
+      TDECK_FRAMES, self.frames,
+      TDECK_CURRENTFRAME, self.currFrame,
+      TAG_END])
+  ENDIF
     
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

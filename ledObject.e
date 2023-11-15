@@ -20,6 +20,8 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*colourPicker'
 
+EXPORT DEF ledbase
+
 EXPORT ENUM LEDGAD_FGPEN,LEDGAD_BGPEN,LEDGAD_WIDTH,LEDGAD_HEIGHT,LEDGAD_COLON,
           LEDGAD_NEGATIVE,LEDGAD_SIGNED,LEDGAD_TIME,LEDGAD_HEX,
       LEDGAD_OK, LEDGAD_CHILD, LEDGAD_CANCEL
@@ -278,20 +280,24 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF ledObject
-  self.previewObject:=LedObject,
-    IA_FGPEN, self.fgPen,
-    IA_BGPEN, self.bgPen,
-    IA_WIDTH, self.width,
-    IA_HEIGHT, self.height,
-    SYSIA_DRAWINFO, self.drawInfo,
-    LED_COLON, self.colon,
-    LED_NEGATIVE, self.negative,
-    LED_SIGNED, self.signed,
-    LED_TIME, self.time,
-    LED_HEXADECIMAL, self.hex,
-    LED_PAIRS,4,
-    LED_VALUES, [12,34,56,78]:INT,
-  LedEnd
+  IF (ledbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=LedObject,
+      IA_FGPEN, self.fgPen,
+      IA_BGPEN, self.bgPen,
+      IA_WIDTH, self.width,
+      IA_HEIGHT, self.height,
+      SYSIA_DRAWINFO, self.drawInfo,
+      LED_COLON, self.colon,
+      LED_NEGATIVE, self.negative,
+      LED_SIGNED, self.signed,
+      LED_TIME, self.time,
+      LED_HEXADECIMAL, self.hex,
+      LED_PAIRS,4,
+      LED_VALUES, [12,34,56,78]:INT,
+    LedEnd
+  ENDIF
     
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

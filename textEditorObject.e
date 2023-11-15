@@ -283,18 +283,22 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textEditorObject
-  self.previewObject:=NewObjectA( TextEditor_GetClass(), NIL,[TAG_IGNORE,0,
-    GA_READONLY, self.readOnly,
-    GA_TEXTEDITOR_EXPORTWRAP, self.exportWrap,
-    GA_TEXTEDITOR_FIXEDFONT, self.fixedFont,
-    GA_TEXTEDITOR_FLOW, ListItem([GV_TEXTEDITOR_FLOW_LEFT,GV_TEXTEDITOR_FLOW_RIGHT,GV_TEXTEDITOR_FLOW_CENTER,GV_TEXTEDITOR_FLOW_JUSTIFIED],self.flow),
-    GA_TEXTEDITOR_IMPORTWRAP ,self.importWrap,
-    GA_TEXTEDITOR_INDENTWIDTH,self.indentWidth,
-    GA_TEXTEDITOR_LINEENDINGEXPORT, ListItem([LINEENDING_LF,LINEENDING_CR,LINEENDING_CRLF,LINEENDING_ASIMPORT],self.lineEndingExport),
-    GA_TEXTEDITOR_SHOWLINENUMBERS, self.showLineNumbers,
-    GA_TEXTEDITOR_SPACESPERTAB,self.spacesPerTab,
-    GA_TEXTEDITOR_TABKEYPOLICY, ListItem([GV_TEXTEDITOR_TABKEY_INDENTSLINE,GV_TEXTEDITOR_TABKEY_INDENTSAFTER],self.tabKeyPolicy),
-    TAG_END])
+  IF (textfieldbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=NewObjectA( TextEditor_GetClass(), NIL,[TAG_IGNORE,0,
+      GA_READONLY, self.readOnly,
+      GA_TEXTEDITOR_EXPORTWRAP, self.exportWrap,
+      GA_TEXTEDITOR_FIXEDFONT, self.fixedFont,
+      GA_TEXTEDITOR_FLOW, ListItem([GV_TEXTEDITOR_FLOW_LEFT,GV_TEXTEDITOR_FLOW_RIGHT,GV_TEXTEDITOR_FLOW_CENTER,GV_TEXTEDITOR_FLOW_JUSTIFIED],self.flow),
+      GA_TEXTEDITOR_IMPORTWRAP ,self.importWrap,
+      GA_TEXTEDITOR_INDENTWIDTH,self.indentWidth,
+      GA_TEXTEDITOR_LINEENDINGEXPORT, ListItem([LINEENDING_LF,LINEENDING_CR,LINEENDING_CRLF,LINEENDING_ASIMPORT],self.lineEndingExport),
+      GA_TEXTEDITOR_SHOWLINENUMBERS, self.showLineNumbers,
+      GA_TEXTEDITOR_SPACESPERTAB,self.spacesPerTab,
+      GA_TEXTEDITOR_TABKEYPOLICY, ListItem([GV_TEXTEDITOR_TABKEY_INDENTSLINE,GV_TEXTEDITOR_TABKEY_INDENTSAFTER],self.tabKeyPolicy),
+      TAG_END])
+  ENDIF
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

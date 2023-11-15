@@ -23,6 +23,7 @@ OPT MODULE, OSVERSION=37
 EXPORT ENUM GRADSLDGAD_MAXVAL,GRADSLDGAD_CURRVAL,GRADSLDGAD_SKIPVAL,GRADSLDGAD_KNOBPIXELS,GRADSLDGAD_ORIENTATION,
       GRADSLDGAD_OK, GRADSLDGAD_CHILD, GRADSLDGAD_CANCEL
       
+EXPORT DEF gradientsliderbase
 
 CONST NUM_GRADSLD_GADS=GRADSLDGAD_CANCEL+1
 
@@ -211,13 +212,17 @@ PROC editSettings(comp:PTR TO gradSliderObject) OF gradSliderSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF gradSliderObject
-  self.previewObject:=GradientObject,
-    GRAD_MAXVAL, self.maxVal,
-    GRAD_CURVAL, self.currVal,
-    GRAD_SKIPVAL, self.skipVal,
-    GRAD_KNOBPIXELS, self.knobPixels,
-    PGA_FREEDOM, ListItem([LORIENT_HORIZ,LORIENT_VERT],self.orientation),
-    GradientSliderEnd
+  IF (gradientsliderbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=GradientObject,
+      GRAD_MAXVAL, self.maxVal,
+      GRAD_CURVAL, self.currVal,
+      GRAD_SKIPVAL, self.skipVal,
+      GRAD_KNOBPIXELS, self.knobPixels,
+      PGA_FREEDOM, ListItem([LORIENT_HORIZ,LORIENT_VERT],self.orientation),
+      GradientSliderEnd
+  ENDIF
     
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
