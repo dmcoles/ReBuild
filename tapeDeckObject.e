@@ -277,6 +277,10 @@ ENDPROC
 
 EXPORT PROC libNameCreate() OF tapeDeckObject IS 'tapedeck.gadget'
 
+EXPORT PROC getTypeEndName() OF tapeDeckObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createTapeDeckObject(parent)
   DEF tapeDeck:PTR TO tapeDeckObject
   

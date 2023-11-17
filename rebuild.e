@@ -47,7 +47,8 @@ OPT OSVERSION=37,LARGE
          '*scrollerObject','*glyphObject','*spaceObject','*labelObject','*checkboxObject','*buttonObject',
          '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject',
          '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject','*colorWheelObject','*dateBrowserObject',
-         '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject'
+         '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
+         '*virtualObject','*sketchboardObject'
 
 #define vernum '0.2.0-alpha'
 #date verstring '$VER:Rebuild 0.2.0-%Y%m%d%h%n%s-alpha'
@@ -65,6 +66,9 @@ OPT OSVERSION=37,LARGE
   CONST GAD_COUNT=GAD_NEW+1
        
   ENUM  MENU_PROJECT, MENU_EDIT
+
+  CONST MENU_ADD_SUB_COUNT=28
+  CONST MENU_ADD_MORE_SUBCOUNT=15
   
   ENUM LANG_E, LANG_C
 
@@ -243,12 +247,17 @@ ENDPROC
 PROC removeMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
   DEF i, parent:PTR TO reactionObject
   IF comp
+    IF comp.parent THEN parent:=comp.parent ELSE parent:=window
+    
     FOR i:=0 TO comp.children.count()-1
       removeMembers(comp.children.item(i),window)
     ENDFOR
-    IF comp.parent THEN parent:=comp.parent ELSE parent:=window
     IF comp.previewObject
-      Sets(parent.addChildTo(),parent.removeChildTag(), comp.previewObject)
+      IF parent.addChildTag()=parent.removeChildTag()
+        Sets(parent.addChildTo(),parent.removeChildTag(), 0)
+      ELSE
+        Sets(parent.addChildTo(),parent.removeChildTag(), comp.previewObject)
+      ENDIF
       comp.previewObject:=0
       comp.previewChildAttrs:=0
     ENDIF
@@ -359,20 +368,25 @@ PROC updateSel(node)
   DEF dismoveup,dismovedown,disdel
   DEF menuItem
   DEF type
+  DEF allowchildren=FALSE
   
   IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
   IF comp
+    allowchildren:=(comp.allowChildren()=TRUE) ORELSE ((comp.allowChildren()>0) ANDALSO (comp.children.count()<comp.allowChildren()))
     selectedComp:=comp
     FOR i:=0 TO 31
       FOR j:=0 TO 1
-        menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
-        IF menuItem
-          type:=GTMENUITEM_USERDATA(menuItem)
-          IF type<>-1
-            check:=((comp.parent=0) AND (comp.allowChildren()=FALSE)) OR (type==[TYPE_STATUSBAR,
-              TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,
-              TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
-            menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,check)
+        IF ((j=0) AND (i<MENU_ADD_SUB_COUNT) OR (i<MENU_ADD_MORE_SUBCOUNT))
+
+          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
+          IF menuItem
+            type:=GTMENUITEM_USERDATA(menuItem)
+            IF type<>-1
+              check:=((comp.parent=0) AND (allowchildren)) OR (type==[TYPE_STATUSBAR,
+                TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,
+                TYPE_TEXTENTRY, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
+              menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,check)
+            ENDIF
           ENDIF
         ENDIF
       ENDFOR
@@ -400,7 +414,7 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,dismoveup)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,dismovedown)
     
-    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.allowChildren()=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
 
     IF bufferLayout
@@ -414,7 +428,7 @@ PROC updateSel(node)
       idx:=comp.getChildIndex()
       IF (idx<(comp.parent.children.count()-1))
         child:=comp.parent.children.item(idx+1)
-        IF ((child.allowChildren()))
+        IF (allowchildren)
           dis:=FALSE
         ENDIF
       ENDIF
@@ -431,11 +445,15 @@ PROC updateSel(node)
   ELSE
     selectedComp:=0
     FOR i:=0 TO 31
-      menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_ADD,i))
-      IF menuItem
-        type:=GTMENUITEM_USERDATA(menuItem)
-        IF type<>-1 THEN menuDisable(win,MENU_EDIT,MENU_EDIT_ADD,i,TRUE)
-      ENDIF
+      FOR j:=0 TO 1
+        IF ((j=0) AND (i<MENU_ADD_SUB_COUNT) OR (i<MENU_ADD_MORE_SUBCOUNT))
+          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
+          IF menuItem
+            type:=GTMENUITEM_USERDATA(menuItem)
+            IF type<>-1 THEN menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,TRUE)
+          ENDIF
+        ENDIF
+      ENDFOR
     ENDFOR
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,TRUE)
@@ -1030,7 +1048,7 @@ PROC genCode()
 
   setBusy()
   NEW fs.create(fname,MODE_NEWFILE)
-  
+
   SELECT langid
     CASE LANG_E
       NEW eSrcGen.create(fs,libsused)
@@ -1345,6 +1363,8 @@ PROC unsavedChangesWarning()
   DEF reqobj
   DEF res=0
   
+  SUBA.L #$100,A7
+  
   setBusy()
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
@@ -1357,6 +1377,7 @@ PROC unsavedChangesWarning()
   ENDIF
   END reqmsg
   clearBusy()
+  ADD.L #$100,A7
 ENDPROC res
 
 PROC showAbout()
@@ -1364,6 +1385,8 @@ PROC showAbout()
   DEF aboutStr[100]:STRING
   DEF reqobj
   
+  SUBA.L #$100,A7
+
   setBusy()
 
   StrCopy(aboutStr,'ReBuilder\n\nThe Reaction UI Builder Tool\nWritten By Darren Coles\n')
@@ -1380,6 +1403,7 @@ PROC showAbout()
   ENDIF
   END reqmsg
   clearBusy()
+  ADD.L #$100,A7
 ENDPROC
 
 PROC doLoad()
@@ -1443,8 +1467,14 @@ ENDPROC
 PROC doAddComp(comp:PTR TO reactionObject, objType, compType=-1)
   DEF newObj:PTR TO reactionObject
   DEF a=0:PTR TO menuitem
+  DEF allowchildren
   newObj:=0
-  WHILE (comp<>0) AND (comp.allowChildren()=FALSE) DO comp:=comp.parent
+  
+  allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
+  WHILE (comp) AND (allowchildren=FALSE) 
+    comp:=comp.parent
+    IF comp THEN allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
+  ENDWHILE
   IF comp
     IF compType>-1
       newObj:=createObjectByType(compType,comp)
@@ -2224,6 +2254,12 @@ PROC createObjectByObj(objType,comp)
       newObj:=createTextEditorObject(comp)
     CASE OBJECT_LED
       newObj:=createLedObject(comp)
+    CASE OBJECT_LISTVIEW
+      newObj:=createListViewObject(comp)
+    CASE OBJECT_VIRTUAL
+      newObj:=createVirtualObject(comp)
+    CASE OBJECT_SKETCH
+      newObj:=createSketchboardObject(comp)
   ENDSELECT
 ENDPROC newObj
 
@@ -2306,6 +2342,12 @@ PROC createObjectByType(objType,comp)
       newObj:=createTextEditorObject(comp)
     CASE TYPE_LED
       newObj:=createLedObject(comp)
+    CASE TYPE_LISTVIEW
+      newObj:=createListViewObject(comp)
+    CASE TYPE_VIRTUAL
+      newObj:=createVirtualObject(comp)
+    CASE TYPE_SKETCH
+      newObj:=createSketchboardObject(comp)
   ENDSELECT
 ENDPROC newObj
 

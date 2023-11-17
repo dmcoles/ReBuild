@@ -324,6 +324,10 @@ EXPORT PROC libNameCreate() OF boingBallObject IS 'boingball.image'
 
 EXPORT PROC isImage() OF boingBallObject IS TRUE
 
+EXPORT PROC getTypeEndName() OF boingBallObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createBoingBallObject(parent)
   DEF bball:PTR TO boingBallObject
   

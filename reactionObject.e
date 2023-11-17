@@ -669,7 +669,7 @@ EXPORT PROC addImageTag() OF reactionObject IS 0
 
 EXPORT PROC removeChildTag() OF reactionObject IS 0
 
-EXPORT PROC addChildTo() OF reactionObject IS 0
+EXPORT PROC addChildTo() OF reactionObject IS self.previewObject
 
 EXPORT PROC genChildObjectsHeader(srcGen:PTR TO srcGen) OF reactionObject IS 0
 

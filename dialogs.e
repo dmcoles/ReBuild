@@ -8,6 +8,8 @@ EXPORT PROC warnRequest(windowObj,title,bodytext,yesno=FALSE)
   DEF res=0
   DEF win
   
+  SUBA.L #$100,A7
+  
   Sets(windowObj,WA_BUSYPOINTER,TRUE)
   win:=Gets(windowObj,WINDOW_WINDOW)
   
@@ -22,6 +24,9 @@ EXPORT PROC warnRequest(windowObj,title,bodytext,yesno=FALSE)
   ENDIF
   END reqmsg
   Sets(windowObj,WA_BUSYPOINTER,FALSE)
+
+  ADD.L #$100,A7
+
 ENDPROC res
 
 EXPORT PROC errorRequest(windowObj,title,bodytext)
@@ -30,6 +35,8 @@ EXPORT PROC errorRequest(windowObj,title,bodytext)
   DEF res=0
   DEF win
   
+  SUBA.L #$100,A7
+
   Sets(windowObj,WA_BUSYPOINTER,TRUE)
   win:=Gets(windowObj,WINDOW_WINDOW)
 
@@ -44,4 +51,7 @@ EXPORT PROC errorRequest(windowObj,title,bodytext)
   ENDIF
   END reqmsg
   Sets(windowObj,WA_BUSYPOINTER,FALSE)
+
+  ADD.L #$100,A7
+
 ENDPROC

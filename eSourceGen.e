@@ -58,6 +58,9 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_TAPEDECK]  THEN self.writeLine('      \agadgets/tapedeck\a,')
   IF self.libsused[TYPE_TEXTEDITOR]  THEN self.writeLine('      \agadgets/texteditor\a,\atexteditor\a,')
   IF self.libsused[TYPE_LED]  THEN self.writeLine('      \aimages/led\a,')
+  IF self.libsused[TYPE_LISTVIEW]  THEN self.writeLine('      \agadgets/listview\a,\alistview\a,')
+  IF self.libsused[TYPE_VIRTUAL]  THEN self.writeLine('      \agadgets/virtual\a,\avirtual\a,')
+  IF self.libsused[TYPE_SKETCH]  THEN self.writeLine('      \agadgets/sketchboard\a,\asketchboard\a,')
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
@@ -68,24 +71,12 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   ENDIF
   self.writeLine('      \aintuition/intuition\a,')
   self.writeLine('      \aintuition/imageclass\a,')
+  self.writeLine('      \aintuition/screens\a,')
   IF (screenObject.custom)
-    self.writeLine('      \aintuition/screens\a,')
     self.writeLine('      \agraphics/modeid\a,')
   ENDIF
   self.writeLine('      \aintuition/gadgetclass\a')
   self.writeLine('')
-  IF self.libsused[TYPE_BOINGBALL]
-    self.writeLine('#define BoingBallEnd LabelEnd')
-    self.writeLine('')
-  ENDIF
-  IF self.libsused[TYPE_TAPEDECK]
-    self.writeLine('#define TapeDeckEnd LabelEnd')
-    self.writeLine('')
-  ENDIF
-  IF self.libsused[TYPE_TEXTEDITOR]
-    self.writeLine('#define TextEditorEnd LabelEnd')
-    self.writeLine('')
-  ENDIF
 
   IF self.libsused[TYPE_GRADSLIDER]
     self.writeLine('DEF gradientsliderbase')
@@ -134,6 +125,9 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF (tapedeckbase:=OpenLibrary(\agadgets/tapedeck.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtape\q)')
   IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/texteditor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
   IF self.libsused[TYPE_LED] THEN self.writeLine('  IF (ledbase:=OpenLibrary(\aimages/led.image\a,0))=NIL THEN Throw(\qLIB\q,\qed\q)')
+  IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF (listviewbase:=OpenLibrary(\agadgets/listview.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlvw\q)')
+  IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
+  IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF (sketchboardbase:=OpenLibrary(\agadgets/sketchboard.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qskch\q)')
 
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
@@ -180,6 +174,9 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF tapedeckbase THEN CloseLibrary(tapedeckbase)')
   IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
   IF self.libsused[TYPE_LED] THEN self.writeLine('  IF ledbase THEN CloseLibrary(ledbase)')
+  IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF listviewbase THEN CloseLibrary(listviewbase)')
+  IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF virtualbase THEN CloseLibrary(virtualbase)')
+  IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF sketchboardbase THEN CloseLibrary(sketchboardbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
 

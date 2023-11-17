@@ -31,7 +31,7 @@ EXPORT ENUM OBJECT_BUTTON=0, OBJECT_BITMAP, OBJECT_CHECKBOX, OBJECT_CHOOSER,
 
 EXPORT CONST NUM_OBJECT_TYPES=OBJECT_LABEL+1
 
-CONST NUMGADS=BTNCANCEL2+1
+CONST NUMGADS=PAGECTRL+1
 
 EXPORT OBJECT objectPickerForm OF reactionForm
 PRIVATE
@@ -368,7 +368,6 @@ EXPORT PROC create() OF objectPickerForm
 
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_LISTVIEW]:=ButtonObject,
                 GA_ID, OBJECT_LISTVIEW,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'ListView',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
@@ -388,9 +387,7 @@ EXPORT PROC create() OF objectPickerForm
               LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_SKETCH]:=ButtonObject,
-                GA_DISABLED,TRUE,
                 GA_ID, OBJECT_SKETCH,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'SketchBoard',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,
@@ -423,7 +420,6 @@ EXPORT PROC create() OF objectPickerForm
               ButtonEnd,
               LAYOUT_ADDCHILD,self.gadgetList[OBJECT_VIRTUAL]:=ButtonObject,
                 GA_ID, OBJECT_VIRTUAL,
-                GA_DISABLED,TRUE,
                 GA_TEXT, 'Virtual',
                 GA_RELVERIFY, TRUE,
                 GA_TABCYCLE, TRUE,

@@ -1,7 +1,7 @@
 
 OPT MODULE
 
-  MODULE 'gadgets/layout'
+  MODULE 'gadgets/layout','gadgets/virtual'
 
   MODULE '*fileStreamer','*stringlist'
 
@@ -162,6 +162,8 @@ PROC componentAddChild(addChildTag) OF srcGen
     StrCopy(tempStr,'LAYOUT_AddChild, ')
   ELSEIF addChildTag=PAGE_ADD
     StrCopy(tempStr,'PAGE_Add, ')
+  ELSEIF addChildTag=VIRTUALA_CONTENTS
+    StrCopy(tempStr,'VIRTUALA_Contents, ')
   ELSE
     StrCopy(tempStr,'LAYOUT_AddChild, ')
   ENDIF

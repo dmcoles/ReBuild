@@ -385,6 +385,10 @@ ENDPROC
 
 EXPORT PROC libTypeCreate() OF textEditorObject IS 'TextEditor_GetClass()'
 
+EXPORT PROC getTypeEndName() OF textEditorObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC createTextEditorObject(parent)
   DEF textEditor:PTR TO textEditorObject
   
