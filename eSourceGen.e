@@ -3,7 +3,7 @@ OPT MODULE,LARGE
   MODULE 'images/drawlist'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject',
-         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject'
+         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -64,7 +64,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
-  IF self.libsused[TYPE_SPEEDBAR]
+  IF self.libsused[TYPE_SPEEDBAR] OR  self.libsused[TYPE_LISTVIEW]
     self.writeLine('      \aexec/lists\a,\aexec/nodes\a,')
     self.writeLine('      \aexec/memory\a,')
     self.writeLine('      \aamigalib/lists\a,')
@@ -179,6 +179,49 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF sketchboardbase THEN CloseLibrary(sketchboardbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
+
+  IF self.libsused[TYPE_LISTVIEW]
+    self.writeLine('PROC listViewLabelsA(text:PTR TO LONG)')
+    self.writeLine('  DEF list:PTR TO lh')
+    self.writeLine('  DEF node:PTR TO listlabelnode')
+    self.writeLine('  DEF i=0')
+    self.writeLine('')
+    self.writeLine('  IF (list:=AllocMem( SIZEOF lh, MEMF_PUBLIC ))')
+    self.writeLine('    newList(list)')
+    self.writeLine('')
+    self.writeLine('    WHILE (text[])')
+    self.writeLine('      NEW node')
+    self.writeLine('      IF node=0')
+    self.writeLine('        freeListViewLabels(list)')
+    self.writeLine('        RETURN NIL')
+    self.writeLine('      ENDIF')
+    self.writeLine('      node.node.type:=i')
+    self.writeLine('      node.renderforeground:=1')
+    self.writeLine('      node.renderbackground:=0')
+    self.writeLine('      node.selectforeground:=2')
+    self.writeLine('      node.selectbackground:=3')
+    self.writeLine('      node.node.name:=text[]++')
+    self.writeLine('      AddTail(list,node)')
+    self.writeLine('    ENDWHILE')
+    self.writeLine('  ENDIF')
+    self.writeLine('ENDPROC list')
+    self.writeLine('')
+    self.writeLine('PROC freeListViewLabels(list:PTR TO lh)')
+    self.writeLine('  DEF node:PTR TO listlabelnode')
+    self.writeLine('  DEF nextnode:PTR TO ln')
+    self.writeLine('  DEF i')
+    self.writeLine('  ')
+    self.writeLine('  IF list')
+    self.writeLine('    node:= list.head')
+    self.writeLine('   WHILE (nextnode := node.node.succ)')
+    self.writeLine('      END node')
+    self.writeLine('      node := nextnode')
+    self.writeLine('   ENDWHILE')
+    self.writeLine('   FreeMem(list,SIZEOF lh)')
+    self.writeLine('  ENDIF')
+    self.writeLine('ENDPROC')
+    self.writeLine('')
+  ENDIF
 
   IF self.libsused[TYPE_SPEEDBAR]
     self.writeLine('PROC speedBarNodesA(text:PTR TO LONG)')
@@ -304,6 +347,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
   layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
+  layoutObject.findObjectsByType(listObjects,TYPE_LISTVIEW)
   
   NEW listObjects2.stdlist(20)
   layoutObject.findObjectsByType(listObjects2,TYPE_DRAWLIST)
@@ -363,6 +407,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_SPEEDBAR
         StringF(tempStr,'  buttons\d:=speedBarNodesA(',reactionObject.id)
         listStr:=self.makeList2(tempStr,reactionObject::speedBarObject.buttonList)
+      CASE TYPE_LISTVIEW
+        StringF(tempStr,'  labels\d:=listViewLabelsA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::listViewObject.listObjectId)
     ENDSELECT
     IF listStr
       self.writeLine(listStr)
@@ -524,6 +571,7 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
   layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
+  layoutObject.findObjectsByType(listObjects,TYPE_LISTVIEW)
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
     SELECT reactionObject.type
@@ -537,6 +585,8 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         StringF(tempStr,'  IF labels\d THEN freeBrowserNodes(labels\d)',reactionObject.id,reactionObject.id)
       CASE TYPE_SPEEDBAR
         StringF(tempStr,'  IF buttons\d THEN freeSpeedBarNodes(buttons\d)',reactionObject.id,reactionObject.id)
+      CASE TYPE_LISTVIEW
+        StringF(tempStr,'  IF labels\d THEN freeListViewLabels(labels\d)',reactionObject.id,reactionObject.id)
     ENDSELECT
     self.writeLine(tempStr)
   ENDFOR

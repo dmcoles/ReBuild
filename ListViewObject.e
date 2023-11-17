@@ -171,7 +171,7 @@ EXPORT PROC createPreviewObject(scr) OF listViewObject
     self.previewObject:=self.createErrorObject(scr)
   ELSE
     self.previewObject:=NewObjectA( ListView_GetClass(), NIL,[TAG_IGNORE,0,
-        ->LISTVIEW_LABELS, self.labels1:=self.makeListViewList(self.listObjectId),
+        LISTVIEW_LABELS, self.labels1:=self.makeListViewList(self.listObjectId),
         LISTVIEW_MULTISELECT, self.multiSelect,
       TAG_END])
   ENDIF
@@ -244,6 +244,11 @@ PROC listViewLabelsA(text:PTR TO LONG) OF listViewObject
         self.freeListViewLabels(list)
         RETURN NIL
       ENDIF
+      node.node.type:=i
+      node.renderforeground:=1
+      node.renderbackground:=0
+      node.selectforeground:=2
+      node.selectbackground:=3
       node.node.name:=text[]++
       AddTail(list,node)
     ENDWHILE
