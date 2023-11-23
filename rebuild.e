@@ -48,10 +48,14 @@ OPT OSVERSION=37,LARGE
          '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject',
          '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject','*colorWheelObject','*dateBrowserObject',
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
-         '*virtualObject','*sketchboardObject'
+         '*virtualObject','*sketchboardObject','*tabsObject'
 
 #define vernum '0.2.0-alpha'
 #date verstring '$VER:Rebuild 0.2.0-%Y%m%d%h%n%s-alpha'
+
+#ifndef EVO_3_7_0
+  FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
+#endif
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
@@ -67,8 +71,8 @@ OPT OSVERSION=37,LARGE
        
   ENUM  MENU_PROJECT, MENU_EDIT
 
-  CONST MENU_ADD_SUB_COUNT=28
-  CONST MENU_ADD_MORE_SUBCOUNT=15
+  CONST MENU_ADD_GADGET_COUNT=31
+  CONST MENU_ADD_IMAGE_COUNT=15
   
   ENUM LANG_E, LANG_C
 
@@ -113,6 +117,7 @@ OPT OSVERSION=37,LARGE
   DEF filename[255]:STRING
   DEF windowTitle[200]:STRING
   
+  DEF tabsbase=0
   DEF gradientsliderbase=0
   DEF progressbase=0
   DEF statusbarbase=0
@@ -139,18 +144,19 @@ PROC openClasses()
   IF (scrollerbase:=OpenLibrary('gadgets/scroller.gadget',0))=NIL THEN Throw("LIB","scrl")
   IF (checkboxbase:=OpenLibrary('gadgets/checkbox.gadget',0))=NIL THEN Throw("LIB","chkb")
   IF (fuelgaugebase:=OpenLibrary('gadgets/fuelgauge.gadget',0))=NIL THEN Throw("LIB","fuel")
-  IF (textfieldbase:=OpenLibrary('gadgets/textfield.gadget',0))=NIL THEN Throw("LIB","text")
   IF (getfilebase:=OpenLibrary('gadgets/getfile.gadget',0))=NIL THEN Throw("LIB","file")
   IF (getfontbase:=OpenLibrary('gadgets/getfont.gadget',0))=NIL THEN Throw("LIB","font")
   IF (getscreenmodebase:=OpenLibrary('gadgets/getscreenmode.gadget',0))=NIL THEN Throw("LIB","scrn")
   IF (sliderbase:=OpenLibrary('gadgets/slider.gadget',0))=NIL THEN Throw("LIB","sldr")
-  speedbarbase:=OpenLibrary('gadgets/speedbar.gadget',0)
   IF (glyphbase:=OpenLibrary('images/glyph.image',0))=NIL THEN Throw("LIB","glyp")
   IF (labelbase:=OpenLibrary('images/label.image',0))=NIL THEN Throw("LIB","labl")
   IF (bevelbase:=OpenLibrary('images/bevel.image',0))=NIL THEN Throw("LIB","bevl")
   IF (drawlistbase:=OpenLibrary('images/drawlist.image',0))=NIL THEN Throw("LIB","draw")
   IF (penmapbase:=OpenLibrary('images/penmap.image',0))=NIL THEN Throw("LIB","penm")
   IF (bitmapbase:=OpenLibrary('images/bitmap.image',0))=NIL THEN Throw("LIB","bitm")
+  tabsbase:=OpenLibrary('gadgets/tabs.gadget',0)
+  speedbarbase:=OpenLibrary('gadgets/speedbar.gadget',0)
+  textfieldbase:=OpenLibrary('gadgets/textfield.gadget',0)
   colorwheelbase:=OpenLibrary('gadgets/colorwheel.gadget',0)
   datebrowserbase:=OpenLibrary('gadgets/datebrowser.gadget',0)
   getcolorbase:=OpenLibrary('gadgets/getcolor.gadget',0)
@@ -160,8 +166,7 @@ PROC openClasses()
   sketchboardbase:=OpenLibrary('gadgets/sketchboard.gadget',0)
   statusbarbase:=OpenLibrary('gadgets/statusbar.gadget',0)
   tapedeckbase:=OpenLibrary('gadgets/tapedeck.gadget',0)
-  textfieldbase:=OpenLibrary('gadgets/texteditor.gadget',0)
-  textentrybase:=OpenLibrary('gadgets/textentry.gadget',0)
+  texteditorbase:=OpenLibrary('gadgets/texteditor.gadget',0)
   virtualbase:=OpenLibrary('gadgets/virtual.gadget',0)
   boingballbase:=OpenLibrary('images/boingball.image',0)
   ledbase:=OpenLibrary('images/led.image',0)
@@ -200,6 +205,7 @@ PROC closeClasses()
   IF penmapbase THEN CloseLibrary(penmapbase)
   IF bitmapbase THEN CloseLibrary(bitmapbase)
 
+  IF tabsbase THEN CloseLibrary(tabsbase)
   IF colorwheelbase THEN CloseLibrary(colorwheelbase)
   IF datebrowserbase THEN CloseLibrary(datebrowserbase)
   IF getcolorbase THEN  CloseLibrary(getcolorbase)
@@ -210,7 +216,6 @@ PROC closeClasses()
   IF statusbarbase THEN CloseLibrary(statusbarbase)
   IF tapedeckbase THEN CloseLibrary(tapedeckbase)
   IF textfieldbase THEN CloseLibrary(textfieldbase)
-  IF textentrybase THEN CloseLibrary(textentrybase)
   IF virtualbase THEN CloseLibrary(virtualbase)
   IF boingballbase THEN CloseLibrary(boingballbase)
   IF ledbase THEN CloseLibrary(ledbase)
@@ -376,7 +381,7 @@ PROC updateSel(node)
     selectedComp:=comp
     FOR i:=0 TO 31
       FOR j:=0 TO 1
-        IF ((j=0) AND (i<MENU_ADD_SUB_COUNT) OR (i<MENU_ADD_MORE_SUBCOUNT))
+        IF ((j=0) AND (i<MENU_ADD_GADGET_COUNT) OR (i<MENU_ADD_IMAGE_COUNT))
 
           menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
           IF menuItem
@@ -446,7 +451,7 @@ PROC updateSel(node)
     selectedComp:=0
     FOR i:=0 TO 31
       FOR j:=0 TO 1
-        IF ((j=0) AND (i<MENU_ADD_SUB_COUNT) OR (i<MENU_ADD_MORE_SUBCOUNT))
+        IF ((j=0) AND (i<MENU_ADD_GADGET_COUNT) OR (i<MENU_ADD_IMAGE_COUNT))
           menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
           IF menuItem
             type:=GTMENUITEM_USERDATA(menuItem)
@@ -1464,7 +1469,7 @@ PROC doAddWindow()
     
 ENDPROC
 
-PROC doAddComp(comp:PTR TO reactionObject, objType, compType=-1)
+PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
   DEF a=0:PTR TO menuitem
   DEF allowchildren
@@ -1476,11 +1481,7 @@ PROC doAddComp(comp:PTR TO reactionObject, objType, compType=-1)
     IF comp THEN allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
   ENDWHILE
   IF comp
-    IF compType>-1
-      newObj:=createObjectByType(compType,comp)
-    ELSE
-      newObj:=createObjectByObj(objType,comp)
-    ENDIF
+    newObj:=createObjectByType(objType,comp)
     IF newObj 
       setBusy()
       IF win
@@ -1847,7 +1848,7 @@ PROC remakePreviewMenus()
   DEF a:PTR TO menuitem
 
   count:=(objectList.count()-ROOT_WINDOW_ITEM)/4
-  count:=count+73
+  count:=count+69
 
   IF win
     a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
@@ -1888,188 +1889,167 @@ PROC remakePreviewMenus()
   menuData[13].type:=NM_TITLE
   menuData[13].label:='Edit'
   menuData[14].type:=NM_ITEM
-  menuData[14].label:='Add'
+  menuData[14].label:='Add Gadget'
   menuData[14].userdata:=-1
-
   menuData[15].type:=NM_SUB
   menuData[15].label:='Button'
   menuData[15].userdata:=TYPE_BUTTON
   menuData[16].type:=NM_SUB
-  menuData[16].label:='Bitmap'
-  menuData[16].userdata:=TYPE_BITMAP
+  menuData[16].label:='CheckBox'
+  menuData[16].userdata:=TYPE_CHECKBOX
   menuData[17].type:=NM_SUB
-  menuData[17].label:='CheckBox'
-  menuData[17].userdata:=TYPE_CHECKBOX
+  menuData[17].label:='Chooser'
+  menuData[17].userdata:=TYPE_CHOOSER
   menuData[18].type:=NM_SUB
-  menuData[18].label:='Chooser'
-  menuData[18].userdata:=TYPE_CHOOSER
+  menuData[18].label:='ClickTab'
+  menuData[18].userdata:=TYPE_CLICKTAB
   menuData[19].type:=NM_SUB
-  menuData[19].label:='ClickTab'
-  menuData[19].userdata:=TYPE_CLICKTAB
+  menuData[19].label:='ColorWheel'
+  menuData[19].userdata:=TYPE_COLORWHEEL
   menuData[20].type:=NM_SUB
-  menuData[20].label:='FuelGauge'
-  menuData[20].userdata:=TYPE_FUELGAUGE
+  menuData[20].label:='DateBrowser'
+  menuData[20].userdata:=TYPE_DATEBROWSER
   menuData[21].type:=NM_SUB
-  menuData[21].label:='GetFile'
-  menuData[21].userdata:=TYPE_GETFILE
+  menuData[21].label:='FuelGauge'
+  menuData[21].userdata:=TYPE_FUELGAUGE
   menuData[22].type:=NM_SUB
-  menuData[22].label:='GetFont'
-  menuData[22].userdata:=TYPE_GETFONT
+  menuData[22].label:='GetColor'
+  menuData[22].userdata:=TYPE_GETCOLOR
   menuData[23].type:=NM_SUB
-  menuData[23].label:='GetScreenMode'
-  menuData[23].userdata:=TYPE_GETSCREENMODE
+  menuData[23].label:='GetFile'
+  menuData[23].userdata:=TYPE_GETFILE
   menuData[24].type:=NM_SUB
-  menuData[24].label:='Integer'
-  menuData[24].userdata:=TYPE_INTEGER
+  menuData[24].label:='GetFont'
+  menuData[24].userdata:=TYPE_GETFONT
   menuData[25].type:=NM_SUB
-  menuData[25].label:='Palette'
-  menuData[25].userdata:=TYPE_PALETTE
+  menuData[25].label:='GetScreenMode'
+  menuData[25].userdata:=TYPE_GETSCREENMODE
   menuData[26].type:=NM_SUB
-  menuData[26].label:='PenMap'
-  menuData[26].userdata:=TYPE_PENMAP
+  menuData[26].label:='GradientSlider'
+  menuData[26].userdata:=TYPE_GRADSLIDER
   menuData[27].type:=NM_SUB
-  menuData[27].label:='Layout'
-  menuData[27].userdata:=TYPE_LAYOUT
+  menuData[27].label:='Integer'
+  menuData[27].userdata:=TYPE_INTEGER
   menuData[28].type:=NM_SUB
-  menuData[28].label:='ListBrowser'
-  menuData[28].userdata:=TYPE_LISTBROWSER
+  menuData[28].label:='Layout'
+  menuData[28].userdata:=TYPE_LAYOUT
   menuData[29].type:=NM_SUB
-  menuData[29].label:='RadioButton'
-  menuData[29].userdata:=TYPE_RADIO
+  menuData[29].label:='ListBrowser'
+  menuData[29].userdata:=TYPE_LISTBROWSER
   menuData[30].type:=NM_SUB
-  menuData[30].label:='Scroller'
-  menuData[30].userdata:=TYPE_SCROLLER
+  menuData[30].label:='ListView'
+  menuData[30].userdata:=TYPE_LISTVIEW
   menuData[31].type:=NM_SUB
-  menuData[31].label:='SpeedBar'
-  menuData[31].userdata:=TYPE_SPEEDBAR
+  menuData[31].label:='Palette'
+  menuData[31].userdata:=TYPE_PALETTE
   menuData[32].type:=NM_SUB
-  menuData[32].label:='Slider'
-  menuData[32].userdata:=TYPE_SLIDER
+  menuData[32].label:='RadioButton'
+  menuData[32].userdata:=TYPE_RADIO
   menuData[33].type:=NM_SUB
-  menuData[33].label:='StatusBar'
-  menuData[33].userdata:=TYPE_STATUSBAR
+  menuData[33].label:='Scroller'
+  menuData[33].userdata:=TYPE_SCROLLER
   menuData[34].type:=NM_SUB
-  menuData[34].label:='String'
-  menuData[34].userdata:=TYPE_STRING
+  menuData[34].label:='SketchBoard'
+  menuData[34].userdata:=TYPE_SKETCH
   menuData[35].type:=NM_SUB
-  menuData[35].label:='Space'
-  menuData[35].userdata:=TYPE_SPACE
+  menuData[35].label:='Slider'
+  menuData[35].userdata:=TYPE_SLIDER
   menuData[36].type:=NM_SUB
-  menuData[36].label:='TextField'
-  menuData[36].userdata:=TYPE_TEXTFIELD
+  menuData[36].label:='Space'
+  menuData[36].userdata:=TYPE_SPACE
   menuData[37].type:=NM_SUB
-  menuData[37].label:='Bevel'
-  menuData[37].userdata:=TYPE_BEVEL
+  menuData[37].label:='SpeedBar'
+  menuData[37].userdata:=TYPE_SPEEDBAR
   menuData[38].type:=NM_SUB
-  menuData[38].label:='DrawList'
-  menuData[38].userdata:=TYPE_DRAWLIST
+  menuData[38].label:='String'
+  menuData[38].userdata:=TYPE_STRING
   menuData[39].type:=NM_SUB
-  menuData[39].label:='Glyph'
-  menuData[39].userdata:=TYPE_GLYPH
+  menuData[39].label:='Tabs'
+  menuData[39].userdata:=TYPE_TABS
   menuData[40].type:=NM_SUB
-  menuData[40].label:='Label'
-  menuData[40].userdata:=TYPE_LABEL
+  menuData[40].label:='TapeDeck'
+  menuData[40].userdata:=TYPE_TAPEDECK
   menuData[41].type:=NM_SUB
-  menuData[41].label:=NM_BARLABEL
-  menuData[41].userdata:=-1
+  menuData[41].label:='TextEditor'
+  menuData[41].userdata:=TYPE_TEXTEDITOR
   menuData[42].type:=NM_SUB
-  menuData[42].label:='Window'
-  menuData[42].userdata:=TYPE_WINDOW
-
-  menuData[43].type:=NM_ITEM
-  menuData[43].label:='Add More'
-  menuData[43].userdata:=-1
-
+  menuData[42].label:='TextField'
+  menuData[42].userdata:=TYPE_TEXTFIELD
+  menuData[43].type:=NM_SUB
+  menuData[43].label:='Virtual'
+  menuData[43].userdata:=TYPE_VIRTUAL
   menuData[44].type:=NM_SUB
-  menuData[44].label:='ColorWheel'
-  menuData[44].userdata:=TYPE_COLORWHEEL
-
+  menuData[44].label:=NM_BARLABEL
+  menuData[44].userdata:=-1
   menuData[45].type:=NM_SUB
-  menuData[45].label:='DateBrowser'
-  menuData[45].userdata:=TYPE_DATEBROWSER
+  menuData[45].label:='Window'
+  menuData[45].userdata:=TYPE_WINDOW
 
-  menuData[46].type:=NM_SUB
-  menuData[46].label:='GetColor'
-  menuData[46].userdata:=TYPE_GETCOLOR
-
+  menuData[46].type:=NM_ITEM
+  menuData[46].label:='Add Image'
+  menuData[46].userdata:=-1
   menuData[47].type:=NM_SUB
-  menuData[47].label:='GradientSlider'
-  menuData[47].userdata:=TYPE_GRADSLIDER
+  menuData[47].label:='Bevel'
+  menuData[47].userdata:=TYPE_BEVEL
 
   menuData[48].type:=NM_SUB
-  menuData[48].label:='ListView'
-  menuData[48].userdata:=TYPE_LISTVIEW
+  menuData[48].label:='BitMap'
+  menuData[48].userdata:=TYPE_BITMAP
   
   menuData[49].type:=NM_SUB
-  menuData[49].label:='Progress'
-  menuData[49].userdata:=TYPE_PROGRESS
+  menuData[49].label:='BoingBall'
+  menuData[49].userdata:=TYPE_BOINGBALL
 
   menuData[50].type:=NM_SUB
-  menuData[50].label:='SketchBoard'
-  menuData[50].userdata:=TYPE_SKETCH
+  menuData[50].label:='DrawList'
+  menuData[50].userdata:=TYPE_DRAWLIST
 
   menuData[51].type:=NM_SUB
-  menuData[51].label:='TapeDeck'
-  menuData[51].userdata:=TYPE_TAPEDECK
+  menuData[51].label:='Glyph'
+  menuData[51].userdata:=TYPE_GLYPH
 
   menuData[52].type:=NM_SUB
-  menuData[52].label:='TextEditor'
-  menuData[52].userdata:=TYPE_TEXTEDITOR
+  menuData[52].label:='Label'
+  menuData[52].userdata:=TYPE_LABEL
 
   menuData[53].type:=NM_SUB
-  menuData[53].label:='TextEntry'
-  menuData[53].userdata:=TYPE_TEXTENTRY
+  menuData[53].label:='LED'
+  menuData[53].userdata:=TYPE_LED
 
   menuData[54].type:=NM_SUB
-  menuData[54].label:='Virtual'
-  menuData[54].userdata:=TYPE_VIRTUAL
+  menuData[54].label:='PenMap'
+  menuData[54].userdata:=TYPE_PENMAP
 
-  menuData[55].type:=NM_SUB
-  menuData[55].label:='BoingBall'
-  menuData[55].userdata:=TYPE_BOINGBALL
-
-  menuData[56].type:=NM_SUB
-  menuData[56].label:='LED'
-  menuData[56].userdata:=TYPE_LED
-
-  menuData[57].type:=NM_SUB
-  menuData[57].label:='SmartBitmap'
-  menuData[57].userdata:=TYPE_SMARTBITMAP
-
-  menuData[58].type:=NM_SUB
-  menuData[58].label:='TitleBar'
-  menuData[58].userdata:=TYPE_TITLEBAR
-
+  menuData[55].type:=NM_ITEM
+  menuData[55].label:='Edit'
+  menuData[56].type:=NM_ITEM
+  menuData[56].label:='Delete'
+  menuData[57].type:=NM_ITEM
+  menuData[57].label:=NM_BARLABEL
+  menuData[58].type:=NM_ITEM
+  menuData[58].label:='Move Up'
   menuData[59].type:=NM_ITEM
-  menuData[59].label:='Edit'
+  menuData[59].label:='Move Down'
   menuData[60].type:=NM_ITEM
-  menuData[60].label:='Delete'
+  menuData[60].label:=NM_BARLABEL
   menuData[61].type:=NM_ITEM
-  menuData[61].label:=NM_BARLABEL
+  menuData[61].label:='Edit Lists'
   menuData[62].type:=NM_ITEM
-  menuData[62].label:='Move Up'
+  menuData[62].label:=NM_BARLABEL
   menuData[63].type:=NM_ITEM
-  menuData[63].label:='Move Down'
+  menuData[63].label:='Show Buffer'
+  menuData[63].flags:=CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[64].type:=NM_ITEM
-  menuData[64].label:=NM_BARLABEL
+  menuData[64].label:='Show Settings On Add'
+  menuData[64].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[65].type:=NM_ITEM
-  menuData[65].label:='Edit Lists'
+  menuData[65].label:='Warn On Delete'
+  menuData[65].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
   menuData[66].type:=NM_ITEM
   menuData[66].label:=NM_BARLABEL
   menuData[67].type:=NM_ITEM
-  menuData[67].label:='Show Buffer'
-  menuData[67].flags:=CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[68].type:=NM_ITEM
-  menuData[68].label:='Show Settings On Add'
-  menuData[68].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[69].type:=NM_ITEM
-  menuData[69].label:='Warn On Delete'
-  menuData[69].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[70].type:=NM_ITEM
-  menuData[70].label:=NM_BARLABEL
-  menuData[71].type:=NM_ITEM
-  menuData[71].label:='Preview Windows'
-  n:=72
+  menuData[77].label:='Preview Windows'
+  n:=68
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
     winObj:=objectList.item(i)
@@ -2185,84 +2165,6 @@ PROC editLists()
   ENDWHILE
 ENDPROC
 
-PROC createObjectByObj(objType,comp)
-  DEF newObj
-  SELECT objType
-    CASE OBJECT_BUTTON
-      newObj:=createButtonObject(comp)
-    CASE OBJECT_CHECKBOX
-      newObj:=createCheckboxObject(comp)
-    CASE OBJECT_LABEL
-      newObj:=createLabelObject(comp)
-    CASE OBJECT_LAYOUT
-      newObj:=createLayoutObject(comp)
-    CASE OBJECT_STRING
-      newObj:=createStringObject(comp)
-    CASE OBJECT_INTEGER
-      newObj:=createIntegerObject(comp)
-    CASE OBJECT_SPACE
-      newObj:=createSpaceObject(comp)
-    CASE OBJECT_GLYPH
-      newObj:=createGlyphObject(comp)
-    CASE OBJECT_SCROLLER
-      newObj:=createScrollerObject(comp)
-    CASE OBJECT_PALETTE
-      newObj:=createPaletteObject(comp)
-    CASE OBJECT_RADIO
-      newObj:=createRadioObject(comp)
-    CASE OBJECT_CHOOSER
-      newObj:=createChooserObject(comp)
-    CASE OBJECT_CLICKTAB
-      newObj:=createClickTabObject(comp)
-    CASE OBJECT_LISTBROWSER
-      newObj:=createListBrowserObject(comp)
-    CASE OBJECT_BEVEL
-      newObj:=createBevelObject(comp)
-    CASE OBJECT_FUELGAUGE
-      newObj:=createFuelGaugeObject(comp)
-    CASE OBJECT_DRAWLIST
-      newObj:=createDrawListObject(comp)
-    CASE OBJECT_TEXTFIELD
-      newObj:=createTextFieldObject(comp)
-    CASE OBJECT_GETFILE
-      newObj:=createGetFileObject(comp)
-    CASE OBJECT_GETFONT
-      newObj:=createGetFontObject(comp)
-    CASE OBJECT_GETSCREENMODE
-      newObj:=createGetScreenModeObject(comp)
-    CASE OBJECT_BOINGBALL
-      newObj:=createBoingBallObject(comp)
-    CASE OBJECT_PENMAP
-      newObj:=createPenMapObject(comp)
-    CASE OBJECT_BITMAP
-      newObj:=createBitmapObject(comp)
-    CASE OBJECT_SLIDER
-      newObj:=createSliderObject(comp)
-    CASE OBJECT_SPEEDBAR
-      newObj:=createSpeedBarObject(comp)
-    CASE OBJECT_COLORWHEEL
-      newObj:=createColorWheelObject(comp)
-    CASE OBJECT_DATEBROWSER
-      newObj:=createDateBrowserObject(comp)
-    CASE OBJECT_GETCOLOR
-      newObj:=createGetColorObject(comp)
-    CASE OBJECT_GRADSLIDER
-      newObj:=createGradSliderObject(comp)
-    CASE OBJECT_TAPEDECK
-      newObj:=createTapeDeckObject(comp)
-    CASE OBJECT_TEXTEDITOR
-      newObj:=createTextEditorObject(comp)
-    CASE OBJECT_LED
-      newObj:=createLedObject(comp)
-    CASE OBJECT_LISTVIEW
-      newObj:=createListViewObject(comp)
-    CASE OBJECT_VIRTUAL
-      newObj:=createVirtualObject(comp)
-    CASE OBJECT_SKETCH
-      newObj:=createSketchboardObject(comp)
-  ENDSELECT
-ENDPROC newObj
-
 PROC createObjectByType(objType,comp)
   DEF newObj
   SELECT objType
@@ -2348,6 +2250,10 @@ PROC createObjectByType(objType,comp)
       newObj:=createVirtualObject(comp)
     CASE TYPE_SKETCH
       newObj:=createSketchboardObject(comp)
+    CASE TYPE_TABS
+      newObj:=createTabsObject(comp)
+    DEFAULT
+      Raise("OBJ")
   ENDSELECT
 ENDPROC newObj
 
@@ -2375,6 +2281,7 @@ PROC main() HANDLE
   DEF item,type
 
   openClasses()
+  initialise()
   NEW objectList.stdlist(20)
   NEW bufferList.stdlist(20)
   initReactionLists()
@@ -2429,13 +2336,13 @@ PROC main() HANDLE
                         IF type=TYPE_WINDOW
                           doAddWindow()
                         ELSE
-                          doAddComp(selectedComp,-1,type)
+                          doAddComp(selectedComp,type)
                         ENDIF
                       ENDIF
                     CASE MENU_EDIT_ADD_MORE  ->Add more
                       item:=ItemAddress(win.menustrip,result)
                       type:=GTMENUITEM_USERDATA(item)
-                      IF type<>-1 THEN doAddComp(selectedComp,-1,type)
+                      IF type<>-1 THEN doAddComp(selectedComp,type)
                     CASE MENU_EDIT_EDIT ->Edit
                       doEdit()
                     CASE MENU_EDIT_DELETE  ->Delete
@@ -2519,6 +2426,8 @@ PROC main() HANDLE
   
 EXCEPT DO
   SELECT exception
+    CASE "OBJ"
+      WriteF('unimplemented object type\n')
     CASE "NIL"
       WriteF('nil pointer error\n')
     CASE "WIN"
@@ -2609,6 +2518,7 @@ EXCEPT DO
   IF list2 THEN freeBrowserNodes( list2 )
   IF mainWindow THEN DisposeObject(mainWindow)
   IF (appPort) THEN DeleteMsgPort(appPort)
+  deinitialise()
   closeClasses()
 ENDPROC
 

@@ -584,7 +584,10 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textFieldObject
-  self.previewObject:=NewObjectA(TextField_GetClass(), NIL,[
+  IF (textfieldbase=0)
+    self.previewObject:=self.createErrorObject(scr)
+  ELSE
+    self.previewObject:=NewObjectA(TextField_GetClass(), NIL,[
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,
       GA_TABCYCLE, self.tabCycle,
@@ -618,8 +621,9 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
       TEXTFIELD_ALIGNMENT, ListItem([TEXTFIELD_ALIGN_LEFT,TEXTFIELD_ALIGN_CENTER,TEXTFIELD_ALIGN_RIGHT],self.align),
 
     End
+  ENDIF
     
-    self.previewChildAttrs:=[
+  self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,
         CHILD_NOMINALSIZE, self.nominalSize,
         CHILD_NODISPOSE, FALSE,

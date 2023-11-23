@@ -231,7 +231,7 @@ PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
 ENDPROC res=MR_OK
 
 PROC makeClickTabsList(id) OF clickTabObject
-  DEF i
+  DEF i,res
   DEF reactionList=0:PTR TO reactionListObject
   DEF findObject:PTR TO reactionListObject
   DEF newlist
@@ -250,11 +250,13 @@ PROC makeClickTabsList(id) OF clickTabObject
     FOR i:=0 TO reactionList.items.count()-1
       ListAddItem(newlist,reactionList.items.item(i))
     ENDFOR
-    ListAddItem(newlist,0)
   ELSE
-    newlist:=[0]
+    newlist:=List(1)
   ENDIF
-ENDPROC clickTabsA(newlist)
+  ListAddItem(newlist,0)
+  res:=clickTabsA(newlist)
+  DisposeLink(newlist)
+ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF clickTabObject
   self.previewObject:=ClickTabObject, 

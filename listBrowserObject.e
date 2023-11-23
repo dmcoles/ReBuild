@@ -633,7 +633,7 @@ PROC editColumns(titles:PTR TO stringlist, widths:PTR TO stdlist) OF editColumns
 ENDPROC res=MR_OK
 
 PROC makeBrowserList(id) OF listBrowserObject
-  DEF i
+  DEF i,res
   DEF reactionList=0:PTR TO reactionListObject
   DEF findObject:PTR TO reactionListObject
   DEF newlist
@@ -652,11 +652,13 @@ PROC makeBrowserList(id) OF listBrowserObject
     FOR i:=0 TO reactionList.items.count()-1
       ListAddItem(newlist,reactionList.items.item(i))
     ENDFOR
-    ListAddItem(newlist,0)
   ELSE
-    newlist:=[0]
+    newlist:=List(1)
   ENDIF
-ENDPROC browserNodesA(newlist)
+  ListAddItem(newlist,0)
+  res:=browserNodesA(newlist)
+  DisposeLink(newlist)
+ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF listBrowserObject
   DEF i

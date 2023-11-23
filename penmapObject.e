@@ -12,6 +12,7 @@ OPT MODULE, OSVERSION=37
         'gadgets/checkbox','checkbox',
         'images/label','label',
         'amigalib/boopsi',
+        'exec/memory',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
@@ -25,6 +26,8 @@ EXPORT ENUM PENMAPGAD_NAME, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
 
 CONST NUM_PENMAP_GADS=PENMAPGAD_CANCEL+1
 
+EXPORT DEF imageData:PTR TO CHAR
+
 EXPORT OBJECT penMapObject OF reactionObject
   leftEdge:INT
   topEdge:INT
@@ -32,6 +35,8 @@ EXPORT OBJECT penMapObject OF reactionObject
   height:INT
   bgPen:INT
   transparent:CHAR
+PRIVATE
+  bitmapData:PTR TO CHAR
 ENDOBJECT
 
 OBJECT penMapSettingsForm OF reactionForm
@@ -240,7 +245,6 @@ PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF penMapObject
-
     self.previewObject:=NewObjectA(PenMap_GetClass(),NIL,[TAG_IGNORE,0,
         IA_LEFT, self.leftEdge,
         IA_TOP, self.topEdge,
@@ -249,7 +253,7 @@ EXPORT PROC createPreviewObject(scr) OF penMapObject
         IA_BGPEN, self.bgPen,
         PENMAP_TRANSPARENT, self.transparent,
         PENMAP_SCREEN, scr,
-        PENMAP_RENDERDATA, {image_data},
+        PENMAP_RENDERDATA, self.bitmapData,
         ->LABEL_DRAWINFO, self.drawInfo,
       TAG_DONE])
 
@@ -269,7 +273,8 @@ EXPORT PROC createPreviewObject(scr) OF penMapObject
 ENDPROC
 
 EXPORT PROC create(parent) OF penMapObject
-  self.type:=TYPE_BOINGBALL
+  DEF i,i4,j
+  self.type:=TYPE_PENMAP
   SUPER self.create(parent)
   self.leftEdge:=0
   self.topEdge:=0
@@ -277,7 +282,24 @@ EXPORT PROC create(parent) OF penMapObject
   self.height:=0
   self.bgPen:=0
   self.transparent:=TRUE
+  self.bitmapData:=NewM(260,MEMF_CHIP OR MEMF_CLEAR)
+  self.bitmapData[1]:=16
+  self.bitmapData[3]:=16
+  FOR i:=0 TO 15
+    i4:=i<<4
+    self.bitmapData[i4+4]:=1
+    self.bitmapData[i4+15+4]:=1
+    self.bitmapData[i+4]:=1
+    self.bitmapData[15<<4+i+4]:=1
+    FOR j:=0 TO 7
+      self.bitmapData[i4+j+4+(IF i>7 THEN 8 ELSE 0)]:=1
+    ENDFOR
+  ENDFOR
   self.libsused:=[TYPE_PENMAP]
+ENDPROC
+
+PROC end() OF penMapObject
+  Dispose(self.bitmapData)
 ENDPROC
 
 EXPORT PROC editSettings() OF penMapObject
@@ -324,22 +346,3 @@ EXPORT PROC createPenMapObject(parent)
   
   NEW penmap.create(parent)
 ENDPROC penmap
-
-image_data:
-CHAR   0,16, 0,16
-     CHAR	$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
-     CHAR	$01,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
-     CHAR	$01,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$01
-     CHAR	$01,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$01
-     CHAR	$01,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$01
-     CHAR	$01,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$01
-     CHAR	$01,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
-     CHAR	$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01

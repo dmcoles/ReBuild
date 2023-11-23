@@ -205,7 +205,7 @@ PROC editSettings(comp:PTR TO radioObject) OF radioSettingsForm
 ENDPROC res=MR_OK
 
 PROC makeRadioList(id) OF radioObject
-  DEF i
+  DEF i,res
   DEF reactionList=0:PTR TO reactionListObject
   DEF findObject:PTR TO reactionListObject
   DEF newlist
@@ -224,11 +224,13 @@ PROC makeRadioList(id) OF radioObject
     FOR i:=0 TO reactionList.items.count()-1
       ListAddItem(newlist,reactionList.items.item(i))
     ENDFOR
-    ListAddItem(newlist,0)
   ELSE
-    newlist:=[0]
+    newlist:=List(1)
   ENDIF
-ENDPROC radioButtonsA(newlist)
+  ListAddItem(newlist,0)
+  res:=radioButtonsA(newlist)
+  DisposeLink(newlist)
+ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF radioObject
   self.previewObject:=RadioButtonObject, 

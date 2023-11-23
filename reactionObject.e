@@ -11,6 +11,7 @@ OPT MODULE,OSVERSION=37
         'images/label','label',
         'amigalib/boopsi',
         'gadtools',
+        'exec/memory',
         'penmap','images/penmap',
         'libraries/gadtools',
         'intuition/intuition',
@@ -32,7 +33,7 @@ EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU,
             TYPE_COLORWHEEL, TYPE_DATEBROWSER, TYPE_GETCOLOR, TYPE_GRADSLIDER,
             TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,TYPE_TAPEDECK,
             TYPE_TEXTEDITOR, TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_BOINGBALL, TYPE_LED,
-            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR,
+            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR, TYPE_TABS,
             
             TYPE_MAX
             
@@ -46,6 +47,7 @@ EXPORT ENUM FIELDTYPE_CHAR=1, FIELDTYPE_INT=2, FIELDTYPE_LONG=3, FIELDTYPE_STR=4
 CONST NUM_CHI_GADS=CHIGAD_CANCEL+1
 
 DEF objCount
+EXPORT DEF imageData:PTR TO CHAR
 
 EXPORT OBJECT reactionObject
   name[80]:ARRAY OF CHAR
@@ -73,6 +75,9 @@ EXPORT OBJECT reactionObject
   previewObject:LONG
   previewChildAttrs:LONG
   node:LONG
+PRIVATE
+  imageData:PTR TO CHAR
+  errObj:CHAR
 ENDOBJECT
 
 OBJECT childSettingsForm OF reactionForm
@@ -334,6 +339,7 @@ EXPORT PROC create(parent) OF reactionObject
   DEF scr
   self.parent:=parent
   self.id:=objCount
+  self.errObj:=FALSE
   objCount:=objCount+1
   StringF(name,'\s_\d',self.getTypeName(),self.id)
   AstrCopy(self.name,name)
@@ -656,7 +662,7 @@ EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF reactionObject
   IF self.noDispose THEN srcGen.componentProperty('CHILD_NoDispose',TRUE,FALSE)
 ENDPROC
 
-EXPORT PROC isImage() OF reactionObject IS 0
+EXPORT PROC isImage() OF reactionObject IS self.errObj
 
 EXPORT PROC libNameCreate() OF reactionObject IS 0
 EXPORT PROC libTypeCreate() OF reactionObject IS 0
@@ -679,6 +685,28 @@ EXPORT PROC objectInitialise(n=1)
   objCount:=n
 ENDPROC
 
+EXPORT PROC initialise()
+  DEF i,i4
+  imageData:=NewM(256+4,MEMF_CHIP OR MEMF_CLEAR)
+  IF imageData
+    imageData[1]:=16
+    imageData[3]:=16
+    FOR i:=0 TO 15
+      i4:=i<<4
+      imageData[i4+4]:=1
+      imageData[i4+15+4]:=1
+      imageData[i+4]:=1
+      imageData[15<<4+i+4]:=1
+      imageData[i4+i+4]:=1
+      imageData[i4+15-i+4]:=1
+    ENDFOR
+  ENDIF
+ENDPROC
+
+EXPORT PROC deinitialise()
+  IF imageData THEN Dispose(imageData)
+ENDPROC
+
 PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   DEF i
   DEF child:PTR TO reactionObject
@@ -690,29 +718,11 @@ PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   ENDFOR
 ENDPROC
 
-EXPORT PROC createErrorObject(scr) OF reactionObject IS
-    NewObjectA(PenMap_GetClass(), NIL,
-                                  [PENMAP_RENDERDATA, {image_data},
+EXPORT PROC createErrorObject(scr) OF reactionObject
+    self.errObj:=TRUE
+ENDPROC NewObjectA(PenMap_GetClass(),NIL,
+                                  [PENMAP_RENDERDATA, imageData,
                                   PENMAP_SCREEN, scr,
                                   TAG_DONE])
 
 EXPORT PROC getObjId() IS objCount
-
-image_data:
-CHAR   0,16, 0,16
-     CHAR	$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01
-     CHAR	$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00
-     CHAR	$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00
-     CHAR	$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$00,$00,$01,$01,$00,$00,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$00,$01,$00,$00,$01,$00,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$00,$01,$00,$00,$00,$00,$01,$00,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00,$00
-     CHAR	$00,$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00,$00
-     CHAR	$00,$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$00
-     CHAR	$00,$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00
-     CHAR	$01,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01
