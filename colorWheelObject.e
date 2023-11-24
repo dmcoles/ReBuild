@@ -135,15 +135,15 @@ PROC editSettings(comp:PTR TO colorWheelObject) OF colorWheelSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF colorWheelObject
-  IF (colorwheelbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (colorwheelbase)
     self.previewObject:=ColorWheelObject,
         WHEEL_SCREEN, scr,
         WHEEL_BEVELBOX, self.bevelBox,
       ColorWheelEnd
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

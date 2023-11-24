@@ -75,10 +75,10 @@ getColorObject.m:			getColorObject.e reactionObject.m reactionForm.m sourceGen.m
 dateBrowserObject.m:			dateBrowserObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) dateBrowserObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m speedBarObject.m listViewObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m rexxObject.m speedBarObject.m listViewObject.m tabsObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m screenObject.m listViewObject.m
+cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m rexxObject.m screenObject.m listViewObject.m tabsObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m
@@ -129,7 +129,7 @@ bevelObject.m:			bevelObject.e reactionObject.m reactionForm.m colourPicker.m so
 textFieldObject.m:			textFieldObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m
 							$(compiler) textFieldObject $(options)
 
-tabsObject.m:			tabsObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m
+tabsObject.m:			tabsObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m listPicker.m reactionLists.m reactionListObject.m
 							$(compiler) tabsObject $(options)
               
 drawListObject.m:			drawListObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m fileStreamer.m

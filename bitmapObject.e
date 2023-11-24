@@ -223,7 +223,6 @@ PROC editSettings(comp:PTR TO bitmapObject) OF bitmapSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF bitmapObject
-
     self.previewObject:=BitMapObject,
         IA_LEFT, self.leftEdge,
         IA_TOP, self.topEdge,
@@ -234,6 +233,8 @@ EXPORT PROC createPreviewObject(scr) OF bitmapObject
         BITMAP_SCREEN, scr,
         ->LABEL_DRAWINFO, self.drawInfo,
       BitMapEnd
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

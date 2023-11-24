@@ -233,6 +233,7 @@ PROC makeRadioList(id) OF radioObject
 ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF radioObject
+  IF self.labels1 THEN freeRadioButtons( self.labels1 )
   self.previewObject:=RadioButtonObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
@@ -241,6 +242,7 @@ EXPORT PROC createPreviewObject(scr) OF radioObject
       RADIOBUTTON_SPACING, self.spacing,
       RADIOBUTTON_SELECTED, self.selected,
     RadioButtonEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
@@ -304,7 +306,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF radioObject
   IF self.selected THEN  srcGen.componentPropertyInt('RADIOBUTTON_Selected',self.selected)
   IF self.labelPlace<>1 THEN srcGen.componentProperty('RADIOBUTTON_LabelPlace',ListItem(['PLACETEXT_LEFT','PLACETEXT_RIGHT'],self.labelPlace),FALSE)
 
-  IF self.listObjectId 
+  IF self.listObjectId>=0
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('RADIOBUTTON_Labels',tempStr,FALSE)
   ENDIF

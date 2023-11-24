@@ -554,6 +554,7 @@ EXPORT PROC createPreviewObject(scr) OF getScreenModeObject
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,
   TAG_DONE])
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
   
   self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,

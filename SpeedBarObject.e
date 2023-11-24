@@ -428,9 +428,8 @@ PROC makeButtons() OF speedBarObject
 ENDPROC list
 
 EXPORT PROC createPreviewObject(scr) OF speedBarObject
-  IF (speedbarbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (speedbarbase)
     self.previewObject:=SpeedBarObject,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
@@ -442,7 +441,8 @@ EXPORT PROC createPreviewObject(scr) OF speedBarObject
         SPEEDBAR_BUTTONS, self.buttons:=self.makeButtons(),
       SpeedBarEnd
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

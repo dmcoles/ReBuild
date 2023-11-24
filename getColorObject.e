@@ -264,9 +264,9 @@ PROC editSettings(comp:PTR TO getColorObject) OF getColorSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF getColorObject
-  IF (getcolorbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  
+  self.previewObject:=0
+  IF (getcolorbase)
     self.previewObject:=NewObjectA(GetColor_GetClass(), NIL,[TAG_IGNORE,0,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
@@ -282,6 +282,7 @@ EXPORT PROC createPreviewObject(scr) OF getColorObject
         GETCOLOR_SCREEN,scr,
       TAG_DONE])
   ENDIF
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

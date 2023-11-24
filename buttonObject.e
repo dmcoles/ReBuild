@@ -372,6 +372,8 @@ EXPORT PROC createPreviewObject(scr) OF buttonObject
       BUTTON_BEVELSTYLE, ListItem([BVS_NONE,BVS_THIN,BVS_BUTTON,BVS_GROUP],self.bevelStyle),
       BUTTON_JUSTIFICATION, ListItem([BCJ_LEFT,BCJ_CENTER,BCJ_RIGHT],self.justify),
     ButtonEnd
+
+    IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
     
     self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,

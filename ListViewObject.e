@@ -167,15 +167,16 @@ PROC editSettings(comp:PTR TO listViewObject) OF listViewSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF listViewObject
-  IF (listviewbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (listviewbase)
+    IF self.labels1 THEN self.freeListViewLabels( self.labels1 )
     self.previewObject:=NewObjectA( ListView_GetClass(), NIL,[TAG_IGNORE,0,
         LISTVIEW_LABELS, self.labels1:=self.makeListViewList(self.listObjectId),
         LISTVIEW_MULTISELECT, self.multiSelect,
       TAG_END])
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,
@@ -303,7 +304,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listViewObject
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.multiSelect THEN srcGen.componentProperty('LISTVIEW_MultiSelect','TRUE',FALSE)
   
-  IF self.listObjectId 
+  IF self.listObjectId >=0
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('LISTVIEW_Labels',tempStr,FALSE)
   ENDIF

@@ -2,8 +2,8 @@ OPT MODULE,LARGE
 
   MODULE 'images/drawlist'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
-  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*reactionListObject',
-         '*drawListObject','*speedBarObject','*listViewObject'
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*tabsObject','*reactionListObject',
+         '*drawListObject','*speedBarObject','*listViewObject','*rexxObject'
 
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
@@ -20,13 +20,16 @@ PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR) OF cSrcGen
   self.indent:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
+PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
   DEF itemType
-  DEF i
+  DEF hasarexx,i
+
+  hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
+
   self.writeLine('#include <clib/macros.h>')
   self.writeLine('#include <clib/alib_protos.h>')
   self.writeLine('')
@@ -72,10 +75,18 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('#include <gadgets/tapedeck.h>')
   IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('#include <proto/texteditor.h>')
   IF self.libsused[TYPE_LED] THEN self.writeLine('#include <images/led.h>')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('#include <gadgets/tabs.h>')
   IF self.libsused[TYPE_LISTVIEW] 
     self.writeLine('#include <gadgets/listview.h>')
     self.writeLine('#include <pragmas/listview_pragmas.h>')
   ENDIF
+  IF hasarexx
+    self.writeLine('#include <proto/arexx.h>')
+    IF rexxObject.replyHook
+      self.writeLine('#include <utility/hooks.h>')
+    ENDIF
+  ENDIF
+
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('#include <proto/virtual.h>')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('#include <proto/sketchboard.h>')
   self.writeLine('#include <proto/gadtools.h>')
@@ -348,6 +359,34 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine('')
   ENDIF
 
+  IF hasarexx
+    IF rexxObject.replyHook
+      self.writeLine('void __saveds rexxReply_CallBack(struct Hook *, Object *, struct RexxMsg * );')
+    ENDIF
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'void __saveds __asm rexx_\s',tempStr)
+      StrAdd(tempStr,'(register __a0 struct ARexxCmd *, register __a1 struct RexxMsg * );')
+      self.writeLine(tempStr)
+    ENDFOR
+ 
+    self.writeLine('Object	*gArexxObject = NULL;')
+    IF rexxObject.replyHook
+      self.writeLine('struct Hook gArexxReplyHook;')
+    ENDIF
+    self.writeLine('struct ARexxCmd gRxCommands[] =')
+    self.writeLine('{')
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'  { \q\s\q, \d, rexx_\s, NULL, NULL },',rexxObject.commands.item(i),i,tempStr)
+      self.writeLine(tempStr)
+    ENDFOR
+    self.writeLine('  { NULL, NULL, NULL, NULL, NULL }')
+    self.writeLine('};')
+    self.writeLine('')
+  ENDIF
   self.writeLine('struct Screen	*gScreen = NULL;')
   self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
   self.writeLine('APTR gVisinfo = NULL;')
@@ -355,6 +394,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('')
 
   self.writeLine('struct Library *WindowBase = NULL,')
+  IF hasarexx THEN self.writeLine('               *ARexxBase = NULL,')
   IF self.libsused[TYPE_BUTTON] THEN self.writeLine('               *ButtonBase = NULL,')
   IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('               *CheckBoxBase = NULL,')
   IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('               *ChooserBase = NULL,')
@@ -388,6 +428,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('               *ListViewBase = NULL,')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('               *VirtualBase = NULL,')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('               *SketchBoardBase = NULL,')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('               *TabsBase = NULL,')
   self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
@@ -397,6 +438,9 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('  if( !(IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L)) ) return 0;')
   self.writeLine('  if( !(GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) ) ) return 0;')
   self.writeLine('  if( !(WindowBase = (struct Library*) OpenLibrary("window.class",0L) ) ) return 0;')
+  IF hasarexx
+    self.writeLine('  if( !(ARexxBase = (struct Library*) OpenLibrary("arexx.class",0L) ) ) return 0;')
+  ENDIF
   self.writeLine('  if( !(LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) ) ) return 0;')
 
   IF self.libsused[TYPE_BUTTON]
@@ -527,6 +571,10 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine('  if( !(SketchBoardBase = (struct Library*) OpenLibrary("gadgets/sketchboard.gadget",0L) ) ) return 0;')
   ENDIF
 
+  IF self.libsused[TYPE_TABS]
+    self.writeLine('  if( !(TabsBase = (struct Library*) OpenLibrary("gadgets/tabs.gadget",0L) ) ) return 0;')
+  ENDIF
+
   self.genScreenCreate(screenObject)
   self.writeLine('  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;')
   self.writeLine('  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;')
@@ -578,13 +626,21 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  if (ListViewBase) CloseLibrary( (struct Library *)ListViewBase );')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  if (VirtualBase) CloseLibrary( (struct Library *)VirtualBase );')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  if (SketchBoardBase) CloseLibrary( (struct Library *)SketchBoardBase );')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('  if (TabsBase) CloseLibrary( (struct Library *)TabsBase );')
   self.writeLine('  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );')
   self.writeLine('  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );')
+  IF hasarexx
+    self.writeLine('  if (ARexxBase) CloseLibrary( (struct Library *)ARexxBase );')
+  ENDIF
+
   self.writeLine('}')
   self.writeLine('')
   self.writeLine('void runWindow( Object *window_object, struct Menu *menu_strip )')
   self.writeLine('{')
   self.writeLine('  struct Window	*main_window = NULL;')
+  IF hasarexx
+    self.writeLine('  ULONG rxsig = 0;')
+  ENDIF  
   self.writeLine('')
   self.writeLine('  if ( window_object )')
   self.writeLine('  {')
@@ -593,10 +649,30 @@ PROC genHeader(screenObject:PTR TO screenObject) OF cSrcGen
   self.writeLine('      WORD Code;')
   self.writeLine('      ULONG wait = 0, signal = 0, result = 0, done = FALSE;')
   self.writeLine('      GetAttr( WINDOW_SigMask, window_object, &signal );')
+  IF hasarexx
+    self.writeLine('      GetAttr( AREXX_SigMask, gArexxObject, &rxsig );')
+    IF rexxObject.replyHook
+      self.writeLine('')
+      self.writeLine('      gArexxReplyHook.h_Entry = (HOOKFUNC) rexxReply_CallBack;')
+      self.writeLine('      gArexxReplyHook.h_SubEntry = NULL;')
+      self.writeLine('      gArexxReplyHook.h_Data = NULL;')
+      self.writeLine('')
+    ENDIF
+  ENDIF
+
   self.writeLine('      if ( menu_strip)  SetMenuStrip( main_window, menu_strip );')
   self.writeLine('      while ( !done)')
   self.writeLine('      {')
-  self.writeLine('        wait = Wait( signal | SIGBREAKF_CTRL_C );')
+  IF hasarexx
+    self.writeLine('        wait = Wait( signal | rxsig | SIGBREAKF_CTRL_C );')
+    self.writeLine('')
+    self.writeLine('      if ( wait & rxsig) RA_HandleRexx(gArexxObject);')
+    self.writeLine('')
+  ELSE
+    self.writeLine('        wait = Wait( signal | SIGBREAKF_CTRL_C );')
+  ENDIF
+
+
   self.writeLine('')
   self.writeLine('        if ( wait & SIGBREAKF_CTRL_C )')
   self.writeLine('          done = TRUE;')
@@ -692,15 +768,17 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
   layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTVIEW)
+  layoutObject.findObjectsByType(listObjects,TYPE_TABS)
 
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
     IF reactionObject.type=TYPE_SPEEDBAR
       StringF(tempStr,'  struct List *buttons\d;',reactionObject.id)
-    ELSE
+      self.writeLine(tempStr)
+    ELSEIF reactionObject.type<>TYPE_TABS
       StringF(tempStr,'  struct List *labels\d;',reactionObject.id)
+      self.writeLine(tempStr)
     ENDIF
-    self.writeLine(tempStr)
       
     SELECT reactionObject.type
       CASE TYPE_CHOOSER
@@ -721,6 +799,10 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_LISTVIEW
         StringF(tempStr,'  UBYTE *labels\d_str[] = ',reactionObject.id)     
         listStr:=self.makeList(tempStr,reactionLists,reactionObject::listViewObject.listObjectId)
+      CASE TYPE_TABS
+        StringF(tempStr,'  TabLabel labels\d ',reactionObject.id)     
+        StrAdd(tempStr,'[] =')
+        listStr:=self.makeList3(tempStr,reactionLists,reactionObject::tabsObject.listObjectId)
     ENDSELECT
     
     IF listStr
@@ -824,8 +906,10 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         StringF(tempStr,'  buttons\d = SpeedBarNodesA( buttons\d_str );',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTVIEW
         StringF(tempStr,'  labels\d = ListViewLabelsA( labels\d_str );',reactionObject.id,reactionObject.id)
+      CASE TYPE_TABS
+        StrCopy(tempStr,'')
     ENDSELECT
-    self.writeLine(tempStr)
+    IF EstrLen(tempStr) THEN self.writeLine(tempStr)
   ENDFOR
   END listObjects
   self.writeLine('')
@@ -884,18 +968,72 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.writeLine('')
 ENDPROC
 
-PROC genFooter(windowObject:PTR TO windowObject) OF cSrcGen
+PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) OF cSrcGen
   DEF tempStr[200]:STRING
+  DEF hasarexx,i
+  
+  hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
+  IF hasarexx
+    IF rexxObject.replyHook
+      self.writeLine('void __saveds rexxReply_CallBack(struct Hook *hook, Object *object, struct RexxMsg *rxm)')
+      self.writeLine('{')
+      self.writeLine('}')
+      self.writeLine('')
+    ENDIF
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'void __saveds __asm rexx_\s',tempStr)    
+      StrAdd(tempStr,'(register __a0 struct ARexxCmd *ac, register __a1 struct RexxMsg *rxm)')
+      self.writeLine(tempStr)
+      self.writeLine('{')
+      self.writeLine('}')
+      self.writeLine('')
+    ENDFOR
+  ENDIF
+    
   self.writeLine('int main( int argc, char **argv )')
   self.writeLine('{')
   self.writeLine('  if ( setup() )')
   self.writeLine('  {')
+
+  IF hasarexx  
+    self.writeLine('    gArexxObject = ARexxObject,')
+    StrCopy(tempStr,rexxObject.hostName)
+    UpperStr(tempStr)
+    StringF(tempStr,'      AREXX_HostName, \q\s\q,',tempStr)
+    self.writeLine(tempStr)
+    self.writeLine('      AREXX_Commands, gRxCommands,')
+    IF rexxObject.noSlot
+      self.writeLine('      AREXX_NoSlot, TRUE,')
+    ENDIF
+    IF rexxObject.replyHook
+      self.writeLine('      AREXX_ReplyHook, &gArexxReplyHook,')
+    ENDIF
+    
+    IF StrLen(rexxObject.extension)>0
+      StringF(tempStr,'      AREXX_DefExtension, \q\s\q,',rexxObject.extension)
+      self.writeLine(tempStr)
+    ENDIF
+    self.writeLine('    End;')
+    self.writeLine('    if ( !gArexxObject )')
+    self.writeLine('    {')
+    self.writeLine('      cleanup();')
+    self.writeLine('      return -2;')
+    self.writeLine('    }')
+    self.writeLine('')
+  ENDIF
+    
+  
   StringF(tempStr,'    \s',windowObject.name)
   LowerStr(tempStr)
   StrAdd(tempStr,'();')
   self.writeLine(tempStr)
   self.writeLine('  }')
 
+  IF hasarexx
+    self.writeLine('  if ( gArexxObject) DisposeObject( gArexxObject );')
+  ENDIF
   self.writeLine('  cleanup();')
   self.writeLine('}')
 ENDPROC
@@ -989,6 +1127,37 @@ PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF cSrcGen
       ENDIF
     ENDFOR
     StrAdd(res,' NULL };')
+  ENDIF
+  
+ENDPROC res
+
+PROC makeList3(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF cSrcGen
+  DEF res=0
+  DEF totsize=0
+  DEF i,listitem=0:PTR TO reactionListObject
+  DEF foundid=-1
+  DEF items:PTR TO stringlist
+ 
+  FOR i:=0 TO reactionLists.count()-1
+    listitem:=reactionLists.item(i)
+    IF listitem.id=listid THEN foundid:=i
+  ENDFOR
+  
+  IF foundid<>-1
+    totsize:=StrLen(start)
+    listitem:=reactionLists.item(foundid)
+    FOR i:=0 TO listitem.items.count()-1
+      totsize:=totsize+EstrLen(listitem.items.item(i))+22
+    ENDFOR
+    res:=String(totsize+30)
+    StrCopy(res,start)
+    StrAdd(res,'\n  {\n')
+    FOR i:=0 TO listitem.items.count()-1
+      StrAdd(res,'    {\q')
+      StrAdd(res,listitem.items.item(i))
+      StrAdd(res,'\q, -1, -1, -1, -1},\n')
+    ENDFOR
+    StrAdd(res,'    NULL\n  };')
   ENDIF
   
 ENDPROC res

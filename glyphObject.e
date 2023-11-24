@@ -161,6 +161,7 @@ EXPORT PROC createPreviewObject(scr) OF glyphObject
       GLYPH_GLYPH, ListItem([GLYPH_NONE,GLYPH_DOWNARROW,GLYPH_UPARROW,GLYPH_LEFTARROW,GLYPH_RIGHTARROW, GLYPH_DROPDOWN,GLYPH_POPUP,GLYPH_CHECKMARK,GLYPH_POPFONT,GLYPH_POPFILE,GLYPH_POPDRAWER,GLYPH_POPSCREENMODE],self.glyphType),
       GLYPH_DRAWINFO, self.drawInfo,
     GlyphEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

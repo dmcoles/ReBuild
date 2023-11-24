@@ -755,6 +755,7 @@ EXPORT PROC createPreviewObject(scr) OF drawListObject
       DRAWLIST_DIRECTIVES, self.drawItems,
       DRAWLIST_DRAWINFO, self.drawInfo,
     DrawListEnd
+    IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
     
     self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,

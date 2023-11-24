@@ -241,9 +241,8 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF boingBallObject
 
-  IF (boingballbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (boingballbase)
     self.previewObject:=NewObjectA(BoingBall_GetClass(),NIL,[TAG_IGNORE,0,
         IA_LEFT, self.leftEdge,
         IA_TOP, self.topEdge,
@@ -255,6 +254,8 @@ EXPORT PROC createPreviewObject(scr) OF boingBallObject
         ->LABEL_DRAWINFO, self.drawInfo,
       TAG_DONE])
   ENDIF
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

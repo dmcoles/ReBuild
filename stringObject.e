@@ -242,7 +242,8 @@ EXPORT PROC createPreviewObject(scr) OF stringObject
     GA_READONLY, self.readOnly,
     STRINGA_REPLACEMODE, self.replaceMode,
   StringEnd
-  
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,
         CHILD_LABEL, LabelObject,

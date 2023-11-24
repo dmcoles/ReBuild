@@ -256,6 +256,7 @@ EXPORT PROC createPreviewObject(scr) OF penMapObject
         PENMAP_RENDERDATA, self.bitmapData,
         ->LABEL_DRAWINFO, self.drawInfo,
       TAG_DONE])
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

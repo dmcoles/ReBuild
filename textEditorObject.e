@@ -27,6 +27,8 @@ EXPORT ENUM TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IM
      
 CONST NUM_TEXTED_GADS=TEXTEDGAD_CANCEL+1
 
+EXPORT DEF texteditorbase
+
 EXPORT OBJECT textEditorObject OF reactionObject
   exportWrap:CHAR
   fixedFont:CHAR
@@ -283,9 +285,12 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textEditorObject
-  IF (textfieldbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  DEF tempbase
+  self.previewObject:=0
+  IF (texteditorbase)
+    tempbase:=textfieldbase
+    textfieldbase:=texteditorbase
+    
     self.previewObject:=NewObjectA( TextEditor_GetClass(), NIL,[TAG_IGNORE,0,
       GA_READONLY, self.readOnly,
       GA_TEXTEDITOR_EXPORTWRAP, self.exportWrap,
@@ -299,7 +304,9 @@ EXPORT PROC createPreviewObject(scr) OF textEditorObject
       GA_TEXTEDITOR_TABKEYPOLICY, ListItem([GV_TEXTEDITOR_TABKEY_INDENTSLINE,GV_TEXTEDITOR_TABKEY_INDENTSAFTER],self.tabKeyPolicy),
       TAG_END])
   ENDIF
-
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+  textfieldbase:=tempbase
+  
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

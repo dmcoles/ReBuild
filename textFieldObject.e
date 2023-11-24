@@ -584,9 +584,8 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textFieldObject
-  IF (textfieldbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (textfieldbase)
     self.previewObject:=NewObjectA(TextField_GetClass(), NIL,[
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,
@@ -622,7 +621,8 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
 
     End
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,
         CHILD_NOMINALSIZE, self.nominalSize,

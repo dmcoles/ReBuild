@@ -451,6 +451,8 @@ EXPORT PROC createPreviewObject(scr) OF bevelObject
       BEVEL_TRANSPARENT, self.transparent,
     BevelEnd
     
+    IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
     self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,
         CHILD_NOMINALSIZE, self.nominalSize,

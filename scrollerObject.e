@@ -239,6 +239,7 @@ EXPORT PROC createPreviewObject(scr) OF scrollerObject
       SCROLLER_ARROWDELTA, self.arrowdelta,
       SCROLLER_ORIENTATION, ListItem([SORIENT_HORIZ,SORIENT_VERT],self.orientation),
     ScrollerEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

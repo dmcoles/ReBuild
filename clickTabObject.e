@@ -259,6 +259,8 @@ PROC makeClickTabsList(id) OF clickTabObject
 ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF clickTabObject
+  IF self.labels1 THEN freeClickTabs( self.labels1 )
+
   self.previewObject:=ClickTabObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
@@ -272,6 +274,8 @@ EXPORT PROC createPreviewObject(scr) OF clickTabObject
         LAYOUT_DEFERLAYOUT, TRUE,
       PageEnd,
    ClickTabEnd
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
@@ -340,7 +344,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
   srcGen.componentPropertyInt('GA_Height',self.height)
   IF self.current THEN srcGen.componentPropertyInt('CLICKTAB_Current',self.current)
 
-  IF self.listObjectId 
+  IF self.listObjectId>=0
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('CLICKTAB_Labels',tempStr,FALSE)
   ENDIF

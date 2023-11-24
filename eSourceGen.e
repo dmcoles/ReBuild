@@ -1,8 +1,8 @@
 OPT MODULE,LARGE
 
-  MODULE 'images/drawlist'
+  MODULE 'images/drawlist','gadgets/tabs'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
-  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject',
+  MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*rexxObject','*tabsObject',
          '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
@@ -20,8 +20,12 @@ PROC create(fser:PTR TO fileStreamer,libsused) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF eSrcGen
   DEF tempStr[200]:STRING
+  DEF hasarexx,i
+  
+  hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
+  
   self.writeLine('OPT OSVERSION=37')
   self.writeLine('')
   self.writeLine('  MODULE \areaction/reaction_macros\a,')
@@ -57,10 +61,11 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_GRADSLIDER]  THEN self.writeLine('      \agadgets/gradientslider\a,')
   IF self.libsused[TYPE_TAPEDECK]  THEN self.writeLine('      \agadgets/tapedeck\a,')
   IF self.libsused[TYPE_TEXTEDITOR]  THEN self.writeLine('      \agadgets/texteditor\a,\atexteditor\a,')
-  IF self.libsused[TYPE_LED]  THEN self.writeLine('      \aimages/led\a,')
+  IF self.libsused[TYPE_LED] THEN self.writeLine('      \aimages/led\a,')
   IF self.libsused[TYPE_LISTVIEW]  THEN self.writeLine('      \agadgets/listview\a,\alistview\a,')
   IF self.libsused[TYPE_VIRTUAL]  THEN self.writeLine('      \agadgets/virtual\a,\avirtual\a,')
   IF self.libsused[TYPE_SKETCH]  THEN self.writeLine('      \agadgets/sketchboard\a,\asketchboard\a,')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('      \agadgets/tabs\a,')
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
@@ -75,6 +80,13 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF (screenObject.custom)
     self.writeLine('      \agraphics/modeid\a,')
   ENDIF
+  IF hasarexx
+    self.writeLine('      \aclasses/arexx\a,\aarexx\a,')
+    IF rexxObject.replyHook
+      self.writeLine('      \autility/hooks\a,\atools/installhook\a,')
+    ENDIF
+  ENDIF
+  
   self.writeLine('      \aintuition/gadgetclass\a')
   self.writeLine('')
 
@@ -87,12 +99,26 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_LED]
     self.writeLine('DEF ledbase')
   ENDIF
+  IF self.libsused[TYPE_TABS]
+    self.writeLine('DEF tabsbase')
+  ENDIF
   
   self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
+  IF hasarexx
+    self.writeLine('DEF gArexxObject=0')
+    IF rexxObject.replyHook
+      self.writeLine('DEF gArexxReplyHook:hook')
+    ENDIF
+    StringF(tempStr,'DEF gRxCommands[\d]:ARRAY OF arexxcmd',rexxObject.commands.count()+1)
+    self.writeLine(tempStr)
+  ENDIF
   self.writeLine('')
   
   self.writeLine('PROC setup()')
   self.writeLine('  IF (windowbase:=OpenLibrary(\awindow.class\a,0))=NIL THEN Throw(\qLIB\q,\qwin\q)')
+  IF hasarexx
+    self.writeLine('  IF (arexxbase:=OpenLibrary(\aarexx.class\a,0))=NIL THEN Throw(\qLIB\q,\qrexx\q)')
+  ENDIF
   self.writeLine('  IF (layoutbase:=OpenLibrary(\agadgets/layout.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlayo\q)')
   self.writeLine('  IF (gadtoolsbase:=OpenLibrary(\agadtools.library\a,0))=NIL THEN Throw(\qLIB\q,\qgadt\q)')
 
@@ -128,6 +154,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF (listviewbase:=OpenLibrary(\agadgets/listview.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlvw\q)')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF (sketchboardbase:=OpenLibrary(\agadgets/sketchboard.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qskch\q)')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF (tabsbase:=OpenLibrary(\agadgets/tabs.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtabs\q)')
 
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
@@ -144,6 +171,9 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')
   self.writeLine('  IF windowbase THEN CloseLibrary(windowbase)')
   self.writeLine('  IF layoutbase THEN CloseLibrary(layoutbase)')
+  IF hasarexx
+    self.writeLine('  IF arexxbase THEN CloseLibrary(arexxbase)')
+  ENDIF
   IF self.libsused[TYPE_BUTTON] THEN self.writeLine('  IF buttonbase THEN CloseLibrary(buttonbase)')
   IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('  IF checkboxbase THEN CloseLibrary(checkboxbase)')
   IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('  IF chooserbase THEN CloseLibrary(chooserbase)')
@@ -177,6 +207,7 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF listviewbase THEN CloseLibrary(listviewbase)')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF virtualbase THEN CloseLibrary(virtualbase)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF sketchboardbase THEN CloseLibrary(sketchboardbase)')
+  IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF tabsbase THEN CloseLibrary(tabsbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
 
@@ -275,16 +306,57 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
     self.writeLine('')
   ENDIF
 
+
+  IF self.libsused[TYPE_TABS]
+    self.writeLine('PROC tabLabelsA(text:PTR TO LONG)')
+    self.writeLine('  DEF i,count,label:PTR TO tablabel')
+    self.writeLine('  count:=ListLen(text)')
+    self.writeLine('  label:=New(SIZEOF tablabel*count)')
+    self.writeLine('  FOR i:=0 TO count-1')
+    self.writeLine('    label[i].label:=ListItem(text,i)')
+    self.writeLine('    label[i].pen1:=-1')
+    self.writeLine('    label[i].pen2:=-1')
+    self.writeLine('    label[i].pen3:=-1')
+    self.writeLine('    label[i].pen4:=-1')
+    self.writeLine('    label[i].attrs:=0')
+    self.writeLine('  ENDFOR')
+    self.writeLine('ENDPROC label')
+    self.writeLine('')
+    self.writeLine('PROC freeTabLabels(labels)')
+    self.writeLine('  IF labels THEN Dispose(labels)')
+    self.writeLine('ENDPROC')
+    self.writeLine('')
+  ENDIF
+    
+    
   self.writeLine('PROC runWindow(windowObject,menuStrip) HANDLE')
   self.writeLine('  DEF running=TRUE')
   self.writeLine('  DEF win:PTR TO window,wsig,code,msg,sig,result')
+  IF hasarexx
+    self.writeLine('  DEF rxsig=0')
+  ENDIF
   self.writeLine('')
   self.writeLine('  IF (win:=RA_OpenWindow(windowObject))')
   self.writeLine('    GetAttr( WINDOW_SIGMASK, windowObject, {wsig} )')
+  IF hasarexx
+    self.writeLine('    GetAttr( AREXX_SIGMASK, gArexxObject, {rxsig} )')
+    IF rexxObject.replyHook
+      self.writeLine('')
+      self.writeLine('    installhook( gArexxReplyHook, {rexxReply_CallBack} )')
+      self.writeLine('')
+    ENDIF
+  ENDIF
   self.writeLine('    IF menuStrip THEN SetMenuStrip( win, menuStrip )')
   self.writeLine('')
   self.writeLine('    WHILE running')
-  self.writeLine('      sig:=Wait(wsig)')
+  IF hasarexx
+    self.writeLine('      sig:=Wait(wsig OR rxsig)')
+    self.writeLine('')
+    self.writeLine('      IF (sig AND rxsig) THEN RA_HandleRexx(gArexxObject)')
+    self.writeLine('')
+  ELSE
+    self.writeLine('      sig:=Wait(wsig)')
+  ENDIF
   self.writeLine('      IF (sig AND (wsig))')
   self.writeLine('        WHILE ((result:=RA_HandleInput(windowObject,{code})) <> WMHI_LASTMSG)')
   self.writeLine('          msg:=(result AND WMHI_CLASSMASK)')
@@ -308,6 +380,29 @@ PROC genHeader(screenObject:PTR TO screenObject) OF eSrcGen
   self.writeLine('  RA_CloseWindow(windowObject)')
   self.writeLine('ENDPROC')
   self.writeLine('')
+  IF hasarexx
+    IF rexxObject.replyHook
+      self.writeLine('PROC rexxReply_CallBack()')
+      self.writeLine('  GetA4()')
+      self.writeLine('ENDPROC')
+      self.writeLine('')
+    ENDIF
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'PROC rexx_\s',tempStr)
+      StrAdd(tempStr,'()')
+      self.writeLine(tempStr)
+      self.writeLine('  DEF rxcmd:PTR TO arexxcmd')
+      self.writeLine('  MOVEM.L D0-D7/A0-A6,-(A7)')
+      self.writeLine('  MOVE.L A0,rxcmd')
+      self.writeLine('  GetA4()')
+      self.writeLine('  rxcmd.rc:=0 ->set result code')
+      self.writeLine('  MOVEM.L (A7)+,D0-D7/A0-A6')
+      self.writeLine('ENDPROC')
+      self.writeLine('')
+    ENDFOR
+  ENDIF
 ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
@@ -348,6 +443,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
   layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTVIEW)
+  layoutObject.findObjectsByType(listObjects,TYPE_TABS)
   
   NEW listObjects2.stdlist(20)
   layoutObject.findObjectsByType(listObjects2,TYPE_DRAWLIST)
@@ -410,6 +506,10 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_LISTVIEW
         StringF(tempStr,'  labels\d:=listViewLabelsA(',reactionObject.id)
         listStr:=self.makeList(tempStr,reactionLists,reactionObject::listViewObject.listObjectId)
+      CASE TYPE_TABS
+        StringF(tempStr,'  labels\d:=tabLabelsA(',reactionObject.id)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::tabsObject.listObjectId)
+        
     ENDSELECT
     IF listStr
       self.writeLine(listStr)
@@ -572,6 +672,7 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   layoutObject.findObjectsByType(listObjects,TYPE_LISTBROWSER)
   layoutObject.findObjectsByType(listObjects,TYPE_SPEEDBAR)
   layoutObject.findObjectsByType(listObjects,TYPE_LISTVIEW)
+  layoutObject.findObjectsByType(listObjects,TYPE_TABS)
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
     SELECT reactionObject.type
@@ -587,6 +688,8 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         StringF(tempStr,'  IF buttons\d THEN freeSpeedBarNodes(buttons\d)',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTVIEW
         StringF(tempStr,'  IF labels\d THEN freeListViewLabels(labels\d)',reactionObject.id,reactionObject.id)
+      CASE TYPE_TABS
+        StringF(tempStr,'  IF labels\d THEN freeTabLabels(labels\d)',reactionObject.id,reactionObject.id)
     ENDSELECT
     self.writeLine(tempStr)
   ENDFOR
@@ -600,18 +703,69 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.writeLine('')
 ENDPROC
 
-PROC genFooter(windowObject:PTR TO windowObject) OF eSrcGen
+PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) OF eSrcGen
   DEF tempStr[200]:STRING
+  DEF hasarexx,i
+  
+  hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
+  
   self.writeLine('PROC main() HANDLE')
   self.writeLine('  setup()')
   self.writeLine('')
+  
+  IF hasarexx
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StringF(tempStr,'\s',rexxObject.commands.item(i))
+      StringF(tempStr,'  gRxCommands[\d].name:=\a\s\a',i,tempStr)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  gRxCommands[\d].id:=\d',i,i)
+      self.writeLine(tempStr)
+      StringF(tempStr,'rexx_\s',rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'  gRxCommands[\d].func:={\s}',i,tempStr)
+      self.writeLine(tempStr)
+      self.writeLine('')
+    ENDFOR
+    StringF(tempStr,'  gRxCommands[\d].name:=0',i)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  gRxCommands[\d].id:=0',i)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  gRxCommands[\d].func:=0',i)
+    self.writeLine(tempStr)
+    self.writeLine('')
+
+    self.writeLine('  gArexxObject:=ARexxObject,')
+    StrCopy(tempStr,rexxObject.hostName)
+    UpperStr(tempStr)
+    StringF(tempStr,'    AREXX_HOSTNAME, \a\s\a,',tempStr)
+    self.writeLine(tempStr)
+    self.writeLine('    AREXX_COMMANDS, gRxCommands,')
+    IF rexxObject.noSlot
+      self.writeLine('    AREXX_NOSLOT, TRUE,')
+    ENDIF
+    IF rexxObject.replyHook
+      self.writeLine('    AREXX_REPLYHOOK, gArexxReplyHook,')
+    ENDIF
+    
+    IF StrLen(rexxObject.extension)>0
+      StringF(tempStr,'    AREXX_DEFEXTENSION, \a\s\a,',rexxObject.extension)
+      self.writeLine(tempStr)
+    ENDIF
+    self.writeLine('  End')
+    self.writeLine('  IF ( gArexxObject=0 ) THEN Raise(\qREXX\q)')
+  
+  ENDIF
   StringF(tempStr,'  \s',windowObject.name)
   LowerStr(tempStr)
   StrAdd(tempStr,'()')
 
   self.writeLine(tempStr)
   self.writeLine('')
+
   self.writeLine('EXCEPT DO')
+  IF hasarexx
+    self.writeLine('  IF gArexxObject THEN DisposeObject(gArexxObject)')
+  ENDIF
   self.writeLine('  cleanup()')
   self.writeLine('ENDPROC')
 ENDPROC

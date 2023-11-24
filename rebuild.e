@@ -50,8 +50,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.2.0-alpha'
-#date verstring '$VER:Rebuild 0.2.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.3.0-alpha'
+#date verstring '$VER:Rebuild 0.3.0-%Y%m%d%h%n%s-alpha'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -126,6 +126,7 @@ OPT OSVERSION=37,LARGE
   DEF ledbase=0
   DEF smartbitmapbase=0
   DEF titlebarbase=0
+  DEF errorState=0
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
@@ -411,7 +412,7 @@ PROC updateSel(node)
     ELSE
       dismoveup:=comp.getChildIndex()=0
       dismovedown:=comp.getChildIndex()=(comp.parent.children.count()-1)
-      disdel:=comp.parent=0
+      disdel:=(comp.parent=0) OR (comp.children.count()>0)
     ENDIF
     
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
@@ -1008,6 +1009,7 @@ PROC genCode()
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
   DEF screenComp:PTR TO screenObject
+  DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
   
   setBusy()
@@ -1066,7 +1068,8 @@ PROC genCode()
   i:=0
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
-  srcGen.genHeader(screenComp)
+  rexxComp:=objectList.item(ROOT_REXX_ITEM)
+  srcGen.genHeader(screenComp,rexxComp)
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)
     menuComp:=objectList.item(i+ROOT_MENU_ITEM)
@@ -1095,7 +1098,7 @@ PROC genCode()
     i+=3
   ENDWHILE
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
-  srcGen.genFooter(windowComp)
+  srcGen.genFooter(windowComp,rexxComp)
   END srcGen
   
   END fs
@@ -1131,6 +1134,7 @@ PROC loadFile() HANDLE
   DEF fr:PTR TO filerequester
   DEF fname[255]:STRING
 
+  errorState:=FALSE
   aslbase:=OpenLibrary('asl.library',37)
   IF aslbase=NIL THEN Throw("LIB","ASL")
   tags:=NEW [ASL_HAIL,'Select a file to load',
@@ -1422,6 +1426,9 @@ PROC doLoad()
   closePreviews()
   loadFile()
   restorePreviews()
+  IF errorState
+    errorRequest(mainWindow,'Warning','This file contains gadgets that you do not have installed.\nThey will not be displayed correctly.')
+  ENDIF
   clearBusy()
 ENDPROC
 
@@ -1737,7 +1744,8 @@ ENDPROC
 PROC newProject()
   DEF i
   StrCopy(filename,'')
-
+  errorState:=FALSE
+  
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
     removeMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
@@ -2048,7 +2056,7 @@ PROC remakePreviewMenus()
   menuData[66].type:=NM_ITEM
   menuData[66].label:=NM_BARLABEL
   menuData[67].type:=NM_ITEM
-  menuData[77].label:='Preview Windows'
+  menuData[67].label:='Preview Windows'
   n:=68
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()

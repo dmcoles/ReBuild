@@ -10,6 +10,9 @@ ENDOBJECT
 
 EXPORT PROC createPreviewObject(scr) OF spaceObject
   self.previewObject:=SpaceObject, SpaceEnd
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

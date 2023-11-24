@@ -269,6 +269,7 @@ EXPORT PROC createPreviewObject(scr) OF integerObject
       INTEGER_MINIMUM, self.minimum,
       INTEGER_MAXIMUM, self.maximum,
     IntegerEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

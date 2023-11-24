@@ -201,6 +201,7 @@ EXPORT PROC createPreviewObject(scr) OF paletteObject
       PALETTE_COLOUROFFSET, self.offset,
       PALETTE_NUMCOLOURS, self.numcols,
     PaletteEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

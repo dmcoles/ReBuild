@@ -308,6 +308,8 @@ PROC makeChooserList(id) OF chooserObject
 ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF chooserObject
+  IF self.labels1 THEN freeChooserLabels( self.labels1 )
+
   self.previewObject:=ChooserObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
@@ -321,6 +323,8 @@ EXPORT PROC createPreviewObject(scr) OF chooserObject
       CHOOSER_WIDTH, self.width,
       CHOOSER_LABELS, self.labels1:=self.makeChooserList(self.listObjectId),
     ChooserEnd
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
@@ -407,7 +411,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF chooserObject
 
   IF self.autofit THEN srcGen.componentProperty('CHOOSER_AutoFit','TRUE',FALSE)
 
-  IF self.listObjectId 
+  IF self.listObjectId>=0 
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('CHOOSER_Labels',tempStr,FALSE)
   ENDIF

@@ -225,6 +225,7 @@ EXPORT PROC createPreviewObject(scr) OF labelObject
       LABEL_DRAWINFO, self.drawInfo,
       LABEL_JUSTIFICATION,ListItem([LJ_LEFT,LJ_CENTER,LJ_RIGHT],self.justify),
     LabelEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

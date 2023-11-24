@@ -683,6 +683,8 @@ EXPORT PROC createPreviewObject(scr) OF listBrowserObject
   self.columnInfo[self.numColumns].title:=-1
   self.columnInfo[self.numColumns].flags:=-1
 
+  IF self.browsernodes THEN freeBrowserNodes( self.browsernodes )
+
   self.previewObject:=ListBrowserObject, 
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
@@ -712,6 +714,7 @@ EXPORT PROC createPreviewObject(scr) OF listBrowserObject
       LISTBROWSER_COLUMNINFO, self.columnInfo,
       LISTBROWSER_LABELS, self.browsernodes:=self.makeBrowserList(self.listObjectId),
     ListBrowserEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
@@ -834,7 +837,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
   IF self.spacing THEN srcGen.componentPropertyInt('LISTBROWSER_Spacing',self.spacing)
   IF self.selected<>-1 THEN srcGen.componentPropertyInt('LISTBROWSER_Selected',self.selected)
 
-  IF self.listObjectId 
+  IF self.listObjectId>=0
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('LISTBROWSER_Labels',tempStr,FALSE)
   ENDIF

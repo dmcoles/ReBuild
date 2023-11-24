@@ -212,9 +212,8 @@ PROC editSettings(comp:PTR TO gradSliderObject) OF gradSliderSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF gradSliderObject
-  IF (gradientsliderbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (gradientsliderbase)
     self.previewObject:=GradientObject,
       GRAD_MAXVAL, self.maxVal,
       GRAD_CURVAL, self.currVal,
@@ -223,6 +222,7 @@ EXPORT PROC createPreviewObject(scr) OF gradSliderObject
       PGA_FREEDOM, ListItem([LORIENT_HORIZ,LORIENT_VERT],self.orientation),
       GradientSliderEnd
   ENDIF
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
     
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

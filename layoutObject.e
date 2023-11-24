@@ -74,6 +74,7 @@ EXPORT PROC createPreviewObject(scr) OF layoutObject
         LAYOUT_SHRINKWRAP, self.shrinkWrap,
         LAYOUT_EVENSIZE, self.evenSize,
       LayoutEnd
+    IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
     self.previewChildAttrs:=[
         LAYOUT_MODIFYCHILD, self.previewObject,

@@ -264,7 +264,9 @@ EXPORT PROC createPreviewObject(scr) OF checkboxObject
       CHECKBOX_FILLTEXTPEN, self.fillTextPen,
       CHECKBOX_TEXTPLACE, ListItem([PLACETEXT_LEFT,PLACETEXT_RIGHT],self.labelPlace),
     CheckBoxEnd
-    
+
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

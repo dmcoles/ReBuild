@@ -47,6 +47,8 @@ EXPORT ENUM FIELDTYPE_CHAR=1, FIELDTYPE_INT=2, FIELDTYPE_LONG=3, FIELDTYPE_STR=4
 CONST NUM_CHI_GADS=CHIGAD_CANCEL+1
 
 DEF objCount
+EXPORT DEF errorState
+
 EXPORT DEF imageData:PTR TO CHAR
 
 EXPORT OBJECT reactionObject
@@ -687,6 +689,7 @@ ENDPROC
 
 EXPORT PROC initialise()
   DEF i,i4
+  errorState:=FALSE
   imageData:=NewM(256+4,MEMF_CHIP OR MEMF_CLEAR)
   IF imageData
     imageData[1]:=16
@@ -720,6 +723,7 @@ ENDPROC
 
 EXPORT PROC createErrorObject(scr) OF reactionObject
     self.errObj:=TRUE
+    errorState:=TRUE
 ENDPROC NewObjectA(PenMap_GetClass(),NIL,
                                   [PENMAP_RENDERDATA, imageData,
                                   PENMAP_SCREEN, scr,

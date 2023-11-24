@@ -280,9 +280,8 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF ledObject
-  IF (ledbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (ledbase)
     self.previewObject:=LedObject,
       IA_FGPEN, self.fgPen,
       IA_BGPEN, self.bgPen,
@@ -298,7 +297,8 @@ EXPORT PROC createPreviewObject(scr) OF ledObject
       LED_VALUES, [12,34,56,78]:INT,
     LedEnd
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

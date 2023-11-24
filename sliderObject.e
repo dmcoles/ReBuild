@@ -354,6 +354,7 @@ EXPORT PROC createPreviewObject(scr) OF sliderObject
       SLIDER_LEVELPLACE, ListItem([PLACETEXT_LEFT, PLACETEXT_RIGHT],self.levelPlace),
       SLIDER_LEVELJUSTIFY, ListItem([SLJ_LEFT, SLJ_CENTER, SLJ_RIGHT],self.levelJustify),
     SliderEnd
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

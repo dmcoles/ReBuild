@@ -202,9 +202,8 @@ PROC editSettings(comp:PTR TO tapeDeckObject) OF tapeDeckSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF tapeDeckObject
-  IF (tapedeckbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+    self.previewObject:=0
+  IF (tapedeckbase)
     self.previewObject:=NewObjectA( NIL, 'tapedeck.gadget',[TAG_IGNORE,0,
       TDECK_TAPE, ListItem([TRUE,FALSE],self.anim),
       TDECK_MODE, ListItem([BUT_REWIND,BUT_PLAY, BUT_FORWARD, BUT_STOP, BUT_PAUSE],self.mode),
@@ -212,7 +211,8 @@ EXPORT PROC createPreviewObject(scr) OF tapeDeckObject
       TDECK_CURRENTFRAME, self.currFrame,
       TAG_END])
   ENDIF
-    
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,

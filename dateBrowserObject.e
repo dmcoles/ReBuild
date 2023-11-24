@@ -177,9 +177,8 @@ PROC editSettings(comp:PTR TO dateBrowserObject) OF dateBrowserSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
-  IF (datebrowserbase=0)
-    self.previewObject:=self.createErrorObject(scr)
-  ELSE
+  self.previewObject:=0
+  IF (datebrowserbase)
     self.previewObject:=NewObjectA(DateBrowser_GetClass(), NIL,[TAG_IGNORE,0,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
@@ -189,7 +188,8 @@ EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
       DATEBROWSER_SHOWTITLE, self.showTitle,
     TAG_DONE])
   ENDIF
-        
+  IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,
     CHILD_NOMINALSIZE, self.nominalSize,
