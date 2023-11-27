@@ -274,6 +274,7 @@ ENDPROC
 
 PROC end() OF radioObject
   freeRadioButtons( self.labels1 )
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF radioObject

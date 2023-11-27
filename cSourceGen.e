@@ -67,6 +67,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('#include <proto/glyph.h>')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('#include <proto/label.h>')
+  IF self.libsused[TYPE_BITMAP] THEN self.writeLine('#include <proto/bitmap.h>')
   IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('#include <proto/penmap.h>')
   IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('#include <proto/colorwheel.h>')
   IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('#include <proto/datebrowser.h>')
@@ -114,6 +115,12 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('#define ListView_GetClass() LISTVIEW_GetClass()')
     self.writeLine('')
   ENDIF
+
+  self.writeLine('struct Screen	*gScreen = NULL;')
+  self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
+  self.writeLine('APTR gVisinfo = NULL;')
+  self.writeLine('struct MsgPort	*gAppPort = NULL;')
+  self.writeLine('')
 
   IF self.libsused[TYPE_LISTVIEW]
     self.writeLine('struct List *ListViewLabelsA(STRPTR *nameList)')
@@ -172,6 +179,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('  struct List *newList;')
     self.writeLine('  struct Gadget *label;')
     self.writeLine('  int i=0;')
+    self.writeLine('  char *c;')
     self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
     self.writeLine('')
     self.writeLine('  if (newList && nameList)')
@@ -179,9 +187,17 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('    NewList( newList );')
     self.writeLine('    while(*nameList)')
     self.writeLine('    {')
-    self.writeLine('      label = LabelObject,')
-    self.writeLine('        LABEL_Text, *nameList,')
-    self.writeLine('      LabelEnd;')
+    self.writeLine('      c = (char *)(*nameList);')
+    self.writeLine('      if (c[0]==\a1\a) {')
+    self.writeLine('        label = BitMapObject,')
+    self.writeLine('          BITMAP_SourceFile, c+1,')
+    self.writeLine('          BITMAP_Screen, gScreen,')
+    self.writeLine('        BitMapEnd;')
+    self.writeLine('      } else {')
+    self.writeLine('        label = LabelObject,')
+    self.writeLine('          LABEL_Text, c+1,')
+    self.writeLine('        LabelEnd;')
+    self.writeLine('      }')
     self.writeLine('      AddTail(newList, AllocSpeedButtonNode(i, SBNA_Image, label, SBNA_Enabled, TRUE, SBNA_Spacing, 2, SBNA_Highlight, SBH_RECESS, TAG_END));')
     self.writeLine('      nameList++;')
     self.writeLine('      i++;')
@@ -387,11 +403,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('};')
     self.writeLine('')
   ENDIF
-  self.writeLine('struct Screen	*gScreen = NULL;')
-  self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
-  self.writeLine('APTR gVisinfo = NULL;')
-  self.writeLine('struct MsgPort	*gAppPort = NULL;')
-  self.writeLine('')
 
   self.writeLine('struct Library *WindowBase = NULL,')
   IF hasarexx THEN self.writeLine('               *ARexxBase = NULL,')
@@ -416,6 +427,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('               *GlyphBase = NULL,')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('               *LabelBase = NULL,')
+  IF self.libsused[TYPE_BITMAP] THEN self.writeLine('               *BitMapBase = NULL,')
   IF self.libsused[TYPE_BOINGBALL] THEN self.writeLine('               *LabelBase = NULL,')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('               *PenMapBase = NULL,')
   IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('               *ColorWheelBase = NULL,')
@@ -527,6 +539,10 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('  if( !(LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) ) ) return 0;')
   ENDIF
 
+  IF self.libsused[TYPE_BITMAP]
+    self.writeLine('  if( !(BitMapBase = (struct Library*) OpenLibrary("images/bitmap.image",0L) ) ) return 0;')
+  ENDIF
+
   IF self.libsused[TYPE_PENMAP]
     self.writeLine('  if( !(PenMapBase = (struct Library*) OpenLibrary("images/penmap.image",0L) ) ) return 0;')
   ENDIF
@@ -614,6 +630,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );')
+  IF self.libsused[TYPE_BITMAP] THEN self.writeLine('  if (BitMapBase) CloseLibrary( (struct Library *)BitMapBase );')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('  if (PenMapBase) CloseLibrary( (struct Library *)PenMapBase );')
 
   IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('  if (ColorWheelBase) CloseLibrary( (struct Library *)ColorWheelBase );')

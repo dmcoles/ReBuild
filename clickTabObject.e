@@ -309,6 +309,7 @@ ENDPROC
 
 PROC end() OF clickTabObject
   freeClickTabs( self.labels1 )
+  SUPER self.end()  
 ENDPROC
 
 EXPORT PROC editSettings() OF clickTabObject

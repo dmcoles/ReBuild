@@ -364,6 +364,7 @@ ENDPROC
 
 PROC end() OF chooserObject
   freeChooserLabels( self.labels1 )
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF chooserObject

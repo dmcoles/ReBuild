@@ -289,15 +289,15 @@ PROC update(nself,gadget,id,code) OF screenSettingsForm
   custom:=Gets(self.gadgetList[ SCRGAD_CUSTOM ],CHECKBOX_CHECKED)
   public:=Gets(self.gadgetList[ SCRGAD_PUBLIC ],CHECKBOX_CHECKED)
 
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_TITLE ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_TITLE ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_PUBLICNAME ],0,0,[GA_DISABLED,public=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_PUBLICNAME ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_LEFTEDGE ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_LEFTEDGE ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_TOPEDGE ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_TOPEDGE ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_WIDTH ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_WIDTH ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_HEIGHT ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_HEIGHT ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_DEPTH ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_DEPTH ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_OVERSCANTYPE ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN  RefreshGList(self.gadgetList[ SCRGAD_OVERSCANTYPE ], win,0,1)
-  IF SetGadgetAttrsA(self.gadgetList[ SCRGAD_DISPLAYID ],0,0,[GA_DISABLED,custom=FALSE,0]) THEN IF win THEN RefreshGList(self.gadgetList[ SCRGAD_DISPLAYID ], win,0,1)
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_TITLE ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_PUBLICNAME ],win,0,[GA_DISABLED,public=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_LEFTEDGE ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_TOPEDGE ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_WIDTH ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_HEIGHT ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_DEPTH ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_OVERSCANTYPE ],win,0,[GA_DISABLED,custom=FALSE,0])
+  SetGadgetAttrsA(self.gadgetList[ SCRGAD_DISPLAYID ],win,0,[GA_DISABLED,custom=FALSE,0])
 ENDPROC
 
 PROC editSettings(comp:PTR TO screenObject) OF screenSettingsForm

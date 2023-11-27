@@ -6,6 +6,7 @@ OPT MODULE, OSVERSION=37
         'reaction/reaction_lib',
         'button','gadgets/button',
         'images/bevel',
+        'bitmap','images/bitmap',
         'string',
         'gadgets/chooser','chooser',
         'gadgets/checkbox','checkbox',
@@ -25,10 +26,13 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*stringlist'
 
-EXPORT ENUM SBARGAD_NAME, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
+EXPORT ENUM SBARGAD_NAME, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
             SBARGAD_STRUMBAR, SBARGAD_BEVELSTYLE,
       SBARGAD_OK, SBARGAD_CHILD, SBARGAD_CANCEL
       
+
+CONST TYPE_TEXT="0"
+CONST TYPE_IMAGE="1"
 
 CONST NUM_SBAR_GADS=SBARGAD_CANCEL+1
 
@@ -46,7 +50,7 @@ ENDOBJECT
 OBJECT speedBarSettingsForm OF reactionForm
 PRIVATE
   speedBarObject:PTR TO speedBarObject
-  columninfo[2]:ARRAY OF columninfo
+  columninfo[3]:ARRAY OF columninfo
   tempItems:PTR TO stringlist
   selectedItem:INT
   tempBgPen:INT
@@ -66,25 +70,37 @@ ENDPROC
 
 PROC addItem(nself,gadget,id,code) OF speedBarSettingsForm
   DEF strval
-  DEF n,win,gen
+  DEF n,win
+  DEF type
+  DEF newval
+  DEF typeStr[10]:STRING
 
   self:=nself
 
   strval:=Gets(self.gadgetList[ SBARGAD_BUTTON_TEXT ],STRINGA_TEXTVAL)
   IF StrLen(strval)
-
-    self.tempItems.add(strval)
+    newval:=String(StrLen(strval)+1)
+    type:=Gets(self.gadgetList[ SBARGAD_BUTTON_TYPE ],CHOOSER_ACTIVE)
+    StringF(newval,'\d\s',type,strval)
+    self.tempItems.add(newval)
 
     win:=Gets(self.windowObj,WINDOW_WINDOW)
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
 
-    IF (n:=AllocListBrowserNodeA(1, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, strval, TAG_END]))
+    IF type=1
+      StrCopy(typeStr,'Image')
+    ELSE
+      StrCopy(typeStr,'Text')
+    ENDIF
+
+    IF (n:=AllocListBrowserNodeA(2, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, strval, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr, TAG_END]))
       AddTail(self.browserlist, n)
     ELSE 
       Raise("MEM")    
     ENDIF
 
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BUTTON_TEXT],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[SBARGAD_BUTTON_TYPE],win,0,[CHOOSER_ACTIVE, 0, TAG_END])
 
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
@@ -122,9 +138,13 @@ PROC create() OF speedBarSettingsForm
   self.columninfo[0].title:='Menu Buttons'
   self.columninfo[0].flags:=CIF_WEIGHTED
   
-  self.columninfo[1].width:=-1
-  self.columninfo[1].title:=-1
-  self.columninfo[1].flags:=-1
+  self.columninfo[1].width:=1
+  self.columninfo[1].title:='Type'
+  self.columninfo[1].flags:=CIF_WEIGHTED
+
+  self.columninfo[2].width:=-1
+  self.columninfo[2].title:=-1
+  self.columninfo[2].flags:=-1
   
   self.browserlist:=browserNodesA([0])
 
@@ -153,114 +173,117 @@ PROC create() OF speedBarSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_NAME ]:=StringObject,
-        GA_ID, SBARGAD_NAME,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_NAME ]:=StringObject,
+          GA_ID, SBARGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'SpeedBar Name',
+        LabelEnd,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'SpeedBar Name',
-      LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BGPEN ]:=ButtonObject,
+          GA_ID, SBARGAD_BGPEN,
+          GA_TEXT, 'Back_groundPen',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,0,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_STRUMBAR ]:=CheckBoxObject,
+          GA_ID, SBARGAD_STRUMBAR,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'StrumBar',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+        CHILD_WEIGHTEDWIDTH,0,
+      LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_ORIENTATION ]:=ChooserObject,
+          GA_ID, SBARGAD_ORIENTATION,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 12,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,
+          CHOOSER_LABELS, self.labels1:=chooserLabelsA(['SBORIENT_HORIZ','SBORIENT_VERT',0]),
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Orientation',
+        LabelEnd,
 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-          LAYOUT_ADDCHILD,self.gadgetList[SBARGAD_BTNLIST]:=ListBrowserObject,
-              GA_ID, SBARGAD_BTNLIST,
-              GA_RELVERIFY, TRUE,
-              LISTBROWSER_POSITION, 0,
-              LISTBROWSER_SHOWSELECTED, TRUE,
-              LISTBROWSER_COLUMNTITLES, TRUE,
-              LISTBROWSER_HIERARCHICAL, FALSE,
-              LISTBROWSER_COLUMNINFO, self.columninfo,
-              LISTBROWSER_LABELS, self.browserlist,
-          ListBrowserEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_BEVELSTYLE ]:=ChooserObject,
+          GA_ID, SBARGAD_BEVELSTYLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 12,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,
+          CHOOSER_LABELS, self.labels2:=chooserLabelsA(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP','BVS_FIELD','BVS_DROPBOX','BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD',0]),
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'BevelStyle',
+        LabelEnd,
+      LayoutEnd,
 
-          LAYOUT_ADDCHILD, LayoutObject,
-            LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-            LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_BUTTON_TEXT ]:=StringObject,
-              GA_ID, SBARGAD_BUTTON_TEXT,
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-              STRINGA_MAXCHARS, 80,
-            StringEnd,
+      LAYOUT_ADDCHILD,self.gadgetList[SBARGAD_BTNLIST]:=ListBrowserObject,
+          GA_ID, SBARGAD_BTNLIST,
+          GA_RELVERIFY, TRUE,
+          LISTBROWSER_POSITION, 0,
+          LISTBROWSER_SHOWSELECTED, TRUE,
+          LISTBROWSER_COLUMNTITLES, TRUE,
+          LISTBROWSER_HIERARCHICAL, FALSE,
+          LISTBROWSER_COLUMNINFO, self.columninfo,
+          LISTBROWSER_LABELS, self.browserlist,
+      ListBrowserEnd,
 
-            LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BUTTON_ADD ]:=ButtonObject,
-              GA_ID, SBARGAD_BUTTON_ADD,
-              GA_TEXT, 'Add',
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-            ButtonEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_BUTTON_TEXT ]:=StringObject,
+          GA_ID, SBARGAD_BUTTON_TEXT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
-            LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BUTTON_DEL ]:=ButtonObject,
-              GA_ID, SBARGAD_BUTTON_DEL,
-              GA_TEXT, 'Remove',
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-            ButtonEnd,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_BUTTON_TYPE ]:=ChooserObject,
+          GA_ID, SBARGAD_BUTTON_TYPE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 12,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,
+          CHOOSER_LABELS, self.labels1:=chooserLabelsA(['Text','Image',0]),
+        ChooserEnd,
+        CHILD_WEIGHTEDWIDTH,0,
 
-          LayoutEnd,
-          CHILD_WEIGHTEDHEIGHT,0,
-        LayoutEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BUTTON_ADD ]:=ButtonObject,
+          GA_ID, SBARGAD_BUTTON_ADD,
+          GA_TEXT, 'Add',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,0,
 
-        LAYOUT_ADDCHILD, LayoutObject,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+        LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BUTTON_DEL ]:=ButtonObject,
+          GA_ID, SBARGAD_BUTTON_DEL,
+          GA_TEXT, 'Remove',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,0,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_ORIENTATION ]:=ChooserObject,
-            GA_ID, SBARGAD_ORIENTATION,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            CHOOSER_POPUP, TRUE,
-            CHOOSER_MAXLABELS, 12,
-            CHOOSER_ACTIVE, 0,
-            CHOOSER_WIDTH, -1,
-            CHOOSER_LABELS, self.labels1:=chooserLabelsA(['SBORIENT_HORIZ','SBORIENT_VERT',0]),
-          ChooserEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'Orientation',
-          LabelEnd,
-          CHILD_WEIGHTEDWIDTH,50,
-
-          LAYOUT_ADDCHILD, LayoutObject,
-            LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-            ->LAYOUT_FIXEDHORIZ,FALSE,
-
-            LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_STRUMBAR ]:=CheckBoxObject,
-              GA_ID, SBARGAD_STRUMBAR,
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-              GA_TEXT, 'StrumBar',
-              CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-            CheckBoxEnd,
-
-            LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BGPEN ]:=ButtonObject,
-              GA_ID, SBARGAD_BGPEN,
-              GA_TEXT, 'Back_groundPen',
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-            ButtonEnd,
-            CHILD_WEIGHTEDHEIGHT,0,
-
-          LayoutEnd,
-
-          LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_BEVELSTYLE ]:=ChooserObject,
-            GA_ID, SBARGAD_BEVELSTYLE,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            CHOOSER_POPUP, TRUE,
-            CHOOSER_MAXLABELS, 12,
-            CHOOSER_ACTIVE, 0,
-            CHOOSER_WIDTH, -1,
-            CHOOSER_LABELS, self.labels2:=chooserLabelsA(['BVS_NONE', 'BVS_THIN', 'BVS_BUTTON', 'BVS_GROUP','BVS_FIELD','BVS_DROPBOX','BVS_SBAR_HORIZ','BVS_SBAR_VERT','BVS_BOX','BVS_RADIOBUTTON','BVS_STANDARD',0]),
-          ChooserEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'BevelStyle',
-          LabelEnd,
-        LayoutEnd,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -341,6 +364,8 @@ ENDPROC
 
 PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   DEF res,i,n
+  DEF typeStr[10]:STRING
+  DEF str:PTR TO CHAR
 
   self.speedBarObject:=comp
     
@@ -349,7 +374,13 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],0,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   FOR i:=0 TO comp.buttonList.count()-1
     self.tempItems.add(comp.buttonList.item(i))
-    IF (n:=AllocListBrowserNodeA(1, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, comp.buttonList.item(i), TAG_END]))
+    str:=comp.buttonList.item(i)
+    IF str[0]=TYPE_IMAGE
+      StrCopy(typeStr,'Image')
+    ELSE
+      StrCopy(typeStr,'Text')
+    ENDIF
+    IF (n:=AllocListBrowserNodeA(2, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, comp.buttonList.item(i)+1, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr, TAG_END]))
       AddTail(self.browserlist, n)
     ELSE 
       Raise("MEM")    
@@ -395,11 +426,12 @@ PROC freeButtons(list:PTR TO lh) OF speedBarObject
   ENDIF
 ENDPROC
 
-PROC makeButtons() OF speedBarObject
+PROC makeButtons(scr) OF speedBarObject
   DEF list:PTR TO lh
   DEF node:PTR TO ln
   DEF label
   DEF i,n=0
+  DEF str:PTR TO CHAR
 
   self.freeButtons(self.buttons)
 
@@ -407,9 +439,17 @@ PROC makeButtons() OF speedBarObject
     newList(list)
     
     FOR i:=0 TO self.buttonList.count()-1
-      label:=LabelObject,
-          LABEL_TEXT, self.buttonList.item(i),
-          LabelEnd
+      str:=self.buttonList.item(i)
+      IF str[0]=TYPE_IMAGE
+        label:=BitMapObject,
+            BITMAP_SOURCEFILE, self.buttonList.item(i)+1,
+            BITMAP_SCREEN,scr,
+            BitMapEnd
+      ELSE
+        label:=LabelObject,
+            LABEL_TEXT, self.buttonList.item(i)+1,
+            LabelEnd
+      ENDIF
       self.buttonLabels.add(label)
           
       IF (node:=AllocSpeedButtonNodeA(
@@ -438,7 +478,7 @@ EXPORT PROC createPreviewObject(scr) OF speedBarObject
         SPEEDBAR_BACKGROUND, self.bgPen,
         SPEEDBAR_STRUMBAR, self.strumBar,
         SPEEDBAR_BEVELSTYLE, ListItem([BVS_NONE, BVS_THIN, BVS_BUTTON, BVS_GROUP,BVS_FIELD,BVS_DROPBOX,BVS_SBAR_HORIZ,BVS_SBAR_VERT,BVS_BOX,BVS_RADIOBUTTON,BVS_STANDARD],self.bevelStyle),
-        SPEEDBAR_BUTTONS, self.buttons:=self.makeButtons(),
+        SPEEDBAR_BUTTONS, self.buttons:=self.makeButtons(scr),
       SpeedBarEnd
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
@@ -472,13 +512,14 @@ EXPORT PROC create(parent) OF speedBarObject
   self.buttonList:=buttons
   NEW buttonLabels.stdlist(10)
   self.buttonLabels:=buttonLabels
-  self.libsused:=[TYPE_SPEEDBAR,TYPE_LABEL]
+  self.libsused:=[TYPE_SPEEDBAR,TYPE_LABEL, TYPE_BITMAP]
 ENDPROC
 
 PROC end() OF speedBarObject
   END self.buttonList
   self.freeButtons(self.buttons)
   END self.buttonLabels
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF speedBarObject

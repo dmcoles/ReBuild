@@ -642,6 +642,7 @@ ENDPROC
 EXPORT PROC end() OF menuObject
   IF self.previewObject THEN FreeMenus(self.previewObject)
   END self.menuItems
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF menuObject

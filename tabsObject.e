@@ -284,6 +284,7 @@ ENDPROC
 
 PROC end() OF tabsObject
   IF self.tabLabels THEN Dispose(self.tabLabels)
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF tabsObject

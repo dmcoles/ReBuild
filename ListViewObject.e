@@ -202,6 +202,7 @@ ENDPROC
 
 PROC end() OF listViewObject
   self.freeListViewLabels( self.labels1 )
+  SUPER self.end()
 ENDPROC
 
 PROC makeListViewList(id) OF listViewObject

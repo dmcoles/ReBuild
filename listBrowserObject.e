@@ -31,6 +31,9 @@ EXPORT ENUM LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
 
 CONST NUM_LISTB_GADS=LISTBGAD_CANCEL+1
 
+ENUM EDITCOLGADS_LIST, EDITCOLGADS_COLTITLE, EDITCOLGADS_COLWIDTH,EDITCOLGADS_SETBTN, EDITCOLGADS_OK, EDITCOLGADS_CANCEL
+CONST NUM_EDITCOL_GADS=EDITCOLGADS_CANCEL+1
+
 EXPORT OBJECT listBrowserObject OF reactionObject
   listObjectId:LONG
   top:INT
@@ -74,6 +77,10 @@ ENDOBJECT
 
 OBJECT editColumnsForm OF reactionForm
   count:LONG
+  browserlist:PTR TO LONG
+  columnInfo:PTR TO columninfo
+  nodes:PTR TO stdlist
+  selectedNodeNum:INT
 ENDOBJECT
 
 PROC create() OF listBrowserSettingsForm
@@ -511,22 +518,41 @@ ENDPROC res=MR_OK
 
 PROC create(count) OF editColumnsForm
   DEF gads:PTR TO LONG
-  DEF n,i,newLayout
+  DEF i,newLayout
 
   DEF rootLayout
   
-  NEW gads[(count+1)*2]
+  NEW gads[NUM_EDITCOL_GADS]
   self.gadgetList:=gads
-  NEW gads[(count+1)*2]
+  NEW gads[NUM_EDITCOL_GADS]
   self.gadgetActions:=gads
   self.count:=count
+
+  self.browserlist:=browserNodesA([0])
+
+  self.columnInfo:=New(4*SIZEOF columninfo)
+  self.columnInfo[0].width:=1
+  self.columnInfo[0].title:='Column Number'
+  self.columnInfo[0].flags:=CIF_WEIGHTED
+
+  self.columnInfo[1].width:=2
+  self.columnInfo[1].title:='Column Title'
+  self.columnInfo[1].flags:=CIF_WEIGHTED
+  
+  self.columnInfo[2].width:=2
+  self.columnInfo[2].title:='Column Width'
+  self.columnInfo[2].flags:=CIF_WEIGHTED
+
+  self.columnInfo[3].width:=-1
+  self.columnInfo[3].title:=-1
+  self.columnInfo[3].flags:=-1
 
   self.windowObj:=WindowObject,
     WA_TITLE, 'Set ListBrowser Columns',
     WA_LEFT, 0,
     WA_TOP, 0,
-    WA_HEIGHT, 80,
-    WA_WIDTH, 150,
+    WA_HEIGHT, 250,
+    WA_WIDTH, 250,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
     WA_MINHEIGHT, 80,
@@ -546,22 +572,65 @@ PROC create(count) OF editColumnsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, rootLayout:=LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
-      LayoutEnd,
-
+      LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_LIST ]:=ListBrowserObject, 
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_ID,EDITCOLGADS_LIST,
+        
+        LISTBROWSER_COLUMNTITLES, TRUE,
+        LISTBROWSER_COLUMNINFO, self.columnInfo,
+        LISTBROWSER_LABELS, self.browserlist,
+      ListBrowserEnd,
+      CHILD_WEIGHTEDHEIGHT, 100,
+          
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ 0 ]:=ButtonObject,
-          GA_ID, 0,
+          LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_COLTITLE ]:=StringObject,
+              GA_ID, EDITCOLGADS_COLTITLE,
+              GA_DISABLED,TRUE,
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+              STRINGA_MAXCHARS, 80,
+            StringEnd,
+            CHILD_LABEL, LabelObject,
+              LABEL_TEXT, 'Column Title',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_COLWIDTH ]:=IntegerObject,
+                GA_ID, EDITCOLGADS_COLWIDTH,
+                GA_DISABLED,TRUE,
+                GA_RELVERIFY, TRUE,
+                GA_TABCYCLE, TRUE,
+                INTEGER_MINIMUM, 0,
+            IntegerEnd,
+            CHILD_LABEL, LabelObject,
+              LABEL_TEXT, 'Column Width',
+          LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_SETBTN ]:=ButtonObject,
+          GA_ID, EDITCOLGADS_SETBTN,
+          GA_DISABLED,TRUE,
+          GA_TEXT, 'Set',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT, 0,
+  
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_OK ]:=ButtonObject,
+          GA_ID, EDITCOLGADS_OK,
           GA_TEXT, '_OK',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ 1 ]:=ButtonObject,
-          GA_ID, 1,
+        LAYOUT_ADDCHILD,  self.gadgetList[ EDITCOLGADS_CANCEL ]:=ButtonObject,
+          GA_ID, EDITCOLGADS_CANCEL,
           GA_TEXT, '_Cancel',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
@@ -571,65 +640,88 @@ PROC create(count) OF editColumnsForm
     LayoutEnd,
   WindowEnd
 
-  n:=2
-  FOR i:=0 TO count-1
-    newLayout:=
-        LayoutObject,
-          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          
-          LAYOUT_ADDCHILD, self.gadgetList[ n ]:=IntegerObject,
-              GA_ID, n++,
-              GA_RELVERIFY, TRUE,
-              GA_TABCYCLE, TRUE,
-              INTEGER_MINIMUM, 0,
-          IntegerEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'Column Width',
-          LabelEnd,
+  self.gadgetActions[EDITCOLGADS_LIST]:={updateSel}
+  self.gadgetActions[EDITCOLGADS_SETBTN]:={setValues}
+  self.gadgetActions[EDITCOLGADS_COLTITLE]:={setValues}
+  self.gadgetActions[EDITCOLGADS_COLWIDTH]:={setValues}
+  self.gadgetActions[EDITCOLGADS_CANCEL]:=MR_CANCEL
+  self.gadgetActions[EDITCOLGADS_OK]:=MR_OK
+  self.selectedNodeNum:=-1
+ENDPROC
 
-          LAYOUT_ADDCHILD, self.gadgetList[ n ]:=StringObject,
-            GA_ID, n++,
-            GA_RELVERIFY, TRUE,
-            GA_TABCYCLE, TRUE,
-            STRINGA_MAXCHARS, 80,
-          StringEnd,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, 'Column Title',
-          LabelEnd,
-        LayoutEnd
+PROC updateSel(nself,gadget,id,code) OF editColumnsForm
+  DEF t,n,win,dis
+  self:=nself
 
-    SetGadgetAttrsA(rootLayout,0,0,[LAYOUT_ADDCHILD, newLayout,  TAG_END])
-  ENDFOR
+  dis:=IF code>=0 THEN FALSE ELSE TRUE
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
 
-  self.gadgetActions[1]:=MR_CANCEL
-  self.gadgetActions[0]:=MR_OK
+  SetGadgetAttrsA(self.gadgetList[ EDITCOLGADS_COLTITLE ],win,0,[GA_DISABLED, dis,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ EDITCOLGADS_COLWIDTH ],win,0,[GA_DISABLED, dis,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ EDITCOLGADS_SETBTN ],win,0,[GA_DISABLED, dis,TAG_END])
+
+  self.selectedNodeNum:=code
+  GetListBrowserNodeAttrsA (self.nodes.item(code),[LBNA_COLUMN,1,LBNCA_TEXT,{t},LBNA_COLUMN,2,LBNCA_TEXT,{n},TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ EDITCOLGADS_COLTITLE ],win,0,[STRINGA_TEXTVAL,t,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ EDITCOLGADS_COLWIDTH ],win,0,[INTEGER_NUMBER,Val(n),TAG_END])
+ENDPROC
+
+PROC setValues(nself,gadget,id,code) OF editColumnsForm
+  DEF t,n,win
+  DEF tempStr[100]:STRING
+  self:=nself
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
+  
+  t:=Gets(self.gadgetList[ EDITCOLGADS_COLTITLE ],STRINGA_TEXTVAL)
+  n:=Gets(self.gadgetList[ EDITCOLGADS_COLWIDTH ],INTEGER_NUMBER)
+  StringF(tempStr,'\d',n)
+  SetGadgetAttrsA(self.gadgetList[EDITCOLGADS_LIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+  SetListBrowserNodeAttrsA (self.nodes.item(self.selectedNodeNum),[LBNA_COLUMN,1,LBNCA_COPYTEXT,TRUE,LBNCA_TEXT,t,LBNA_COLUMN,2,LBNCA_COPYTEXT,TRUE,LBNCA_TEXT,tempStr,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[EDITCOLGADS_LIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+ENDPROC
+
+PROC end() OF editColumnsForm
+  freeBrowserNodes(self.browserlist)
+  Dispose(self.columnInfo)
+  SUPER self.end()
 ENDPROC
 
 PROC editColumns(titles:PTR TO stringlist, widths:PTR TO stdlist) OF editColumnsForm
-  DEF i,res
+  DEF i,res,t,n
+  DEF tempStr[200]:STRING
+  DEF colTitle[200]:STRING
+  DEF colWidth[10]:STRING
+  DEF nodes:PTR TO stdlist
   
-  FOR i:=0 TO self.count-1
-    IF i<titles.count()
-      SetGadgetAttrsA(self.gadgetList[ ((i+1)<<1)+1 ],0,0,[STRINGA_TEXTVAL,titles.item(i),0])
-    ELSE
-      SetGadgetAttrsA(self.gadgetList[ ((i+1)<<1)+1],0,0,[STRINGA_TEXTVAL,'',0])
-    ENDIF
+  SetGadgetAttrsA(self.gadgetList[EDITCOLGADS_LIST],0,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
 
-    IF i<widths.count()
-      SetGadgetAttrsA(self.gadgetList[ (i+1)<<1 ],0,0,[INTEGER_NUMBER,widths.item(i),0])
-    ELSE
-      SetGadgetAttrsA(self.gadgetList[ (i+1)<<1 ],0,0,[INTEGER_NUMBER,1,0])
+  NEW nodes.stdlist(self.count)
+  self.nodes:=nodes
+
+  FOR i:=0 TO self.count-1
+    StringF(tempStr,'\d',i+1)
+    
+    IF i<titles.count() THEN StrCopy(colTitle,titles.item(i)) ELSE StringF(colTitle,'Column\d',i+1)
+    IF i<widths.count() THEN StringF(colWidth,'\d',widths.item(i)) ELSE StrCopy(colWidth,'1')
+    
+    IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS,0, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, tempStr, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, colTitle,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, colWidth,TAG_END])) 
+      AddTail(self.browserlist, n)
     ENDIF
+    nodes.add(n)
   ENDFOR
+
+  SetGadgetAttrsA(self.gadgetList[EDITCOLGADS_LIST],0,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
   
   res:=self.showModal()
   IF res=MR_OK
     FOR i:=0 TO self.count-1
-    
-      titles.setItem(i,Gets(self.gadgetList[ ((i+1) << 1)+1 ],STRINGA_TEXTVAL))
-      widths.setItem(i,Gets(self.gadgetList[ (i+1) << 1 ],INTEGER_NUMBER))
+      GetListBrowserNodeAttrsA (nodes.item(i),[LBNA_COLUMN,1,LBNCA_TEXT,{t},LBNA_COLUMN,2,LBNCA_TEXT,{n},TAG_END])
+      titles.setItem(i,t)
+      widths.setItem(i,Val(n))
     ENDFOR
   ENDIF
+  
+  END nodes
 ENDPROC res=MR_OK
 
 PROC makeBrowserList(id) OF listBrowserObject
@@ -778,6 +870,7 @@ PROC end() OF listBrowserObject
   END self.colTitles
   Dispose(self.columnInfo)
   freeBrowserNodes( self.browsernodes )
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF listBrowserObject

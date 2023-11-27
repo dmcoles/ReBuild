@@ -301,6 +301,7 @@ ENDPROC
 
 PROC end() OF penMapObject
   Dispose(self.bitmapData)
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF penMapObject

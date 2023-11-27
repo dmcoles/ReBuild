@@ -395,6 +395,7 @@ ENDPROC
 
 EXPORT PROC end() OF rexxObject
   END self.commands
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF rexxObject

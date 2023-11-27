@@ -412,7 +412,7 @@ PROC updateSel(node)
     ELSE
       dismoveup:=comp.getChildIndex()=0
       dismovedown:=comp.getChildIndex()=(comp.parent.children.count()-1)
-      disdel:=(comp.parent=0) OR (comp.children.count()>0)
+      disdel:=(comp.parent=0)
     ENDIF
     
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
@@ -525,7 +525,7 @@ PROC createBufferGads()
     
     LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_COPYTO]:=ButtonObject,
         GA_ID, GAD_TEMP_COPYTO,
-        GA_TEXT, '->Copy',
+        GA_TEXT, '=>Copy',
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
       ButtonEnd,
@@ -533,7 +533,7 @@ PROC createBufferGads()
 
       LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_COPYFROM]:=ButtonObject,
         GA_ID, GAD_TEMP_COPYFROM,
-        GA_TEXT, '<-Copy',
+        GA_TEXT, '<=Copy',
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
       ButtonEnd,
@@ -541,7 +541,7 @@ PROC createBufferGads()
 
       LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_MOVETO]:=ButtonObject,
         GA_ID, GAD_TEMP_MOVETO,
-        GA_TEXT, 'Move->',
+        GA_TEXT, 'Move=>',
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
       ButtonEnd,
@@ -549,7 +549,7 @@ PROC createBufferGads()
 
       LAYOUT_ADDCHILD, gMain_Gadgets[GAD_TEMP_MOVEFROM]:=ButtonObject,
         GA_ID, GAD_TEMP_MOVEFROM,
-        GA_TEXT, '<-Move',
+        GA_TEXT, '<=Move',
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
       ButtonEnd,
@@ -741,10 +741,12 @@ PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
   ENDIF
 ENDPROC
 
-PROC removeObject(parent:PTR TO reactionObject,child:PTR TO reactionObject)
-  DEF idx, mainRootLayout
+PROC removeObject(child:PTR TO reactionObject)
+  DEF i,idx, mainRootLayout
   DEF comp2:PTR TO reactionObject
-  DEF window
+  DEF window,parent:PTR TO reactionObject
+
+  parent:=child.parent
   
   IF parent.allowChildren()
     idx:=findWindowIndex(selectedComp)
@@ -1574,14 +1576,21 @@ PROC doDelete()
       removeWindow(selectedComp)
     ENDIF
   ELSE
-    IF win
-      a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_WARN_ON_DEL,0))
-    ENDIF
-    IF a THEN skipWarn:=(a.flags AND CHECKED)
-    
-    IF (skipWarn=0) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
-      changes:=TRUE
-      removeObject(selectedComp.parent,selectedComp)
+    IF selectedComp.children.count()>0
+      IF (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item and all of its children?',TRUE)=1)
+        changes:=TRUE
+        removeObject(selectedComp)
+      ENDIF
+    ELSE
+      IF win
+        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_WARN_ON_DEL,0))
+      ENDIF
+      IF a THEN skipWarn:=(a.flags AND CHECKED)
+      
+      IF (skipWarn=0) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
+        changes:=TRUE
+        removeObject(selectedComp)
+      ENDIF
     ENDIF
   ENDIF
 ENDPROC
@@ -1614,7 +1623,7 @@ ENDPROC
 PROC moveToBuffer(comp:PTR TO reactionObject)
   changes:=TRUE
   copyToBuffer(comp)
-  removeObject(comp.parent,comp)
+  removeObject(comp)
 ENDPROC
 
 PROC copyFromBuffer(bufferComp:PTR TO reactionObject)

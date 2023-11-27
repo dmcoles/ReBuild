@@ -22,6 +22,7 @@ ENDPROC
 
 PROC end() OF reactionListObject
   END self.items
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionListObject

@@ -1145,8 +1145,8 @@ EXPORT PROC create(parent) OF windowObject
 ENDPROC
 
 PROC end() OF windowObject
-  IF self.previewObject THEN DisposeObject(self.previewObject)
   IF self.appPort THEN DeleteMsgPort(self.appPort)
+  SUPER self.end()
 ENDPROC
 
 EXPORT PROC editSettings() OF windowObject
