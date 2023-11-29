@@ -360,7 +360,6 @@ EXPORT PROC serialiseData() OF sketchboardObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sketchboardObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   ->IF self.scroller=FALSE THEN srcGen.componentProperty('VIRTUALA_Scroller','FALSE',FALSE)

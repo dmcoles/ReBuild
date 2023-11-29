@@ -280,7 +280,6 @@ EXPORT PROC serialiseData() OF gradSliderObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF gradSliderObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   

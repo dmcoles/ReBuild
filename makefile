@@ -132,7 +132,7 @@ textFieldObject.m:			textFieldObject.e reactionObject.m reactionForm.m colourPic
 tabsObject.m:			tabsObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m listPicker.m reactionLists.m reactionListObject.m
 							$(compiler) tabsObject $(options)
               
-drawListObject.m:			drawListObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m fileStreamer.m
+drawListObject.m:			drawListObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m fileStreamer.m stringlist.m
 							$(compiler) drawListObject $(options)
 
 fuelGaugeObject.m:			fuelGaugeObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m

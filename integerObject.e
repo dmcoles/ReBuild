@@ -333,7 +333,6 @@ EXPORT PROC getTypeName() OF integerObject
 ENDPROC
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF integerObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle',IF self.tabCycle THEN 'TRUE' ELSE 'FALSE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)

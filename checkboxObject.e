@@ -320,7 +320,6 @@ EXPORT PROC serialiseData() OF checkboxObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF checkboxObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_Text',self.name,TRUE)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)

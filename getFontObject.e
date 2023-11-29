@@ -435,7 +435,6 @@ EXPORT PROC serialiseData() OF getFontObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFontObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF StrLen(self.title) THEN srcGen.componentProperty('GETFONT_TitleText',self.title,TRUE)
   IF self.leftEdge<>30 THEN srcGen.componentPropertyInt('GETFONT_LeftEdge',self.leftEdge)

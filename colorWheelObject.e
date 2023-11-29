@@ -187,7 +187,6 @@ EXPORT PROC serialiseData() OF colorWheelObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF colorWheelObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   srcGen.componentProperty('WHEEL_Screen','gScreen',FALSE) 

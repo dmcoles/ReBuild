@@ -71,8 +71,8 @@ OPT OSVERSION=37,LARGE
        
   ENUM  MENU_PROJECT, MENU_EDIT
 
-  CONST MENU_ADD_GADGET_COUNT=31
-  CONST MENU_ADD_IMAGE_COUNT=15
+  CONST MENU_ADD_GADGET_COUNT=29
+  CONST MENU_ADD_IMAGE_COUNT=8
   
   ENUM LANG_E, LANG_C
 
@@ -85,17 +85,24 @@ OPT OSVERSION=37,LARGE
   CONST MENU_PROJECT_ABOUT=9
   CONST MENU_PROJECT_QUIT=11
 
-  CONST MENU_EDIT_ADD=0
-  CONST MENU_EDIT_ADD_MORE=1
-  CONST MENU_EDIT_EDIT=2
-  CONST MENU_EDIT_DELETE=3
-  CONST MENU_EDIT_MOVEUP=5
-  CONST MENU_EDIT_MOVEDOWN=6
-  CONST MENU_EDIT_LISTS=8
-  CONST MENU_EDIT_BUFFER=10
-  CONST MENU_EDIT_SHOW_ADD_SETTINGS=11
-  CONST MENU_EDIT_WARN_ON_DEL=12
-  CONST MENU_EDIT_PREVIEW=14
+  CONST MENU_EDIT_ADD_GADGET=0
+  CONST MENU_EDIT_ADD_IMAGE=1
+  CONST MENU_EDIT_ADD_WINDOW=2
+  CONST MENU_EDIT_ADD_HLAYOUT=3
+  CONST MENU_EDIT_ADD_VLAYOUT=4
+  CONST MENU_EDIT_EDIT=6
+  CONST MENU_EDIT_DELETE=7
+  CONST MENU_EDIT_MOVE=9
+  CONST MENU_EDIT_LISTS=11
+  CONST MENU_EDIT_BUFFER=13
+  CONST MENU_EDIT_SHOW_ADD_SETTINGS=14
+  CONST MENU_EDIT_WARN_ON_DEL=15
+  CONST MENU_EDIT_PREVIEW=17
+  
+  CONST MENU_EDIT_MOVEUP=0
+  CONST MENU_EDIT_MOVEDOWN=1
+  CONST MENU_EDIT_MOVETOP=2
+  CONST MENU_EDIT_MOVEBOTTOM=3
 
   CONST FILE_FORMAT_VER=1
 
@@ -384,14 +391,13 @@ PROC updateSel(node)
       FOR j:=0 TO 1
         IF ((j=0) AND (i<MENU_ADD_GADGET_COUNT) OR (i<MENU_ADD_IMAGE_COUNT))
 
-          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
+          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i))
           IF menuItem
             type:=GTMENUITEM_USERDATA(menuItem)
             IF type<>-1
-              check:=((comp.parent=0) AND (allowchildren)) OR (type==[TYPE_STATUSBAR,
-                TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,
-                TYPE_TEXTENTRY, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
-              menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,check)
+              check:=(allowchildren=FALSE) OR (comp.type=TYPE_WINDOW) OR (type==[TYPE_STATUSBAR,
+                TYPE_PAGE, TYPE_PROGRESS, TYPE_TEXTENTRY, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
+              menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i,check)
             ENDIF
           ENDIF
         ENDIF
@@ -415,17 +421,22 @@ PROC updateSel(node)
       disdel:=(comp.parent=0)
     ENDIF
     
+    dis:=allowchildren=FALSE
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_VLAYOUT,0,dis)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_HLAYOUT,0,dis)
     menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,disdel)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,dismoveup)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,dismovedown)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEUP,dismoveup)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEDOWN,dismovedown)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVETOP,dismoveup)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEBOTTOM,dismovedown)
     
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
 
     IF bufferLayout
       SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYTO],win,0,[GA_DISABLED,(comp.parent=0) AND (comp.allowChildren()=FALSE) AND (comp.type<>TYPE_WINDOW),TAG_END])
-      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW)) OR comp.children.count()),TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVETO],win,0,[GA_DISABLED,(((comp.parent=0) AND (comp.type<>TYPE_WINDOW))),TAG_END])
     ENDIF
 
     
@@ -434,7 +445,7 @@ PROC updateSel(node)
       idx:=comp.getChildIndex()
       IF (idx<(comp.parent.children.count()-1))
         child:=comp.parent.children.item(idx+1)
-        IF (allowchildren)
+        IF (child.allowChildren())
           dis:=FALSE
         ENDIF
       ENDIF
@@ -453,18 +464,20 @@ PROC updateSel(node)
     FOR i:=0 TO 31
       FOR j:=0 TO 1
         IF ((j=0) AND (i<MENU_ADD_GADGET_COUNT) OR (i<MENU_ADD_IMAGE_COUNT))
-          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i))
+          menuItem:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i))
           IF menuItem
             type:=GTMENUITEM_USERDATA(menuItem)
-            IF type<>-1 THEN menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD ELSE MENU_EDIT_ADD_MORE,i,TRUE)
+            IF type<>-1 THEN menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i,TRUE)
           ENDIF
         ENDIF
       ENDFOR
     ENDFOR
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_DELETE,0,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEUP,0,TRUE)
-    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEDOWN,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEUP,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEDOWN,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_VLAYOUT,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_HLAYOUT,0,TRUE)
 
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,TRUE,TAG_END])
@@ -842,16 +855,22 @@ PROC swapWindows(idx1,idx2)
   objectList.setItem(ROOT_LAYOUT_ITEM+idx2,tempitem)
 ENDPROC
 
-PROC moveUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
+PROC moveUp(child:PTR TO reactionObject,count=1)
   DEF idx, mainRootLayout, window
-
+  DEF parent:PTR TO reactionObject
+  
+  parent:=child.parent
   IF parent=0
     idx:=findWindowIndex(child)
 
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
-    swapWindows(idx,idx-1)
+    WHILE count
+      swapWindows(idx,idx-1)
+      idx--
+      count--
+    ENDWHILE
     makeList(child)
     addMembers(mainRootLayout,window)
     RETURN
@@ -863,23 +882,31 @@ PROC moveUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
-    parent.swapChildren(child.getChildIndex(),child.getChildIndex()-1)
+    WHILE count
+      parent.swapChildren(child.getChildIndex(),child.getChildIndex()-1)
+      count--
+    ENDWHILE
     makeList(child)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
 ENDPROC
 
-PROC moveDown(parent:PTR TO reactionObject,child:PTR TO reactionObject)
+PROC moveDown(child:PTR TO reactionObject,count=1)
   DEF idx, mainRootLayout, window
-
+  DEF parent:PTR TO reactionObject
+  parent:=child.parent
   IF parent=0
     idx:=findWindowIndex(child)
 
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
-    swapWindows(idx,idx+1)
+    WHILE count
+      swapWindows(idx,idx+1)
+      idx++
+      count--
+    ENDWHILE
     makeList(child)
     addMembers(mainRootLayout,window)
     RETURN
@@ -891,7 +918,10 @@ PROC moveDown(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
-    parent.swapChildren(child.getChildIndex(),child.getChildIndex()+1)
+    WHILE count
+      parent.swapChildren(child.getChildIndex(),child.getChildIndex()+1)
+      count--
+    ENDWHILE
     makeList(child)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
@@ -968,6 +998,14 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
     StringF(tempStr,'\sObject,',comp.getTypeName())
     srcGen.componentCreate(tempStr)
   ENDIF
+
+  IF comp.type<>TYPE_LAYOUT
+    IF srcGen.useIds
+      srcGen.componentPropertyInt('GA_ID',comp.id)
+    ELSE
+      srcGen.componentPropertyInt('GA_ID',srcGen.currentGadgetVar)
+    ENDIF
+  ENDIF
   comp.genCodeProperties(srcGen)
   IF comp.children.count()>0
     comp.genChildObjectsHeader(srcGen)
@@ -1006,7 +1044,7 @@ PROC genCode()
   DEF objectCreate[50]:STRING
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
-  DEF langid,i
+  DEF langid,i,useids,fullcode
   DEF menuComp:PTR TO reactionObject
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
@@ -1016,7 +1054,7 @@ PROC genCode()
   
   setBusy()
   NEW codeGenForm.create()
-  langid:=codeGenForm.selectLang()
+  langid,useids,fullcode:=codeGenForm.selectLang()
   END codeGenForm
   clearBusy()
   IF langid=-1 THEN RETURN
@@ -1060,10 +1098,10 @@ PROC genCode()
 
   SELECT langid
     CASE LANG_E
-      NEW eSrcGen.create(fs,libsused)
+      NEW eSrcGen.create(fs,libsused,fullcode=FALSE,useids)
       srcGen:=eSrcGen
     CASE LANG_C
-      NEW cSrcGen.create(fs,libsused)
+      NEW cSrcGen.create(fs,libsused,fullcode=FALSE,useids)
       srcGen:=cSrcGen
   ENDSELECT
 
@@ -1082,6 +1120,7 @@ PROC genCode()
     srcGen.assignWindowVar()
     StringF(objectCreate,'\sObject,',windowComp.getTypeName())
     StringF(objectEnd,'\sEnd',windowComp.getTypeName())
+
     srcGen.componentCreate(objectCreate)
     windowComp.genCodeProperties(srcGen)
     
@@ -1478,6 +1517,33 @@ PROC doAddWindow()
     
 ENDPROC
 
+PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
+  DEF newObj:PTR TO layoutObject
+  DEF a=0:PTR TO menuitem
+  DEF allowchildren
+  DEF tempStr[100]:STRING
+  newObj:=0
+  
+  allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
+  WHILE (comp) AND (allowchildren=FALSE) 
+    comp:=comp.parent
+    IF comp THEN allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
+  ENDWHILE
+  IF comp AND allowchildren
+    newObj:=createLayoutObject(comp)
+    IF newObj 
+      IF horiz
+        newObj.orientation:=0
+        StringF(tempStr,'Horiz\d',newObj.id)
+        AstrCopy(newObj.name,tempStr,80)
+      ENDIF
+      changes:=TRUE
+      addObject(comp,newObj)
+    ENDIF
+  ENDIF
+ENDPROC
+
+
 PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
   DEF a=0:PTR TO menuitem
@@ -1604,9 +1670,20 @@ PROC doClose()
   ENDIF
 ENDPROC TRUE
 
-PROC copyToBuffer(comp:PTR TO reactionObject)
+PROC doCopyToBuffer(comp:PTR TO reactionObject)
+  DEF recurse=FALSE
+
+  IF comp.children.count()>0
+    recurse:=queryRequest(mainWindow,'Query','Do you wish to copy recursively?')=1
+  ENDIF
+  
+  copyToBuffer(comp,recurse)
+ENDPROC
+
+PROC copyToBuffer(comp:PTR TO reactionObject,recurse)
   DEF newObj:PTR TO reactionObject
   DEF fs:PTR TO fileStreamer
+  DEF i
 
   NEW fs.create('t:tempcomp',MODE_NEWFILE)
   comp.serialise(fs)
@@ -1617,12 +1694,23 @@ PROC copyToBuffer(comp:PTR TO reactionObject)
   newObj.deserialise(fs)
   END fs
   bufferList.add(newObj)
+  
+  IF recurse
+    FOR i:=0 TO comp.children.count()-1
+      copyToBuffer(comp.children.item(i),TRUE)
+    ENDFOR
+  ENDIF
+  
   makeBufferList()
 ENDPROC
 
-PROC moveToBuffer(comp:PTR TO reactionObject)
+PROC doMoveToBuffer(comp:PTR TO reactionObject)
+  IF comp.children.count()>0
+    IF warnRequest(mainWindow,'Warning','This will move this and all child items into the buffer.\nDo you wish to continue?',TRUE)=0 THEN RETURN
+  ENDIF
   changes:=TRUE
-  copyToBuffer(comp)
+
+  copyToBuffer(comp,TRUE)
   removeObject(comp)
 ENDPROC
 
@@ -1863,9 +1951,11 @@ PROC remakePreviewMenus()
   DEF count,n,i
   DEF addSett=TRUE
   DEF a:PTR TO menuitem
+  DEF menuSetup:PTR TO LONG
 
-  count:=(objectList.count()-ROOT_WINDOW_ITEM)/4
-  count:=count+69
+  count:=(objectList.count()-ROOT_WINDOW_ITEM)/3
+  IF count<0 THEN count:=0
+  count++
 
   IF win
     a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
@@ -1875,198 +1965,94 @@ PROC remakePreviewMenus()
   ENDIF
 
   IF menus THEN FreeMenus(menus)
-
-  NEW menuData[count]
-  menuData[0].type:=NM_TITLE
-  menuData[0].label:='Project'
-  menuData[1].type:=NM_ITEM
-  menuData[1].label:='New'
-  menuData[2].type:=NM_ITEM
-  menuData[2].label:='Open'
-  menuData[3].type:=NM_ITEM
-  menuData[3].label:='Save'
-  menuData[4].type:=NM_ITEM
-  menuData[4].label:='Save As'
-  menuData[5].type:=NM_ITEM
-  menuData[5].label:=NM_BARLABEL
-  menuData[6].type:=NM_ITEM
-  menuData[6].label:='Generate Code'
-  menuData[7].type:=NM_ITEM
-  menuData[7].label:=NM_BARLABEL
-  menuData[8].type:=NM_ITEM
-  menuData[8].label:='Show Libraries'
-  menuData[9].type:=NM_ITEM
-  menuData[9].label:=NM_BARLABEL
-  menuData[10].type:=NM_ITEM
-  menuData[10].label:='About'
-  menuData[11].type:=NM_ITEM
-  menuData[11].label:=NM_BARLABEL
-  menuData[12].type:=NM_ITEM
-  menuData[12].label:='Quit'
-  menuData[13].type:=NM_TITLE
-  menuData[13].label:='Edit'
-  menuData[14].type:=NM_ITEM
-  menuData[14].label:='Add Gadget'
-  menuData[14].userdata:=-1
-  menuData[15].type:=NM_SUB
-  menuData[15].label:='Button'
-  menuData[15].userdata:=TYPE_BUTTON
-  menuData[16].type:=NM_SUB
-  menuData[16].label:='CheckBox'
-  menuData[16].userdata:=TYPE_CHECKBOX
-  menuData[17].type:=NM_SUB
-  menuData[17].label:='Chooser'
-  menuData[17].userdata:=TYPE_CHOOSER
-  menuData[18].type:=NM_SUB
-  menuData[18].label:='ClickTab'
-  menuData[18].userdata:=TYPE_CLICKTAB
-  menuData[19].type:=NM_SUB
-  menuData[19].label:='ColorWheel'
-  menuData[19].userdata:=TYPE_COLORWHEEL
-  menuData[20].type:=NM_SUB
-  menuData[20].label:='DateBrowser'
-  menuData[20].userdata:=TYPE_DATEBROWSER
-  menuData[21].type:=NM_SUB
-  menuData[21].label:='FuelGauge'
-  menuData[21].userdata:=TYPE_FUELGAUGE
-  menuData[22].type:=NM_SUB
-  menuData[22].label:='GetColor'
-  menuData[22].userdata:=TYPE_GETCOLOR
-  menuData[23].type:=NM_SUB
-  menuData[23].label:='GetFile'
-  menuData[23].userdata:=TYPE_GETFILE
-  menuData[24].type:=NM_SUB
-  menuData[24].label:='GetFont'
-  menuData[24].userdata:=TYPE_GETFONT
-  menuData[25].type:=NM_SUB
-  menuData[25].label:='GetScreenMode'
-  menuData[25].userdata:=TYPE_GETSCREENMODE
-  menuData[26].type:=NM_SUB
-  menuData[26].label:='GradientSlider'
-  menuData[26].userdata:=TYPE_GRADSLIDER
-  menuData[27].type:=NM_SUB
-  menuData[27].label:='Integer'
-  menuData[27].userdata:=TYPE_INTEGER
-  menuData[28].type:=NM_SUB
-  menuData[28].label:='Layout'
-  menuData[28].userdata:=TYPE_LAYOUT
-  menuData[29].type:=NM_SUB
-  menuData[29].label:='ListBrowser'
-  menuData[29].userdata:=TYPE_LISTBROWSER
-  menuData[30].type:=NM_SUB
-  menuData[30].label:='ListView'
-  menuData[30].userdata:=TYPE_LISTVIEW
-  menuData[31].type:=NM_SUB
-  menuData[31].label:='Palette'
-  menuData[31].userdata:=TYPE_PALETTE
-  menuData[32].type:=NM_SUB
-  menuData[32].label:='RadioButton'
-  menuData[32].userdata:=TYPE_RADIO
-  menuData[33].type:=NM_SUB
-  menuData[33].label:='Scroller'
-  menuData[33].userdata:=TYPE_SCROLLER
-  menuData[34].type:=NM_SUB
-  menuData[34].label:='SketchBoard'
-  menuData[34].userdata:=TYPE_SKETCH
-  menuData[35].type:=NM_SUB
-  menuData[35].label:='Slider'
-  menuData[35].userdata:=TYPE_SLIDER
-  menuData[36].type:=NM_SUB
-  menuData[36].label:='Space'
-  menuData[36].userdata:=TYPE_SPACE
-  menuData[37].type:=NM_SUB
-  menuData[37].label:='SpeedBar'
-  menuData[37].userdata:=TYPE_SPEEDBAR
-  menuData[38].type:=NM_SUB
-  menuData[38].label:='String'
-  menuData[38].userdata:=TYPE_STRING
-  menuData[39].type:=NM_SUB
-  menuData[39].label:='Tabs'
-  menuData[39].userdata:=TYPE_TABS
-  menuData[40].type:=NM_SUB
-  menuData[40].label:='TapeDeck'
-  menuData[40].userdata:=TYPE_TAPEDECK
-  menuData[41].type:=NM_SUB
-  menuData[41].label:='TextEditor'
-  menuData[41].userdata:=TYPE_TEXTEDITOR
-  menuData[42].type:=NM_SUB
-  menuData[42].label:='TextField'
-  menuData[42].userdata:=TYPE_TEXTFIELD
-  menuData[43].type:=NM_SUB
-  menuData[43].label:='Virtual'
-  menuData[43].userdata:=TYPE_VIRTUAL
-  menuData[44].type:=NM_SUB
-  menuData[44].label:=NM_BARLABEL
-  menuData[44].userdata:=-1
-  menuData[45].type:=NM_SUB
-  menuData[45].label:='Window'
-  menuData[45].userdata:=TYPE_WINDOW
-
-  menuData[46].type:=NM_ITEM
-  menuData[46].label:='Add Image'
-  menuData[46].userdata:=-1
-  menuData[47].type:=NM_SUB
-  menuData[47].label:='Bevel'
-  menuData[47].userdata:=TYPE_BEVEL
-
-  menuData[48].type:=NM_SUB
-  menuData[48].label:='BitMap'
-  menuData[48].userdata:=TYPE_BITMAP
   
-  menuData[49].type:=NM_SUB
-  menuData[49].label:='BoingBall'
-  menuData[49].userdata:=TYPE_BOINGBALL
+  menuSetup:=[
+  NM_TITLE,'Project',0,0,
+  NM_ITEM,'New',0,0,
+  NM_ITEM,'Open',0,0,
+  NM_ITEM,'Save',0,0,
+  NM_ITEM,'Save As',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Generate Code',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Show Libraries',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'About',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Quit',0,0,
+  NM_TITLE,'Edit',0,0,
+  NM_ITEM,'Add Gadget',-1,0,
+  NM_SUB,'Button',TYPE_BUTTON,0,
+  NM_SUB,'CheckBox',TYPE_CHECKBOX,0,
+  NM_SUB,'Chooser',TYPE_CHOOSER,0,
+  NM_SUB,'ClickTab',TYPE_CLICKTAB,0,
+  NM_SUB,'ColorWheel',TYPE_COLORWHEEL,0,
+  NM_SUB,'DateBrowser',TYPE_DATEBROWSER,0,
+  NM_SUB,'FuelGauge',TYPE_FUELGAUGE,0,
+  NM_SUB,'GetColor',TYPE_GETCOLOR,0,
+  NM_SUB,'GetFile',TYPE_GETFILE,0,
+  NM_SUB,'GetFont',TYPE_GETFONT,0,
+  NM_SUB,'GetScreenMode',TYPE_GETSCREENMODE,0,
+  NM_SUB,'GradientSlider',TYPE_GRADSLIDER,0,
+  NM_SUB,'Integer',TYPE_INTEGER,0,
+  NM_SUB,'Layout',TYPE_LAYOUT,0,
+  NM_SUB,'ListBrowser',TYPE_LISTBROWSER,0,
+  NM_SUB,'ListView',TYPE_LISTVIEW,0,
+  NM_SUB,'Palette',TYPE_PALETTE,0,
+  NM_SUB,'RadioButton',TYPE_RADIO,0,
+  NM_SUB,'Scroller',TYPE_SCROLLER,0,
+  NM_SUB,'SketchBoard',TYPE_SKETCH,0,
+  NM_SUB,'Slider',TYPE_SLIDER,0,
+  NM_SUB,'Space',TYPE_SPACE,0,
+  NM_SUB,'SpeedBar',TYPE_SPEEDBAR,0,
+  NM_SUB,'String',TYPE_STRING,0,
+  NM_SUB,'Tabs',TYPE_TABS,0,
+  NM_SUB,'TapeDeck',TYPE_TAPEDECK,0,
+  NM_SUB,'TextEditor',TYPE_TEXTEDITOR,0,
+  NM_SUB,'TextField',TYPE_TEXTFIELD,0,
+  NM_SUB,'Virtual',TYPE_VIRTUAL,0,
+  NM_ITEM,'Add Image',-1,0,
+  NM_SUB,'Bevel',TYPE_BEVEL,0,
+  NM_SUB,'BitMap',TYPE_BITMAP,0,
+  NM_SUB,'BoingBall',TYPE_BOINGBALL,0,
+  NM_SUB,'DrawList',TYPE_DRAWLIST,0,
+  NM_SUB,'Glyph',TYPE_GLYPH,0,
+  NM_SUB,'Label',TYPE_LABEL,0,
+  NM_SUB,'LED',TYPE_LED,0,
+  NM_SUB,'PenMap',TYPE_PENMAP,0,
+  NM_ITEM,'Add Window',-1,0,
+  NM_ITEM,'Add HLayout (quick)',-1,0,
+  NM_ITEM,'Add VLayout (quick)',-1,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Edit',0,0,
+  NM_ITEM,'Delete',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Move',0,0,
+  NM_SUB,'Up',0,0,
+  NM_SUB,'Down',0,0,
+  NM_SUB,'Group Top',0,0,
+  NM_SUB,'Group Bottom',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Edit Lists',0,0,
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Show Buffer',0,(CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,'Warn On Delete',0,(CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,NM_BARLABEL,0,0,
+  NM_ITEM,'Preview Windows',0,0
+  ]
+  count:=count+Shr(ListLen(menuSetup),2)
+  NEW menuData[count]
+  
+  n:=0
+  i:=0
+  WHILE i<ListLen(menuSetup)
+    menuData[n].type:=menuSetup[i++]
+    menuData[n].label:=menuSetup[i++]
+    menuData[n].userdata:=menuSetup[i++]
+    menuData[n++].flags:=menuSetup[i++]
+  ENDWHILE
 
-  menuData[50].type:=NM_SUB
-  menuData[50].label:='DrawList'
-  menuData[50].userdata:=TYPE_DRAWLIST
-
-  menuData[51].type:=NM_SUB
-  menuData[51].label:='Glyph'
-  menuData[51].userdata:=TYPE_GLYPH
-
-  menuData[52].type:=NM_SUB
-  menuData[52].label:='Label'
-  menuData[52].userdata:=TYPE_LABEL
-
-  menuData[53].type:=NM_SUB
-  menuData[53].label:='LED'
-  menuData[53].userdata:=TYPE_LED
-
-  menuData[54].type:=NM_SUB
-  menuData[54].label:='PenMap'
-  menuData[54].userdata:=TYPE_PENMAP
-
-  menuData[55].type:=NM_ITEM
-  menuData[55].label:='Edit'
-  menuData[56].type:=NM_ITEM
-  menuData[56].label:='Delete'
-  menuData[57].type:=NM_ITEM
-  menuData[57].label:=NM_BARLABEL
-  menuData[58].type:=NM_ITEM
-  menuData[58].label:='Move Up'
-  menuData[59].type:=NM_ITEM
-  menuData[59].label:='Move Down'
-  menuData[60].type:=NM_ITEM
-  menuData[60].label:=NM_BARLABEL
-  menuData[61].type:=NM_ITEM
-  menuData[61].label:='Edit Lists'
-  menuData[62].type:=NM_ITEM
-  menuData[62].label:=NM_BARLABEL
-  menuData[63].type:=NM_ITEM
-  menuData[63].label:='Show Buffer'
-  menuData[63].flags:=CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[64].type:=NM_ITEM
-  menuData[64].label:='Show Settings On Add'
-  menuData[64].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[65].type:=NM_ITEM
-  menuData[65].label:='Warn On Delete'
-  menuData[65].flags:=CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE
-  menuData[66].type:=NM_ITEM
-  menuData[66].label:=NM_BARLABEL
-  menuData[67].type:=NM_ITEM
-  menuData[67].label:='Preview Windows'
-  n:=68
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
     winObj:=objectList.item(i)
@@ -2346,28 +2332,36 @@ PROC main() HANDLE
                   ENDSELECT
                 CASE MENU_EDIT
                   SELECT menuitem
-                    CASE MENU_EDIT_ADD  ->Add
-                      item:=ItemAddress(win.menustrip,result)
-                      type:=GTMENUITEM_USERDATA(item)
-                      IF type<>-1
-                        IF type=TYPE_WINDOW
-                          doAddWindow()
-                        ELSE
-                          doAddComp(selectedComp,type)
-                        ENDIF
-                      ENDIF
-                    CASE MENU_EDIT_ADD_MORE  ->Add more
+                    CASE MENU_EDIT_ADD_GADGET  ->Add
                       item:=ItemAddress(win.menustrip,result)
                       type:=GTMENUITEM_USERDATA(item)
                       IF type<>-1 THEN doAddComp(selectedComp,type)
+                    CASE MENU_EDIT_ADD_IMAGE
+                      item:=ItemAddress(win.menustrip,result)
+                      type:=GTMENUITEM_USERDATA(item)
+                      IF type<>-1 THEN doAddComp(selectedComp,type)
+                    CASE MENU_EDIT_ADD_WINDOW
+                      doAddWindow()
+                    CASE MENU_EDIT_ADD_HLAYOUT
+                      doAddLayoutQuick(selectedComp,TRUE)
+                    CASE MENU_EDIT_ADD_VLAYOUT
+                      doAddLayoutQuick(selectedComp,FALSE)
                     CASE MENU_EDIT_EDIT ->Edit
                       doEdit()
                     CASE MENU_EDIT_DELETE  ->Delete
                       doDelete()
-                    CASE MENU_EDIT_MOVEUP  ->MoveUp
-                      moveUp(selectedComp.parent,selectedComp)
+                    CASE MENU_EDIT_MOVE  ->Move
+                      SELECT subitem
+                        CASE MENU_EDIT_MOVEUP
+                          moveUp(selectedComp)
+                        CASE MENU_EDIT_MOVEDOWN
+                          moveDown(selectedComp)
+                        CASE MENU_EDIT_MOVETOP
+                          moveUp(selectedComp,selectedComp.getChildIndex())
+                        CASE MENU_EDIT_MOVEBOTTOM
+                          moveDown(selectedComp,selectedComp.parent.children.count()-selectedComp.getChildIndex()-1)
+                      ENDSELECT
                     CASE MENU_EDIT_MOVEDOWN  ->MoveDown
-                      moveDown(selectedComp.parent,selectedComp)
                     CASE MENU_EDIT_LISTS
                       editLists()
                     CASE MENU_EDIT_BUFFER
@@ -2397,9 +2391,9 @@ PROC main() HANDLE
                 CASE GAD_DELETE  ->Delete
                   doDelete()
                 CASE GAD_MOVEUP  ->Move Up
-                  moveUp(selectedComp.parent,selectedComp)
+                  moveUp(selectedComp)
                 CASE GAD_MOVEDOWN  ->Move Down
-                  moveDown(selectedComp.parent,selectedComp)
+                  moveDown(selectedComp)
                 CASE GAD_LISTS  ->Lists
                   editLists()
                 CASE GAD_CODE  ->Code
@@ -2411,9 +2405,9 @@ PROC main() HANDLE
                 CASE GAD_NEW  ->New
                   doNew()
                 CASE GAD_TEMP_COPYTO
-                  copyToBuffer(selectedComp)
+                  doCopyToBuffer(selectedComp)
                 CASE GAD_TEMP_MOVETO
-                  moveToBuffer(selectedComp)
+                  doMoveToBuffer(selectedComp)
                 CASE GAD_TEMP_COPYFROM
                   copyFromBuffer(selectedBuffComp)
                 CASE GAD_TEMP_MOVEFROM

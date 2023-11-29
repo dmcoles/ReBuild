@@ -485,7 +485,6 @@ EXPORT PROC serialiseData() OF getFileObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFileObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GETFILE_TitleText','Select a file',TRUE)
   IF StrLen(self.fileGadgetName) THEN srcGen.componentProperty('GETFILE_File',self.fileGadgetName,TRUE)

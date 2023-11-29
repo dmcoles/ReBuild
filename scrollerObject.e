@@ -295,7 +295,6 @@ EXPORT PROC serialiseData() OF scrollerObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF scrollerObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   srcGen.componentPropertyInt('SCROLLER_Top',self.top)

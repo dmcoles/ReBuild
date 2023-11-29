@@ -358,8 +358,6 @@ EXPORT PROC serialiseData() OF ledObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF ledObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
-
   IF self.fgPen<>-1 THEN srcGen.componentPropertyInt('IA_FGPen',self.fgPen)
   IF self.bgPen<>-1 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
   srcGen.componentPropertyInt('IA_Width',self.width)

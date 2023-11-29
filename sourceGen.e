@@ -18,9 +18,12 @@ EXPORT OBJECT srcGen
   terminator:CHAR
   assignChars[10]:ARRAY OF CHAR
   indent:INT
+  definitionOnly:CHAR
+  useIds:CHAR
+  currentGadgetVar:INT
 ENDOBJECT
 
-PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR) OF srcGen
+PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR,definitionOnly,useIds) OF srcGen
   self.type:=NONE
   self.fser:=fser
   self.libsused:=libsused
@@ -31,6 +34,9 @@ PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR) OF srcGen
   self.upperCaseProperties:=FALSE
   self.terminator:=";"
   self.indent:=0
+  self.definitionOnly:=definitionOnly
+  self.useIds:=useIds
+  self.currentGadgetVar:=0
 ENDPROC
 
 PROC genIndent() OF srcGen
@@ -202,6 +208,7 @@ PROC assignGadgetVar(index) OF srcGen
   IF self.extraPadding THEN padding:=' ' ELSE padding:=''
   StringF(tempStr,'main_Gadgets[\s\d\s]\s\s\s',padding,index,padding,padding,self.assignChars,padding)
   self.write(tempStr)
+  self.currentGadgetVar:=index
 ENDPROC
 
 PROC addTerminator() OF srcGen

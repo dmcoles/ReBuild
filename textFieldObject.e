@@ -717,7 +717,6 @@ EXPORT PROC serialiseData() OF textFieldObject IS
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textFieldObject
 
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF self.tabCycle THEN srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)

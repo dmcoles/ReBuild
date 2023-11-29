@@ -654,7 +654,6 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getScreenModeObject
       'DIPF_IS_SPRITES_ATT','DIPF_IS_SPRITES_CHNG_RES','DIPF_IS_SPRITES_BORDER','DIPF_IS_SCANDBL','DIPF_IS_SPRITES_CHNG_BASE',
       'DIPF_IS_SPRITES_CHNG_PRI','DIPF_IS_DBUFFER','DIPF_IS_PROGBEAM','DIPF_IS_FOREIGN'] 
 
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF StrLen(self.title) THEN srcGen.componentProperty('GETSCREENMODE_TitleText',self.title,TRUE)
   IF self.leftEdge<>30 THEN srcGen.componentPropertyInt('GETSCREENMODE_LeftEdge',self.leftEdge)

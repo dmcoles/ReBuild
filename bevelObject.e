@@ -107,7 +107,7 @@ PROC create() OF bevelSettingsForm
       StringEnd,
 
       CHILD_LABEL, LabelObject,
-        LABEL_TEXT, '_Button Name',
+        LABEL_TEXT, '_Bevel Name',
       LabelEnd,
 
 

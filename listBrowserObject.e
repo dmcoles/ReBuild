@@ -916,7 +916,6 @@ EXPORT PROC serialiseData() OF listBrowserObject IS
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
   DEF tempStr[200]:STRING
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)

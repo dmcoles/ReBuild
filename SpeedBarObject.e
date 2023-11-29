@@ -549,7 +549,6 @@ EXPORT PROC serialiseData() OF speedBarObject IS
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF speedBarObject
   DEF tempStr[200]:STRING
 
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_Text',self.name,TRUE)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)

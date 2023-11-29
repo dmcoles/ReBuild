@@ -368,7 +368,6 @@ EXPORT PROC serialiseData() OF textEditorObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textEditorObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentPropertyInt('GA_ReadOnly',self.readOnly)
 
   srcGen.componentPropertyInt('GA_TEXTEDITOR_ExportWrap',self.exportWrap)

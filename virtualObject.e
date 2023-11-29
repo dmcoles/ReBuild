@@ -194,7 +194,6 @@ EXPORT PROC removeChildTag() OF virtualObject IS VIRTUALA_CONTENTS
 EXPORT PROC addImageTag() OF virtualObject IS VIRTUALA_CONTENTS
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF virtualObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.scroller=FALSE THEN srcGen.componentProperty('VIRTUALA_Scroller','FALSE',FALSE)

@@ -457,7 +457,6 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
   DEF penlist
 
   penlist:=['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN']
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   
   srcGen.componentPropertyInt('FUELGAUGE_Min',self.min)

@@ -422,7 +422,6 @@ EXPORT PROC serialiseData() OF sliderObject IS
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sliderObject
-  srcGen.componentPropertyInt('GA_ID',self.id)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)  
   IF self.min THEN srcGen.componentPropertyInt('SLIDER_Min',self.min)

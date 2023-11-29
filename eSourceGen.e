@@ -8,8 +8,8 @@ OPT MODULE,LARGE
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
 
-PROC create(fser:PTR TO fileStreamer,libsused) OF eSrcGen
-  SUPER self.create(fser,libsused)
+PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
+  SUPER self.create(fser,libsused,definitionOnly,useIds)
   self.type:=ESOURCE_GEN
   self.stringDelimiter:=39
   self.orOperator:='OR'
@@ -114,6 +114,8 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
+
+  IF self.definitionOnly THEN RETURN
   
   self.writeLine('PROC setup()')
   self.writeLine('  IF (windowbase:=OpenLibrary(\awindow.class\a,0))=NIL THEN Throw(\qLIB\q,\qwin\q)')
@@ -439,7 +441,11 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   LowerStr(tempStr)
   self.write('PROC ')
   self.write(tempStr)
-  self.writeLine('() HANDLE')
+  IF self.definitionOnly
+    self.writeLine('()')
+  ELSE
+    self.writeLine('() HANDLE')
+  ENDIF
   self.writeLine('  DEF windowObject')
   StringF(tempStr,'  DEF mainGadgets[\d]:ARRAY OF LONG',count)
   self.writeLine(tempStr)
@@ -474,14 +480,13 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   FOR i:=0 TO listObjects2.count()-1
     drawlistObject:=listObjects2.item(i)
-    j:=0
-    drawlist:=drawlistObject.drawItems[j]
+    
     count:=0
-    WHILE (drawlist.directive<>DLST_END)
+    FOR j:=0 TO drawlistObject.drawItemsList.count()-1
+      drawlist:=drawlistObject.drawItemsList.item(j)
+      EXIT drawlist.directive=DLST_END
       count++
-      j++
-      drawlist:=drawlistObject.drawItems[j]
-    ENDWHILE
+    ENDFOR
 
     StringF(tempStr,'  DEF dlstDrawList\d[\d]:ARRAY OF drawlist',drawlistObject.id,count+1)
     self.writeLine(tempStr)
@@ -534,9 +539,10 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   FOR i:=0 TO listObjects2.count()-1
     drawlistObject:=listObjects2.item(i)
-    j:=0
-    drawlist:=drawlistObject.drawItems[j]
-    WHILE (drawlist.directive<>DLST_END)
+    FOR j:=0 TO drawlistObject.drawItemsList.count()-1
+      drawlist:=drawlistObject.drawItemsList.item(j)
+      EXIT drawlist.directive=DLST_END
+      
       SELECT drawlist.directive
         CASE DLST_LINE
           StrCopy(directiveStr,'DLST_LINE')
@@ -573,9 +579,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       self.writeLine(tempStr)
       StringF(tempStr,'  dlstDrawList\d[\d].pen:=\d',drawlistObject.id,j,drawlist.pen)
       self.writeLine(tempStr)
-      j++
-      drawlist:=drawlistObject.drawItems[j]
-    ENDWHILE
+    ENDFOR
     StringF(tempStr,'  dlstDrawList\d[\d].directive:=DLST_END',drawlistObject.id,j)
     self.writeLine(tempStr)
     StringF(tempStr,'  dlstDrawList\d[\d].x1:=0',drawlistObject.id,j)
@@ -666,6 +670,12 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF reactionObject:PTR TO reactionObject
   DEF i
 
+  IF self.definitionOnly
+    self.writeLine('ENDPROC')
+    self.writeLine('')
+    RETURN
+  ENDIF
+
   self.writeLine('')
   IF menuObject.menuItems.count()>0
     self.writeLine('  runWindow(windowObject,menuStrip)')
@@ -717,6 +727,8 @@ ENDPROC
 PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF hasarexx,i
+
+  IF self.definitionOnly THEN RETURN
   
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
   
@@ -830,6 +842,8 @@ PROC assignGadgetVar(index) OF eSrcGen
   DEF tempStr[100]:STRING
   StringF(tempStr,'mainGadgets[\d]:=',index)
   self.write(tempStr)
+  self.currentGadgetVar:=index
+ 
 ENDPROC
 
 PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
