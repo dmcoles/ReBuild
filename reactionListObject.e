@@ -47,6 +47,8 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF reactionListObject
     IF fser.readLine(tempStr)
       IF StrCmp('-',tempStr)
         done:=TRUE
+      ELSEIF StrCmp('LISTITEM: ',tempStr,STRLEN)
+        self.items.add(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE
