@@ -115,6 +115,72 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   ENDIF
   self.writeLine('')
 
+  IF hasarexx
+    self.writeLine('PROC setupArexx()')
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StringF(tempStr,'\s',rexxObject.commands.item(i))
+      StringF(tempStr,'  gRxCommands[\d].name:=\a\s\a',i,tempStr)
+      self.writeLine(tempStr)
+      StringF(tempStr,'  gRxCommands[\d].id:=\d',i,i)
+      self.writeLine(tempStr)
+      StringF(tempStr,'rexx_\s',rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'  gRxCommands[\d].func:={\s}',i,tempStr)
+      self.writeLine(tempStr)
+      self.writeLine('')
+    ENDFOR
+    StringF(tempStr,'  gRxCommands[\d].name:=0',i)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  gRxCommands[\d].id:=0',i)
+    self.writeLine(tempStr)
+    StringF(tempStr,'  gRxCommands[\d].func:=0',i)
+    self.writeLine(tempStr)
+    self.writeLine('')
+
+    self.writeLine('  gArexxObject:=ARexxObject,')
+    StrCopy(tempStr,rexxObject.hostName)
+    UpperStr(tempStr)
+    StringF(tempStr,'    AREXX_HOSTNAME, \a\s\a,',tempStr)
+    self.writeLine(tempStr)
+    self.writeLine('    AREXX_COMMANDS, gRxCommands,')
+    IF rexxObject.noSlot
+      self.writeLine('    AREXX_NOSLOT, TRUE,')
+    ENDIF
+    IF rexxObject.replyHook
+      self.writeLine('    AREXX_REPLYHOOK, gArexxReplyHook,')
+    ENDIF
+    
+    IF StrLen(rexxObject.extension)>0
+      StringF(tempStr,'    AREXX_DEFEXTENSION, \a\s\a,',rexxObject.extension)
+      self.writeLine(tempStr)
+    ENDIF
+    self.writeLine('  End')
+    self.writeLine('ENDPROC')
+    self.writeLine('')
+
+    IF rexxObject.replyHook
+      self.writeLine('PROC rexxReply_CallBack()')
+      self.writeLine('  GetA4()')
+      self.writeLine('ENDPROC')
+      self.writeLine('')
+    ENDIF
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'PROC rexx_\s',tempStr)
+      StrAdd(tempStr,'()')
+      self.writeLine(tempStr)
+      self.writeLine('  DEF rxcmd:PTR TO arexxcmd')
+      self.writeLine('  MOVEM.L D0-D7/A0-A6,-(A7)')
+      self.writeLine('  MOVE.L A0,rxcmd')
+      self.writeLine('  GetA4()')
+      self.writeLine('  rxcmd.rc:=0 ->set result code')
+      self.writeLine('  MOVEM.L (A7)+,D0-D7/A0-A6')
+      self.writeLine('ENDPROC')
+      self.writeLine('')
+    ENDFOR
+  ENDIF
+
   IF self.definitionOnly THEN RETURN
   
   self.writeLine('PROC setup()')
@@ -393,29 +459,6 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.writeLine('  RA_CloseWindow(windowObject)')
   self.writeLine('ENDPROC')
   self.writeLine('')
-  IF hasarexx
-    IF rexxObject.replyHook
-      self.writeLine('PROC rexxReply_CallBack()')
-      self.writeLine('  GetA4()')
-      self.writeLine('ENDPROC')
-      self.writeLine('')
-    ENDIF
-    FOR i:=0 TO rexxObject.commands.count()-1
-      StrCopy(tempStr,rexxObject.commands.item(i))
-      LowerStr(tempStr)
-      StringF(tempStr,'PROC rexx_\s',tempStr)
-      StrAdd(tempStr,'()')
-      self.writeLine(tempStr)
-      self.writeLine('  DEF rxcmd:PTR TO arexxcmd')
-      self.writeLine('  MOVEM.L D0-D7/A0-A6,-(A7)')
-      self.writeLine('  MOVE.L A0,rxcmd')
-      self.writeLine('  GetA4()')
-      self.writeLine('  rxcmd.rc:=0 ->set result code')
-      self.writeLine('  MOVEM.L (A7)+,D0-D7/A0-A6')
-      self.writeLine('ENDPROC')
-      self.writeLine('')
-    ENDFOR
-  ENDIF
 ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
@@ -734,50 +777,12 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   
   self.writeLine('PROC main() HANDLE')
   self.writeLine('  setup()')
-  self.writeLine('')
-  
   IF hasarexx
-    FOR i:=0 TO rexxObject.commands.count()-1
-      StringF(tempStr,'\s',rexxObject.commands.item(i))
-      StringF(tempStr,'  gRxCommands[\d].name:=\a\s\a',i,tempStr)
-      self.writeLine(tempStr)
-      StringF(tempStr,'  gRxCommands[\d].id:=\d',i,i)
-      self.writeLine(tempStr)
-      StringF(tempStr,'rexx_\s',rexxObject.commands.item(i))
-      LowerStr(tempStr)
-      StringF(tempStr,'  gRxCommands[\d].func:={\s}',i,tempStr)
-      self.writeLine(tempStr)
-      self.writeLine('')
-    ENDFOR
-    StringF(tempStr,'  gRxCommands[\d].name:=0',i)
-    self.writeLine(tempStr)
-    StringF(tempStr,'  gRxCommands[\d].id:=0',i)
-    self.writeLine(tempStr)
-    StringF(tempStr,'  gRxCommands[\d].func:=0',i)
-    self.writeLine(tempStr)
-    self.writeLine('')
-
-    self.writeLine('  gArexxObject:=ARexxObject,')
-    StrCopy(tempStr,rexxObject.hostName)
-    UpperStr(tempStr)
-    StringF(tempStr,'    AREXX_HOSTNAME, \a\s\a,',tempStr)
-    self.writeLine(tempStr)
-    self.writeLine('    AREXX_COMMANDS, gRxCommands,')
-    IF rexxObject.noSlot
-      self.writeLine('    AREXX_NOSLOT, TRUE,')
-    ENDIF
-    IF rexxObject.replyHook
-      self.writeLine('    AREXX_REPLYHOOK, gArexxReplyHook,')
-    ENDIF
-    
-    IF StrLen(rexxObject.extension)>0
-      StringF(tempStr,'    AREXX_DEFEXTENSION, \a\s\a,',rexxObject.extension)
-      self.writeLine(tempStr)
-    ENDIF
-    self.writeLine('  End')
+    self.writeLine('  setupArexx()')
     self.writeLine('  IF ( gArexxObject=0 ) THEN Raise(\qREXX\q)')
-  
   ENDIF
+  self.writeLine('')
+
   StringF(tempStr,'  \s',windowObject.name)
   LowerStr(tempStr)
   StrAdd(tempStr,'()')

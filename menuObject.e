@@ -280,6 +280,10 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
     self.selectItem(self,0,0,-1)
+
+    ->restore type so we can add again quickly
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, menuItem.type , TAG_END])
+
     IF gadget=self.gadgetList[MENUGAD_ITEM_NAME] THEN ActivateGadget(gadget, win, 0)
   ENDIF
 ENDPROC
@@ -599,7 +603,7 @@ EXPORT PROC createPreviewObject(scr) OF menuObject
     ->first item must be a menu otherwise LayoutMenusA will freeze
     IF (menuItem.type=MENU_TYPE_MENU)
       count++
-      NEW newMenu[count]
+      newMenu:=New(count*SIZEOF newmenu)
       FOR i:=0 TO count-2
         menuItem:=self.menuItems.item(i)
         IF menuItem.type=MENU_TYPE_MENUSUB
@@ -624,7 +628,7 @@ EXPORT PROC createPreviewObject(scr) OF menuObject
       ENDFOR
       newMenu[count-1].type:=NM_END    
       self.previewObject:=CreateMenusA(newMenu,[GTMN_FRONTPEN,1,TAG_END])
-      END newMenu[count]
+      Dispose(newMenu)
     
       IF self.previewObject THEN LayoutMenusA(self.previewObject,self.visInfo,[GTMN_NEWLOOKMENUS,TRUE,TAG_END])
     ENDIF
@@ -646,6 +650,7 @@ ENDPROC
 
 EXPORT PROC end() OF menuObject
   IF self.previewObject THEN FreeMenus(self.previewObject)
+  self.previewObject:=0
   END self.menuItems
   SUPER self.end()
 ENDPROC

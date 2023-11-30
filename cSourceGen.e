@@ -123,6 +123,35 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('struct MsgPort	*gAppPort = NULL;')
   self.writeLine('')
 
+  IF hasarexx
+    IF rexxObject.replyHook
+      self.writeLine('void __SAVE_DS__ rexxReply_CallBack(struct Hook *, Object *, struct RexxMsg * );')
+    ENDIF
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'void __SAVE_DS__ __ASM__ rexx_\s',tempStr)
+      StrAdd(tempStr,'(__REG__(a0,struct ARexxCmd *),__REG__(a1,struct RexxMsg * ));')
+      self.writeLine(tempStr)
+    ENDFOR
+ 
+    self.writeLine('Object	*gArexxObject = NULL;')
+    IF rexxObject.replyHook
+      self.writeLine('struct Hook gArexxReplyHook;')
+    ENDIF
+    self.writeLine('struct ARexxCmd gRxCommands[] =')
+    self.writeLine('{')
+    FOR i:=0 TO rexxObject.commands.count()-1
+      StrCopy(tempStr,rexxObject.commands.item(i))
+      LowerStr(tempStr)
+      StringF(tempStr,'  { \q\s\q, \d, rexx_\s, NULL, NULL },',rexxObject.commands.item(i),i,tempStr)
+      self.writeLine(tempStr)
+    ENDFOR
+    self.writeLine('  { NULL, NULL, NULL, NULL, NULL }')
+    self.writeLine('};')
+    self.writeLine('')
+  ENDIF
+
   IF self.definitionOnly=FALSE
 
     IF self.libsused[TYPE_LISTVIEW]
@@ -377,35 +406,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
       self.writeLine('}')
       self.writeLine('')
     ENDIF
-  ENDIF
-
-  IF hasarexx
-    IF rexxObject.replyHook
-      self.writeLine('void __SAVE_DS__ rexxReply_CallBack(struct Hook *, Object *, struct RexxMsg * );')
-    ENDIF
-    FOR i:=0 TO rexxObject.commands.count()-1
-      StrCopy(tempStr,rexxObject.commands.item(i))
-      LowerStr(tempStr)
-      StringF(tempStr,'void __SAVE_DS__ __ASM__ rexx_\s',tempStr)
-      StrAdd(tempStr,'(__REG__(a0,struct ARexxCmd *),__REG__(a1,struct RexxMsg * ));')
-      self.writeLine(tempStr)
-    ENDFOR
- 
-    self.writeLine('Object	*gArexxObject = NULL;')
-    IF rexxObject.replyHook
-      self.writeLine('struct Hook gArexxReplyHook;')
-    ENDIF
-    self.writeLine('struct ARexxCmd gRxCommands[] =')
-    self.writeLine('{')
-    FOR i:=0 TO rexxObject.commands.count()-1
-      StrCopy(tempStr,rexxObject.commands.item(i))
-      LowerStr(tempStr)
-      StringF(tempStr,'  { \q\s\q, \d, rexx_\s, NULL, NULL },',rexxObject.commands.item(i),i,tempStr)
-      self.writeLine(tempStr)
-    ENDFOR
-    self.writeLine('  { NULL, NULL, NULL, NULL, NULL }')
-    self.writeLine('};')
-    self.writeLine('')
   ENDIF
 
   self.writeLine('struct Library *WindowBase = NULL,')
@@ -1000,8 +1000,6 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   DEF tempStr[200]:STRING
   DEF hasarexx,i
   
-  IF self.definitionOnly THEN RETURN
-
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
   IF hasarexx
     IF rexxObject.replyHook
@@ -1023,6 +1021,8 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
     ENDFOR
   ENDIF
     
+  IF self.definitionOnly THEN RETURN
+
   self.writeLine('int main( int argc, char **argv )')
   self.writeLine('{')
   self.writeLine('  if ( setup() )')
