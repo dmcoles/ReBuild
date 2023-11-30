@@ -103,6 +103,8 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEDOWN=1
   CONST MENU_EDIT_MOVETOP=2
   CONST MENU_EDIT_MOVEBOTTOM=3
+  CONST MENU_EDIT_MOVELPREV=4
+  CONST MENU_EDIT_MOVELNEXT=5
 
   CONST FILE_FORMAT_VER=1
 
@@ -379,6 +381,7 @@ PROC updateSel(node)
   DEF dis,idx
   DEF check,i,j
   DEF dismoveup,dismovedown,disdel
+  DEF disprevgroup,disnextgroup
   DEF menuItem
   DEF type
   DEF allowchildren=FALSE
@@ -415,10 +418,27 @@ PROC updateSel(node)
         dismovedown:=TRUE
         disdel:=TRUE
       ENDIF
+      disprevgroup:=TRUE
+      disnextgroup:=TRUE
     ELSE
       dismoveup:=comp.getChildIndex()=0
       dismovedown:=comp.getChildIndex()=(comp.parent.children.count()-1)
       disdel:=(comp.parent=0)
+      IF comp.parent.parent=0
+        disprevgroup:=TRUE
+        disnextgroup:=TRUE
+      ELSE
+        disprevgroup:=TRUE
+        FOR i:=0 TO comp.parent.getChildIndex()-1
+          child:=comp.parent.parent.children.item(i)
+          IF child.type=TYPE_LAYOUT THEN disprevgroup:=FALSE
+        ENDFOR
+        disnextgroup:=TRUE
+        FOR i:=comp.parent.getChildIndex()+1 TO comp.parent.parent.children.count()-1
+          child:=comp.parent.parent.children.item(i)
+          IF child.type=TYPE_LAYOUT THEN disnextgroup:=FALSE
+        ENDFOR
+      ENDIF
     ENDIF
     
     dis:=allowchildren=FALSE
@@ -430,6 +450,8 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEDOWN,dismovedown)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVETOP,dismoveup)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEBOTTOM,dismovedown)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELPREV,disprevgroup)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELNEXT,disnextgroup)
     
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
@@ -926,6 +948,48 @@ PROC moveDown(child:PTR TO reactionObject,count=1)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
   ENDIF
+ENDPROC
+
+PROC movePrevLayout(comp:PTR TO reactionObject)
+  DEF idx, mainRootLayout, window
+  DEF newLayout:PTR TO reactionObject
+  DEF i
+  
+  i:=comp.parent.getChildIndex()-1
+  WHILE comp.parent.parent.children.item(i)::reactionObject.type<>TYPE_LAYOUT DO i--
+  newLayout:=comp.parent.parent.children.item(i)
+
+  changes:=TRUE
+  idx:=findWindowIndex(comp)
+  mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+  window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+  removeMembers(mainRootLayout,window)
+  comp.parent.removeChild(comp)
+  newLayout.addChild(comp)
+  makeList(comp)
+  addMembers(mainRootLayout,window)
+  rethinkPreviews()
+ENDPROC
+
+PROC moveNextLayout(comp:PTR TO reactionObject)
+  DEF idx, mainRootLayout, window
+  DEF newLayout:PTR TO reactionObject
+  DEF i
+  
+  i:=comp.parent.getChildIndex()+1
+  WHILE comp.parent.parent.children.item(i)::reactionObject.type<>TYPE_LAYOUT DO i++
+  newLayout:=comp.parent.parent.children.item(i)
+
+  changes:=TRUE
+  idx:=findWindowIndex(comp)
+  mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+  window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+  removeMembers(mainRootLayout,window)
+  comp.parent.removeChild(comp)
+  newLayout.addChild(comp)
+  makeList(comp)
+  addMembers(mainRootLayout,window)
+  rethinkPreviews()
 ENDPROC
 
 PROC findWindowIndex(comp:PTR TO reactionObject)
@@ -2030,8 +2094,10 @@ PROC remakePreviewMenus()
   NM_ITEM,'Move',0,0,
   NM_SUB,'Up',0,0,
   NM_SUB,'Down',0,0,
-  NM_SUB,'Group Top',0,0,
-  NM_SUB,'Group Bottom',0,0,
+  NM_SUB,'Layout Top',0,0,
+  NM_SUB,'Layout Bottom',0,0,
+  NM_SUB,'Prev Layout',0,0,
+  NM_SUB,'Next Layout',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
   NM_ITEM,'Edit Lists',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
@@ -2360,8 +2426,11 @@ PROC main() HANDLE
                           moveUp(selectedComp,selectedComp.getChildIndex())
                         CASE MENU_EDIT_MOVEBOTTOM
                           moveDown(selectedComp,selectedComp.parent.children.count()-selectedComp.getChildIndex()-1)
+                        CASE MENU_EDIT_MOVELPREV
+                          movePrevLayout(selectedComp)
+                        CASE MENU_EDIT_MOVELNEXT
+                          moveNextLayout(selectedComp)
                       ENDSELECT
-                    CASE MENU_EDIT_MOVEDOWN  ->MoveDown
                     CASE MENU_EDIT_LISTS
                       editLists()
                     CASE MENU_EDIT_BUFFER

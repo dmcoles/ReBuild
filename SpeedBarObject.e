@@ -105,6 +105,8 @@ PROC addItem(nself,gadget,id,code) OF speedBarSettingsForm
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
     self.selectItem(self,0,0,-1)
+    IF gadget=self.gadgetList[SBARGAD_BUTTON_TEXT] THEN ActivateGadget(gadget, win, 0)
+
   ENDIF
 ENDPROC
 

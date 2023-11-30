@@ -325,6 +325,7 @@ PROC addCommand(nself,gadget,id,code) OF rexxCommandSettingsForm
   SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_COMMAND],win,0,[STRINGA_TEXTVAL, '', TAG_END])
 
   SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_CMDLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
+  ActivateGadget(gadget, win, 0)
 ENDPROC
 
 PROC delCommand(nself,gadget,id,code) OF rexxCommandSettingsForm

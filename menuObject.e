@@ -246,6 +246,7 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
   IF StrLen(strval)
 
     win:=Gets(self.windowObj,WINDOW_WINDOW)
+
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
     NEW menuItem
     AstrCopy(menuItem.itemName,strval,80)
@@ -279,6 +280,7 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEMLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
     self.selectItem(self,0,0,-1)
+    IF gadget=self.gadgetList[MENUGAD_ITEM_NAME] THEN ActivateGadget(gadget, win, 0)
   ENDIF
 ENDPROC
 
@@ -361,6 +363,7 @@ PROC create() OF menuSettingsForm
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_FIXEDHORIZ, FALSE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_NAME ]:=StringObject,
             GA_ID, MENUGAD_ITEM_NAME,
@@ -368,6 +371,7 @@ PROC create() OF menuSettingsForm
             GA_TABCYCLE, TRUE,
             STRINGA_MAXCHARS, 80,
           StringEnd,
+          CHILD_MINWIDTH,100,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, '_Name',
           LabelEnd,
@@ -378,6 +382,7 @@ PROC create() OF menuSettingsForm
             GA_TABCYCLE, TRUE,
             STRINGA_MAXCHARS, 2,
           StringEnd,
+          CHILD_WEIGHTEDWIDTH,0,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Comm_Key',
           LabelEnd,

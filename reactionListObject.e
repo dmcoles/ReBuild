@@ -4,10 +4,6 @@
 
 EXPORT OBJECT reactionListObject OF reactionObject
   listnode:LONG
-  chooser:CHAR
-  clicktab:CHAR
-  listbrowser:CHAR
-  radiobutton:CHAR
   items:PTR TO stringlist
 ENDOBJECT
 
@@ -31,14 +27,6 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionListObject
 
   SUPER self.serialise(fser)
 
-  StringF(tempStr,'CHOOSER: \d',self.chooser)
-  fser.writeLine(tempStr)
-  StringF(tempStr,'CLICKTAB: \d',self.clicktab)
-  fser.writeLine(tempStr)
-  StringF(tempStr,'LISTBROWSER: \d',self.listbrowser)
-  fser.writeLine(tempStr)
-  StringF(tempStr,'RADIOBUTTON: \d',self.radiobutton)
-  fser.writeLine(tempStr)
   FOR i:=0 TO self.items.count()-1
     StringF(tempStr,'LISTITEM: \s',self.items.item(i))
     fser.writeLine(tempStr)
@@ -59,16 +47,6 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF reactionListObject
     IF fser.readLine(tempStr)
       IF StrCmp('-',tempStr)
         done:=TRUE
-      ELSEIF StrCmp('CHOOSER: ',tempStr,STRLEN)
-        self.chooser:=Val(tempStr+STRLEN)
-      ELSEIF StrCmp('CLICKTAB: ',tempStr,STRLEN)
-        self.clicktab:=Val(tempStr+STRLEN)
-      ELSEIF StrCmp('LISTBROWSER: ',tempStr,STRLEN)
-        self.listbrowser:=Val(tempStr+STRLEN)
-      ELSEIF StrCmp('RADIOBUTTON: ',tempStr,STRLEN)
-        self.radiobutton:=Val(tempStr+STRLEN)
-      ELSEIF StrCmp('LISTITEM: ',tempStr,STRLEN)
-        self.items.add(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE

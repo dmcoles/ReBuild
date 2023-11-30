@@ -56,7 +56,7 @@ EXPORT PROC showModal() OF reactionForm HANDLE
               self.gadgetPress(result AND $FFFF,Shr(code,16))
             CASE WMHI_CLOSEWINDOW
               IF self.canClose() THEN running:=FALSE
-            CASE WMHI_CLOSEWINDOW
+            CASE WMHI_INTUITICK
               self.ticker()
             CASE WMHI_MENUPICK
               menu:=MENUNUM(result)

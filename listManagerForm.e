@@ -20,7 +20,6 @@ OPT MODULE, OSVERSION=37
   MODULE '*reactionForm','*stringlist','*reactionListObject','*reactionLists'
 
 EXPORT ENUM LISTMANAGER_LISTLIST, LISTMANAGER_LISTNAME, LISTMANAGER_ITEMLIST, LISTMANAGER_ITEMNAME, 
-    LISTMANAGER_CHOOSER, LISTMANAGER_CLICKTAB, LISTMANAGER_LISTBROWSER, LISTMANAGER_RADIOBTN,
     LISTMANAGER_OK, LISTMANAGER_ADD, LISTMANAGER_MODIFYNAME, LISTMANAGER_DELNAME, LISTMANAGER_DELITEM,
     LISTMANAGER_SORTITEM
 
@@ -58,11 +57,6 @@ PROC makeItemsList(list:PTR TO reactionListObject) OF listManagerForm
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL, list.name, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', GA_DISABLED, FALSE, TAG_END])
 
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_CHOOSER],win,0,[CHECKBOX_CHECKED, list.chooser, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_CLICKTAB],win,0,[CHECKBOX_CHECKED, list.clicktab, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTBROWSER],win,0,[CHECKBOX_CHECKED,list.listbrowser, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_RADIOBTN],win,0,[CHECKBOX_CHECKED,list.radiobutton, TAG_END])
-
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYNAME],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELNAME],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_SORTITEM],win,0,[GA_DISABLED, FALSE, TAG_END])
@@ -70,11 +64,6 @@ PROC makeItemsList(list:PTR TO reactionListObject) OF listManagerForm
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', GA_DISABLED, TRUE, TAG_END])
-
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_CHOOSER],win,0,[CHECKBOX_CHECKED, 0, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_CLICKTAB],win,0,[CHECKBOX_CHECKED, 0, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTBROWSER],win,0,[CHECKBOX_CHECKED,0, TAG_END])
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_RADIOBTN],win,0,[CHECKBOX_CHECKED,0, TAG_END])
 
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYNAME],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELNAME],win,0,[GA_DISABLED, TRUE, TAG_END])
@@ -111,10 +100,6 @@ PROC addList(nself,gadget,id,code) OF listManagerForm
 
     AstrCopy(reactionList.name,listName)
     
-    reactionList.chooser:=Gets(self.gadgetList[LISTMANAGER_CHOOSER],CHECKBOX_CHECKED)
-    reactionList.clicktab:=Gets(self.gadgetList[LISTMANAGER_CLICKTAB],CHECKBOX_CHECKED)
-    reactionList.listbrowser:=Gets(self.gadgetList[LISTMANAGER_LISTBROWSER],CHECKBOX_CHECKED)
-    reactionList.radiobutton:=Gets(self.gadgetList[LISTMANAGER_RADIOBTN],CHECKBOX_CHECKED)
     self.lists.add(reactionList)
     
     self.selectedList:=self.lists.count()-1
@@ -128,6 +113,8 @@ PROC addList(nself,gadget,id,code) OF listManagerForm
     ENDIF
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTLIST],win,0,[LISTBROWSER_LABELS, self.browserlist1, LISTBROWSER_SELECTED, self.selectedList, TAG_END])
     self.selectList(self,self.gadgetList[LISTMANAGER_LISTLIST],LISTMANAGER_LISTLIST,self.selectedList)
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL,'',TAG_END])
+    IF gadget=self.gadgetList[LISTMANAGER_LISTNAME] THEN ActivateGadget(gadget, win, 0)
   ENDIF
 ENDPROC
 
@@ -167,21 +154,6 @@ PROC delName(nself,gadget,id,code) OF listManagerForm
   ENDIF
 ENDPROC
 
-PROC updateFlags(nself,gadget,id,code) OF listManagerForm
-  DEF reactionList:PTR TO reactionListObject
-  self:=nself
-
-  IF self.selectedList>=0
-    reactionList:=self.lists.item(self.selectedList)
-    
-    reactionList.chooser:=Gets(self.gadgetList[LISTMANAGER_CHOOSER],CHECKBOX_CHECKED)
-    reactionList.clicktab:=Gets(self.gadgetList[LISTMANAGER_CLICKTAB],CHECKBOX_CHECKED)
-    reactionList.listbrowser:=Gets(self.gadgetList[LISTMANAGER_LISTBROWSER],CHECKBOX_CHECKED)
-    reactionList.radiobutton:=Gets(self.gadgetList[LISTMANAGER_RADIOBTN],CHECKBOX_CHECKED)
-   
-  ENDIF
-ENDPROC
-
 PROC newItem(nself,gadget,id,code) OF listManagerForm
   DEF win,itemName,n
   DEF reactionList:PTR TO reactionListObject
@@ -202,7 +174,7 @@ PROC newItem(nself,gadget,id,code) OF listManagerForm
       Raise("MEM")    
     ENDIF
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, TAG_END])
-
+    IF gadget=self.gadgetList[LISTMANAGER_ITEMNAME] THEN ActivateGadget(gadget, win, 0)
   ENDIF
 ENDPROC
 
@@ -368,43 +340,6 @@ EXPORT PROC create() OF listManagerForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_CHOOSER ] := CheckBoxObject,
-          GA_ID, LISTMANAGER_CHOOSER,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'Chooser',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_CLICKTAB ] := CheckBoxObject,
-          GA_ID, LISTMANAGER_CLICKTAB,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'ClickTab',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_LISTBROWSER ] := CheckBoxObject,
-          GA_ID, LISTMANAGER_LISTBROWSER,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'ListBrowser',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ LISTMANAGER_RADIOBTN ] := CheckBoxObject,
-          GA_ID, LISTMANAGER_RADIOBTN,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'RadioButton',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-      LayoutEnd,
-      CHILD_WEIGHTEDHEIGHT, 0,
-      
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-
         LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_OK ] := ButtonObject,
           GA_ID, LISTMANAGER_OK,
           GA_TEXT, '_Ok',
@@ -460,10 +395,6 @@ EXPORT PROC create() OF listManagerForm
   self.gadgetActions[LISTMANAGER_ITEMLIST]:={selItem}
   self.gadgetActions[LISTMANAGER_SORTITEM]:={sortItems}
   self.gadgetActions[LISTMANAGER_DELITEM]:={delItem}
-  self.gadgetActions[LISTMANAGER_CHOOSER]:={updateFlags}
-  self.gadgetActions[LISTMANAGER_CLICKTAB]:={updateFlags}
-  self.gadgetActions[LISTMANAGER_LISTBROWSER]:={updateFlags}
-  self.gadgetActions[LISTMANAGER_RADIOBTN]:={updateFlags}
   self.gadgetActions[LISTMANAGER_OK]:=MR_OK
 ENDPROC
 

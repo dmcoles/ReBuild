@@ -32,6 +32,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
 
   self.writeLine('#include <clib/macros.h>')
   self.writeLine('#include <clib/alib_protos.h>')
+  self.writeLine('#include <clib/compiler-specific.h>')
   self.writeLine('')
   self.writeLine('#include <proto/exec.h>')
   self.writeLine('#include <proto/dos.h>')
@@ -380,13 +381,13 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
 
   IF hasarexx
     IF rexxObject.replyHook
-      self.writeLine('void __saveds rexxReply_CallBack(struct Hook *, Object *, struct RexxMsg * );')
+      self.writeLine('void __SAVE_DS__ rexxReply_CallBack(struct Hook *, Object *, struct RexxMsg * );')
     ENDIF
     FOR i:=0 TO rexxObject.commands.count()-1
       StrCopy(tempStr,rexxObject.commands.item(i))
       LowerStr(tempStr)
-      StringF(tempStr,'void __saveds __asm rexx_\s',tempStr)
-      StrAdd(tempStr,'(register __a0 struct ARexxCmd *, register __a1 struct RexxMsg * );')
+      StringF(tempStr,'void __SAVE_DS__ __ASM__ rexx_\s',tempStr)
+      StrAdd(tempStr,'(__REG__(a0,struct ARexxCmd *),__REG__(a1,struct RexxMsg * ));')
       self.writeLine(tempStr)
     ENDFOR
  
@@ -1004,7 +1005,7 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
   IF hasarexx
     IF rexxObject.replyHook
-      self.writeLine('void __saveds rexxReply_CallBack(struct Hook *hook, Object *object, struct RexxMsg *rxm)')
+      self.writeLine('void __SAVE_DS__ rexxReply_CallBack(struct Hook *hook, Object *object, struct RexxMsg *rxm)')
       self.writeLine('{')
       self.writeLine('}')
       self.writeLine('')
@@ -1012,8 +1013,9 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
     FOR i:=0 TO rexxObject.commands.count()-1
       StrCopy(tempStr,rexxObject.commands.item(i))
       LowerStr(tempStr)
-      StringF(tempStr,'void __saveds __asm rexx_\s',tempStr)    
-      StrAdd(tempStr,'(register __a0 struct ARexxCmd *ac, register __a1 struct RexxMsg *rxm)')
+      StringF(tempStr,'void __SAVE_DS__ __ASM__ rexx_\s',tempStr)
+
+      StrAdd(tempStr,'(__REG__(a0,struct ARexxCmd *ac), __REG__(a1,struct RexxMsg *rxm))')
       self.writeLine(tempStr)
       self.writeLine('{')
       self.writeLine('}')
