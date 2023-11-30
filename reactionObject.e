@@ -381,7 +381,6 @@ EXPORT PROC end() OF reactionObject
   ENDFOR
   END self.children
   IF self.previewObject THEN DisposeObject(self.previewObject)
-  IF self.previewChildAttrs THEN DisposeObject(self.previewChildAttrs)
   IF self.drawInfo
     scr:=LockPubScreen(NIL)
     FreeScreenDrawInfo(scr,self.drawInfo)
