@@ -201,7 +201,6 @@ PROC closeClasses()
   IF scrollerbase THEN CloseLibrary(scrollerbase)
   IF checkboxbase THEN CloseLibrary(checkboxbase)
   IF fuelgaugebase THEN CloseLibrary(fuelgaugebase)
-  IF textfieldbase THEN CloseLibrary(textfieldbase)
   IF getfilebase THEN CloseLibrary(getfilebase)
   IF getfontbase THEN CloseLibrary(getfontbase)
   IF getscreenmodebase THEN CloseLibrary(getscreenmodebase)
@@ -2296,7 +2295,7 @@ PROC createObjectByType(objType,comp)
     CASE TYPE_BITMAP
       newObj:=createBitmapObject(comp)
     CASE TYPE_SLIDER
-      newObj:=createPenMapObject(comp)
+      newObj:=createSliderObject(comp)
     CASE TYPE_SPEEDBAR
       newObj:=createSpeedBarObject(comp)
     CASE TYPE_COLORWHEEL
