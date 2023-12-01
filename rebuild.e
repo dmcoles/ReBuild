@@ -50,8 +50,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.3.0-alpha'
-#date verstring '$VER:Rebuild 0.3.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.4.0-beta'
+#date verstring '$VER:Rebuild 0.4.0-%Y%m%d%h%n%s-alpha'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -1028,10 +1028,16 @@ ENDPROC -1
 
 PROC findLibsUsed(from:PTR TO reactionObject,libsused:PTR TO CHAR)
   DEF i
-  FOR i:=0 TO ListLen(from.libsused)-1 DO libsused[ListItem(from.libsused,i)]:=TRUE
+  DEF n
+  IF from.libsused
+    FOR i:=0 TO ListLen(from.libsused)-1 
+      n:=ListItem(from.libsused,i)
+      libsused[n]:=TRUE
+    ENDFOR
+  ENDIF
 
-  FOR i:=0 TO from.children.count()-1 DO libsused:=findLibsUsed(from.children.item(i),libsused)
-ENDPROC libsused
+  FOR i:=0 TO from.children.count()-1 DO findLibsUsed(from.children.item(i),libsused)
+ENDPROC
 
 PROC countGads(from=0:PTR TO reactionObject,n=0)
   DEF i
@@ -2363,8 +2369,8 @@ PROC main() HANDLE
     updateBufferSel(win,0)
 
     GetAttr( WINDOW_SIGMASK, mainWindow, {wsig} )
-    wsig:=getAllWindowSigs()
     WHILE running
+      wsig:=getAllWindowSigs()
       sig:=Wait(wsig)
       handlePreviewInputs()
       IF (sig AND (wsig))
