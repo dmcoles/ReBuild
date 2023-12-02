@@ -657,10 +657,10 @@ EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF reactionObject
   IF self.weightedHeight<>100 THEN srcGen.componentPropertyInt('CHILD_WeightedHeight',self.weightedHeight)
   IF self.scaleWidth<>0 THEN srcGen.componentPropertyInt('CHILD_ScaledWidth',self.scaleWidth)
   IF self.scaleHeight<>0 THEN srcGen.componentPropertyInt('CHILD_ScaledHeight',self.scaleHeight)
-  IF self.nominalSize THEN srcGen.componentProperty('CHILD_NominalSize',TRUE,FALSE)
-  IF self.weightMinimum THEN srcGen.componentProperty('CHILD_WeightMinimum',TRUE,FALSE)
-  IF self.cacheDomain=0 THEN srcGen.componentProperty('CHILD_CacheDomain',FALSE,FALSE)
-  IF self.noDispose THEN srcGen.componentProperty('CHILD_NoDispose',TRUE,FALSE)
+  IF self.nominalSize THEN srcGen.componentProperty('CHILD_NominalSize','TRUE',FALSE)
+  IF self.weightMinimum THEN srcGen.componentProperty('CHILD_WeightMinimum','TRUE',FALSE)
+  IF self.cacheDomain=0 THEN srcGen.componentProperty('CHILD_CacheDomain','FALSE',FALSE)
+  IF self.noDispose THEN srcGen.componentProperty('CHILD_NoDispose','TRUE',FALSE)
 ENDPROC
 
 EXPORT PROC isImage() OF reactionObject IS self.errObj

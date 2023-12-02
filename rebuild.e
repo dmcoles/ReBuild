@@ -1046,7 +1046,7 @@ PROC countGads(from=0:PTR TO reactionObject,n=0)
   FOR i:=0 TO from.children.count()-1 DO n:=countGads(from.children.item(i),n)
 ENDPROC n+1
 
-PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
+PROC genComponentCode(comp:PTR TO reactionObject, nptr:PTR TO LONG, srcGen:PTR TO srcGen)
   DEF i
   DEF tempStr[200]:STRING
   DEF libname,libtype,addTag
@@ -1058,7 +1058,7 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
     srcGen.componentAddChild(addTag)
   ENDIF
 
-  srcGen.assignGadgetVar(n)
+  srcGen.assignGadgetVar(nptr[])
   IF (libtype:=comp.libTypeCreate())
     srcGen.componentLibtypeCreate(libtype)
   ELSEIF (libname:=comp.libNameCreate())
@@ -1079,8 +1079,8 @@ PROC genComponentCode(comp:PTR TO reactionObject, n, srcGen:PTR TO srcGen)
   IF comp.children.count()>0
     comp.genChildObjectsHeader(srcGen)
     FOR i:=0 TO comp.children.count()-1
-      n++
-      genComponentCode(comp.children.item(i),n,srcGen)
+      nptr[]:=nptr[]+1
+      genComponentCode(comp.children.item(i),nptr,srcGen)
     ENDFOR
     comp.genChildObjectsFooter(srcGen)
   ENDIF
@@ -1120,6 +1120,7 @@ PROC genCode()
   DEF screenComp:PTR TO screenObject
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
+  DEF n
   
   setBusy()
   NEW codeGenForm.create()
@@ -1200,7 +1201,8 @@ PROC genCode()
     srcGen.componentProperty('LAYOUT_SpaceOuter','TRUE',FALSE)
     srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
     srcGen.increaseIndent()
-    genComponentCode(layoutComp,0,srcGen)
+    n:=0
+    genComponentCode(layoutComp,{n},srcGen)
     srcGen.componentEnd('LayoutEnd,') 
     srcGen.finalComponentEnd(objectEnd) 
     srcGen.decreaseIndent()
