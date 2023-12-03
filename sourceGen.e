@@ -41,6 +41,7 @@ ENDPROC
 
 PROC genIndent() OF srcGen
   DEF str,i
+  IF self.indent=0 THEN RETURN
   str:=String(self.indent)
   FOR i:=0 TO self.indent-1 DO str[i]:=32
   SetStr(str,self.indent)

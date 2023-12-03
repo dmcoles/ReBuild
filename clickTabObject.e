@@ -352,6 +352,7 @@ ENDPROC
 
 EXPORT PROC genChildObjectsHeader(srcGen:PTR TO srcGen) OF clickTabObject
   srcGen.componentProperty('CLICKTAB_PageGroup','PageObject',FALSE)
+  srcGen.increaseIndent()
   srcGen.componentProperty('LAYOUT_DEFERLAYOUT','TRUE',FALSE)
 ENDPROC
 
