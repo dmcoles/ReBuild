@@ -764,7 +764,7 @@ PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
   DEF window
   
   IF parent.allowChildren()
-    idx:=findWindowIndex(selectedComp)
+    idx:=findWindowIndex(parent)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
@@ -783,7 +783,7 @@ PROC removeObject(child:PTR TO reactionObject)
   parent:=child.parent
   
   IF parent.allowChildren()
-    idx:=findWindowIndex(selectedComp)
+    idx:=findWindowIndex(child)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)

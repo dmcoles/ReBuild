@@ -187,6 +187,8 @@ PROC componentAddImage(addImageTag) OF srcGen
     StrCopy(tempStr,'LAYOUT_AddImage, ')
   ELSEIF addImageTag=PAGE_ADD
     StrCopy(tempStr,'PAGE_Add, ')
+  ELSEIF addImageTag=VIRTUALA_CONTENTS
+    StrCopy(tempStr,'VIRTUALA_Contents, ')
   ELSE
     StrCopy(tempStr,'LAYOUT_AddImage, ')
   ENDIF
