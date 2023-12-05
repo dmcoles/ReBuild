@@ -244,7 +244,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF dateBrowserObject
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
   IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)
-  IF self.multiSelect THEN srcGen.componentProperty('DATEBROWSR_MultiSelect','TRUE',FALSE)
+  IF self.multiSelect THEN srcGen.componentProperty('DATEBROWSER_MultiSelect','TRUE',FALSE)
   IF self.showTitle THEN srcGen.componentProperty('DATEBROWSER_ShowTitle','TRUE',FALSE)
 ENDPROC
 

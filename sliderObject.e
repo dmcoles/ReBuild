@@ -447,7 +447,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sliderObject
   IF self.tickSize<>5 THEN srcGen.componentPropertyInt('SLIDER_TickSize',self.tickSize)
   IF self.maxLen<>3 THEN srcGen.componentPropertyInt('SLIDER_LevelMaxLen',self.maxLen)
 
-  IF self.shortTicks THEN srcGen.componentProperty('SLIDER_ShortTick','TRUE',FALSE)
+  IF self.shortTicks THEN srcGen.componentProperty('SLIDER_ShortTicks','TRUE',FALSE)
   IF self.invert THEN srcGen.componentProperty('SLIDER_Invert','TRUE',FALSE)
   IF self.orientation<>1 THEN srcGen.componentProperty('SLIDER_Orientation',ListItem(['SORIENT_HORIZ','SORIENT_VERT'],self.orientation),FALSE)
 

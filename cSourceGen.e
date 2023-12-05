@@ -40,6 +40,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('#include <proto/graphics.h>')
   self.writeLine('#include <proto/intuition.h>')
   self.writeLine('#include <proto/gadtools.h>')
+  self.writeLine('#include <proto/icon.h>')
   self.writeLine('')
   self.writeLine('#include <stdio.h>')
   self.writeLine('#include <stdlib.h>')
@@ -60,10 +61,14 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('#include <proto/listbrowser.h>')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('#include <proto/radiobutton.h>')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('#include <proto/scroller.h>')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('#include <proto/slider.h>')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('#include <proto/speedbar.h>')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('#include <proto/string.h>')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('#include <proto/space.h>')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('#include <proto/textfield.h>')
+  IF self.libsused[TYPE_TEXTFIELD]
+    self.writeLine('#include <proto/textfield.h>')
+    self.writeLine('#include <gadgets/textfield.h>')
+  ENDIF
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('#include <proto/bevel.h>')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('#include <proto/drawlist.h>')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('#include <proto/glyph.h>')
@@ -91,7 +96,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
 
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('#include <proto/virtual.h>')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('#include <proto/sketchboard.h>')
-  self.writeLine('#include <proto/gadtools.h>')
   
   self.writeLine('')
   self.writeLine('#include <libraries/gadtools.h>')
@@ -107,8 +111,23 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('')
   ENDIF
 
+  IF self.libsused[TYPE_TEXTEDITOR]
+    self.writeLine('#define TextEditor_GetClass() TEXTEDITOR_GetClass()')
+    self.writeLine('')
+  ENDIF
+
+  IF self.libsused[TYPE_GETCOLOR]
+    self.writeLine('#define GetColor_GetClass() GETCOLOR_GetClass()')
+    self.writeLine('')
+  ENDIF
+
   IF self.libsused[TYPE_SKETCH]
     self.writeLine('#define SketchBoard_GetClass() SKETCHBOARD_GetClass()')
+    self.writeLine('')
+  ENDIF
+
+  IF self.libsused[TYPE_DATEBROWSER]
+    self.writeLine('#define DateBrowser_GetClass() DATEBROWSER_GetClass()')
     self.writeLine('')
   ENDIF
 
@@ -378,7 +397,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     ENDIF
 
     IF self.libsused[TYPE_LISTBROWSER]
-      self.writeLine('struct List *BrowserNodesA(STRPTR *nameList)')
+      self.writeLine('struct List *BrowserNodesA(STRPTR *nameList, int colCount)')
       self.writeLine('{')
       self.writeLine('  struct List *newList;')
       self.writeLine('  newList = (struct List *)AllocMem(sizeof(struct List), MEMF_PUBLIC );')
@@ -388,7 +407,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
       self.writeLine('    NewList( newList );')
       self.writeLine('    while(*nameList)')
       self.writeLine('    {')
-      self.writeLine('      AddTail(newList, AllocListBrowserNode(1, LBNCA_Text, *nameList, TAG_END));')
+      self.writeLine('      AddTail(newList, AllocListBrowserNode(colCount, LBNCA_Text, *nameList, TAG_END));')
       self.writeLine('      nameList++;')
       self.writeLine('    }')
       self.writeLine('  }')
@@ -423,6 +442,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('               *ListBrowserBase = NULL,')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('               *RadioButtonBase = NULL,')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('               *ScrollerBase = NULL,')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('               *SliderBase = NULL,')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('               *SpeedBarBase = NULL,')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('               *StringBase = NULL,')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('               *SpaceBase = NULL,')
@@ -432,7 +452,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('               *GlyphBase = NULL,')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('               *LabelBase = NULL,')
   IF self.libsused[TYPE_BITMAP] THEN self.writeLine('               *BitMapBase = NULL,')
-  IF self.libsused[TYPE_BOINGBALL] THEN self.writeLine('               *LabelBase = NULL,')
   IF self.libsused[TYPE_PENMAP] THEN self.writeLine('               *PenMapBase = NULL,')
   IF self.libsused[TYPE_COLORWHEEL] THEN self.writeLine('               *ColorWheelBase = NULL,')
   IF self.libsused[TYPE_DATEBROWSER] THEN self.writeLine('               *DateBrowserBase = NULL,')
@@ -446,7 +465,8 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('               *SketchBoardBase = NULL,')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('               *TabsBase = NULL,')
   self.writeLine('               *GadToolsBase = NULL,')
-  self.writeLine('               *LayoutBase = NULL;')
+  self.writeLine('               *LayoutBase = NULL,')
+  self.writeLine('               *IconBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
   
   IF self.definitionOnly THEN RETURN
@@ -457,6 +477,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('  if( !(IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L)) ) return 0;')
   self.writeLine('  if( !(GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) ) ) return 0;')
   self.writeLine('  if( !(WindowBase = (struct Library*) OpenLibrary("window.class",0L) ) ) return 0;')
+  self.writeLine('  if( !(IconBase = (struct Library*) OpenLibrary("icon.library",0L) ) ) return 0;')
   IF hasarexx
     self.writeLine('  if( !(ARexxBase = (struct Library*) OpenLibrary("arexx.class",0L) ) ) return 0;')
   ENDIF
@@ -512,6 +533,10 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
 
   IF self.libsused[TYPE_SCROLLER]
     self.writeLine('  if( !(ScrollerBase = (struct Library*) OpenLibrary("gadgets/scroller.gadget",0L) ) ) return 0;')
+  ENDIF
+
+  IF self.libsused[TYPE_SLIDER]
+    self.writeLine('  if( !(SliderBase = (struct Library*) OpenLibrary("gadgets/slider.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused[TYPE_SPEEDBAR]
@@ -615,6 +640,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.genScreenFree(screenObject)
   self.writeLine('')
   self.writeLine('  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );')
+  self.writeLine('  if (IconBase) CloseLibrary( (struct Library *)IconBase );')
   self.writeLine('  if (IntuitionBase) CloseLibrary( (struct Library *)IntuitionBase );')
   IF self.libsused[TYPE_BUTTON] THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );')
   IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('  if (CheckBoxBase) CloseLibrary( (struct Library *)CheckBoxBase );')
@@ -629,6 +655,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  if (ListBrowserBase) CloseLibrary( (struct Library *)ListBrowserBase );')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('  if (RadioButtonBase) CloseLibrary( (struct Library *)RadioButtonBase );')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  if (ScrollerBase) CloseLibrary( (struct Library *)ScrollerBase );')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('  if (SliderBase) CloseLibrary( (struct Library *)SliderBase );')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  if (SpeedBarBase) CloseLibrary( (struct Library *)SpeedBarBase );')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
@@ -709,7 +736,12 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('                done = TRUE;')
   self.writeLine('                break;')
   self.writeLine('')
+  self.writeLine('              case WMHI_MENUPICK:')
+  self.writeLine('                puts(\qmenu pick\q);')
+  self.writeLine('                break;')
+  self.writeLine('')
   self.writeLine('              case WMHI_GADGETUP:')
+  self.writeLine('                puts(\qgadget press\q);')
   self.writeLine('                break;')
   self.writeLine('')
   self.writeLine('              case WMHI_ICONIFY:')
@@ -719,6 +751,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('')
   self.writeLine('              case WMHI_UNICONIFY:')
   self.writeLine('                main_window = RA_OpenWindow( window_object );')
+  self.writeLine('                if ( menu_strip)  SetMenuStrip( main_window, menu_strip );')
   self.writeLine('              break;')
   self.writeLine('')
   self.writeLine('            }')
@@ -923,7 +956,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       CASE TYPE_CLICKTAB
         StringF(tempStr,'  labels\d = ClickTabsA( labels\d_str );',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTBROWSER
-        StringF(tempStr,'  labels\d = BrowserNodesA( labels\d_str );',reactionObject.id,reactionObject.id)
+        StringF(tempStr,'  labels\d = BrowserNodesA( labels\d_str, \d );',reactionObject.id,reactionObject.id, reactionObject::listBrowserObject.numColumns)
       CASE TYPE_SPEEDBAR
         StringF(tempStr,'  buttons\d = SpeedBarNodesA( buttons\d_str );',reactionObject.id,reactionObject.id)
       CASE TYPE_LISTVIEW

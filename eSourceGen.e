@@ -33,6 +33,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.writeLine('      \awindow\a,\aclasses/window\a,')
   self.writeLine('      \agadgets/layout\a,\alayout\a,')
   self.writeLine('      \alibraries/gadtools\a,\agadtools\a,')
+  self.writeLine('      \aicon\a,')
   IF self.libsused[TYPE_BUTTON] THEN self.writeLine('      \abutton\a,\agadgets/button\a,')
   IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('      \acheckbox\a,\agadgets/checkbox\a,')
   IF self.libsused[TYPE_CHOOSER] THEN self.writeLine('      \achooser\a,\agadgets/chooser\a,')
@@ -46,6 +47,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('      \alistbrowser\a,\agadgets/listbrowser\a,')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('      \aradiobutton\a,\agadgets/radiobutton\a,')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('      \ascroller\a,\agadgets/scroller\a,')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('      \aslider\a,\agadgets/slider\a,')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('      \astring\a,\agadgets/string\a,')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('      \aspace\a,')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('      \aspeedbar\a,\agadgets/speedbar\a,')
@@ -55,7 +57,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('      \aglyph\a,\aimages/glyph\a,')
   IF self.libsused[TYPE_LABEL] THEN self.writeLine('      \alabel\a,\aimages/label\a,')
   IF self.libsused[TYPE_BITMAP] THEN self.writeLine('      \abitmap\a,\aimages/bitmap\a,')
-  IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('      \aimages/penmap\a,')
+  IF (self.libsused[TYPE_BOINGBALL] OR self.libsused[TYPE_PENMAP]) THEN self.writeLine('      \apenmap\a,\aimages/penmap\a,')
   IF self.libsused[TYPE_COLORWHEEL]  THEN self.writeLine('      \acolorwheel\a,\agadgets/colorwheel\a,')
   IF self.libsused[TYPE_DATEBROWSER]  THEN self.writeLine('      \adatebrowser\a,\agadgets/datebrowser\a,')
   IF self.libsused[TYPE_GETCOLOR]  THEN self.writeLine('      \agetcolor\a,\agadgets/getcolor\a,')
@@ -70,7 +72,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.writeLine('      \aimages/bevel\a,')
   self.writeLine('      \aamigalib/boopsi\a,')
   self.writeLine('      \aexec\a,')
-  IF self.libsused[TYPE_SPEEDBAR] OR  self.libsused[TYPE_LISTVIEW]
+  IF self.libsused[TYPE_SPEEDBAR] OR self.libsused[TYPE_LISTVIEW] OR self.libsused[TYPE_LISTBROWSER]
     self.writeLine('      \aexec/lists\a,\aexec/nodes\a,')
     self.writeLine('      \aexec/memory\a,')
     self.writeLine('      \aamigalib/lists\a,')
@@ -78,7 +80,10 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.writeLine('      \aintuition/intuition\a,')
   self.writeLine('      \aintuition/imageclass\a,')
   self.writeLine('      \aintuition/screens\a,')
-  IF (screenObject.custom)
+  IF self.libsused[TYPE_GETSCREENMODE]
+    self.writeLine('      \agraphics/displayinfo\a,')
+  ENDIF
+  IF (screenObject.custom) OR self.libsused[TYPE_GETSCREENMODE]
     self.writeLine('      \agraphics/modeid\a,')
   ENDIF
   IF hasarexx
@@ -190,6 +195,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   ENDIF
   self.writeLine('  IF (layoutbase:=OpenLibrary(\agadgets/layout.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlayo\q)')
   self.writeLine('  IF (gadtoolsbase:=OpenLibrary(\agadtools.library\a,0))=NIL THEN Throw(\qLIB\q,\qgadt\q)')
+  self.writeLine('  IF (iconbase:=OpenLibrary(\aicon.library\a,0))=NIL THEN Throw(\qLIB\q,\qicon\q)')
 
   IF self.libsused[TYPE_BUTTON] THEN self.writeLine('  IF (buttonbase:=OpenLibrary(\agadgets/button.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qbtn\q)')
   IF self.libsused[TYPE_CHECKBOX] THEN self.writeLine('  IF (checkboxbase:=OpenLibrary(\agadgets/checkbox.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qchkb\q)')
@@ -204,6 +210,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  IF (listbrowserbase:=OpenLibrary(\agadgets/listbrowser.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlist\q)')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('  IF (radiobuttonbase:=OpenLibrary(\agadgets/radiobutton.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qrbtn\q)')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  IF (scrollerbase:=OpenLibrary(\agadgets/scroller.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qscrl\q)')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('  IF (sliderbase:=OpenLibrary(\agadgets/slider.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qsldr\q)')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF (speedbarbase:=OpenLibrary(\agadgets/speedbar.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspdb\q)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF (stringbase:=OpenLibrary(\agadgets/string.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qstrn\q)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF (spacebase:=OpenLibrary(\agadgets/space.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspce\q)')
@@ -239,6 +246,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.genScreenFree(screenObject)
   self.writeLine('')
   self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')
+  self.writeLine('  IF iconbase THEN CloseLibrary(iconbase)')
   self.writeLine('  IF windowbase THEN CloseLibrary(windowbase)')
   self.writeLine('  IF layoutbase THEN CloseLibrary(layoutbase)')
   IF hasarexx
@@ -257,6 +265,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   IF self.libsused[TYPE_LISTBROWSER] THEN self.writeLine('  IF listbrowserbase THEN CloseLibrary(listbrowserbase)')
   IF self.libsused[TYPE_RADIO] THEN self.writeLine('  IF radiobuttonbase THEN CloseLibrary(radiobuttonbase)')
   IF self.libsused[TYPE_SCROLLER] THEN self.writeLine('  IF scrollerbase THEN CloseLibrary(scrollerbase)')
+  IF self.libsused[TYPE_SLIDER] THEN self.writeLine('  IF sliderbase THEN CloseLibrary(sliderbase)')
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF speedbarbase THEN CloseLibrary(speedbarbase)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF stringbase THEN CloseLibrary(stringbase)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF spacebase THEN CloseLibrary(spacebase)')
@@ -281,6 +290,28 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF tabsbase THEN CloseLibrary(tabsbase)')
   self.writeLine('ENDPROC')
   self.writeLine('')
+
+  IF self.libsused[TYPE_LISTBROWSER]
+    self.writeLine('PROC browserNodesA_(text:PTR TO LONG, numCols)')
+    self.writeLine('  DEF list:PTR TO lh')
+    self.writeLine('  DEF node:PTR TO ln')
+    self.writeLine('')
+    self.writeLine('  IF (list:=AllocMem(SIZEOF lh,MEMF_PUBLIC))')
+    self.writeLine('    newList(list)')
+    self.writeLine('')
+    self.writeLine('    WHILE( text[] )')
+    self.writeLine('      node:=AllocListBrowserNodeA( numCols,[LBNCA_TEXT,text[]++,0])')
+    self.writeLine('      IF(node=FALSE)')
+    self.writeLine('        freeBrowserNodes( list )')
+    self.writeLine('        RETURN NIL')
+    self.writeLine('      ENDIF')
+    self.writeLine('')
+    self.writeLine('      AddTail( list, node )')
+    self.writeLine('    ENDWHILE')
+    self.writeLine('  ENDIF')
+    self.writeLine('ENDPROC list')
+    self.writeLine('')
+  ENDIF
 
   IF self.libsused[TYPE_LISTVIEW]
     self.writeLine('PROC listViewLabelsA(text:PTR TO LONG)')
@@ -440,16 +471,17 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF
   self.writeLine('        WHILE ((result:=RA_HandleInput(windowObject,{code})) <> WMHI_LASTMSG)')
   self.writeLine('          msg:=(result AND WMHI_CLASSMASK)')
   self.writeLine('          SELECT msg')
-  self.writeLine('            CASE WMHI_GADGETUP')
-  self.writeLine('              ->handle gadget press')
   self.writeLine('            CASE WMHI_CLOSEWINDOW')
   self.writeLine('              running:=FALSE')
+  self.writeLine('            CASE WMHI_GADGETUP')
+  self.writeLine('              WriteF(\agadget press\a)')
   self.writeLine('            CASE WMHI_MENUPICK')
-  self.writeLine('              ->handle menu item')
+  self.writeLine('              WriteF(\amenu pick\a)')
   self.writeLine('            CASE WMHI_ICONIFY')
   self.writeLine('              RA_Iconify(windowObject)')
   self.writeLine('            CASE WMHI_UNICONIFY')
   self.writeLine('              win:=RA_OpenWindow(windowObject)')
+  self.writeLine('              IF menuStrip THEN SetMenuStrip( win, menuStrip )')
   self.writeLine('          ENDSELECT')
   self.writeLine('        ENDWHILE')
   self.writeLine('      ENDIF')
@@ -463,6 +495,7 @@ ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
   DEF tempStr[200]:STRING
+  DEF endStr[20]:STRING
   DEF i,j
   DEF menuItem:PTR TO menuItem
   DEF itemType
@@ -557,8 +590,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         StringF(tempStr,'  labels\d:=clickTabsA(',reactionObject.id)
         listStr:=self.makeList(tempStr,reactionLists,reactionObject::clickTabObject.listObjectId)
       CASE TYPE_LISTBROWSER
-        StringF(tempStr,'  labels\d:=browserNodesA(',reactionObject.id)
-        listStr:=self.makeList(tempStr,reactionLists,reactionObject::listBrowserObject.listObjectId)
+        StringF(tempStr,'  labels\d:=browserNodesA_(',reactionObject.id)
+        StringF(endStr,',\d',reactionObject::listBrowserObject.numColumns)
+        listStr:=self.makeList(tempStr,reactionLists,reactionObject::listBrowserObject.listObjectId,endStr)
       CASE TYPE_SPEEDBAR
         StringF(tempStr,'  buttons\d:=speedBarNodesA(',reactionObject.id)
         listStr:=self.makeList2(tempStr,reactionObject::speedBarObject.buttonList)
@@ -851,7 +885,7 @@ PROC assignGadgetVar(index) OF eSrcGen
  
 ENDPROC
 
-PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
+PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid, end=0:PTR TO CHAR) OF eSrcGen
   DEF res=0
   DEF totsize=0,linelen=0
   DEF i,listitem=0:PTR TO reactionListObject
@@ -873,6 +907,7 @@ PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
       ENDIF
       totsize:=totsize+EstrLen(listitem.items.item(i))+3
     ENDFOR
+    IF end THEN totsize:=totsize+StrLen(end)
     res:=String(totsize+4)
     StrCopy(res,start)
     StrAdd(res,'[')
@@ -887,7 +922,9 @@ PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF eSrcGen
         StrAdd(res,'\n    ')
       ENDIF
     ENDFOR
-    StrAdd(res,'0])')
+    StrAdd(res,'0]')
+    IF end THEN StrAdd(res,end)
+    StrAdd(res,')')
   ENDIF
   
 ENDPROC res

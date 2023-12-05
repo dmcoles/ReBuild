@@ -341,6 +341,10 @@ EXPORT PROC getTypeName() OF penMapObject
   RETURN 'PenMap'
 ENDPROC
 
+EXPORT PROC getTypeEndName() OF penMapObject
+  RETURN 'End'
+ENDPROC
+
 EXPORT PROC isImage() OF penMapObject IS TRUE
 
 EXPORT PROC createPenMapObject(parent)

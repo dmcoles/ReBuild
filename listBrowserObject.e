@@ -11,7 +11,9 @@ OPT MODULE, OSVERSION=37
         'gadgets/integer','integer',
         'gadgets/checkbox','checkbox',
         'images/label','label',
-        'amigalib/boopsi',
+        'amigalib/boopsi','amigalib/lists',
+        'exec/lists','exec/nodes',
+        'exec/memory',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
@@ -724,6 +726,26 @@ PROC editColumns(titles:PTR TO stringlist, widths:PTR TO stdlist) OF editColumns
   END nodes
 ENDPROC res=MR_OK
 
+PROC browserNodesA(text:PTR TO LONG, colCount) OF listBrowserObject
+  DEF list:PTR TO lh
+  DEF node:PTR TO ln
+ 
+  IF (list:=AllocMem(SIZEOF lh,MEMF_PUBLIC))
+		newList(list)
+
+		WHILE( text[] )
+      node:=AllocListBrowserNodeA( colCount,[LBNCA_TEXT,text[]++,0])
+			IF(node=FALSE)
+				freeBrowserNodes( list )
+				RETURN NIL
+			ENDIF
+
+			AddTail( list, node )
+		ENDWHILE
+	ENDIF
+
+ENDPROC list
+
 PROC makeBrowserList(id) OF listBrowserObject
   DEF i,res
   DEF reactionList=0:PTR TO reactionListObject
@@ -748,7 +770,7 @@ PROC makeBrowserList(id) OF listBrowserObject
     newlist:=List(1)
   ENDIF
   ListAddItem(newlist,0)
-  res:=browserNodesA(newlist)
+  res:=self.browserNodesA(newlist,self.numColumns)
   DisposeLink(newlist)
 ENDPROC res
 

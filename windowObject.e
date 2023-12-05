@@ -1234,6 +1234,19 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   IF self.flags AND WFLG_MENUHELP THEN srcGen.componentProperty('WA_MenuHelp','TRUE',FALSE)
   IF self.flags AND WFLG_HELPGROUP THEN srcGen.componentProperty('WA_HelpGroup','TRUE',FALSE)
 
+  IF self.windowPos THEN srcGen.componentProperty('WINDOW_Position',ListItem(['NONE','WPOS_CENTERSCREEN','WPOS_CENTERMOUSE','WPOS_TOPLEFT','WPOS_CENTERWINDOW','WPOS_FULLSCREEN',0],self.windowPos),FALSE)
+  IF StrLen(self.iconTitle)>0 THEN srcGen.componentProperty('WINDOW_IconTitle',self.iconTitle,TRUE)
+
+  IF StrLen(self.iconFile)>0
+    IF srcGen.type=CSOURCE_GEN
+      StringF(tempStr,' GetDiskObject(\q\s\q)',self.iconFile)
+    ELSE
+      StringF(tempStr,' GetDiskObject(\a\s\a)',self.iconFile)
+    ENDIF
+    srcGen.componentProperty('WINDOW_Icon',tempStr,FALSE)
+  ENDIF
+
+
   SELECT self.refreshType
     CASE 0
       srcGen.componentProperty('WA_NoCareRefresh','TRUE',FALSE)

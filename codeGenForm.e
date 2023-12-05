@@ -21,6 +21,13 @@ EXPORT ENUM CODEGEN_LABEL, CODEGEN_LANGSELECTOR,CODEGEN_USEIDS, CODEGEN_FULLCODE
 
 CONST NUMGADS=CODEGEN_CANCEL+1
 
+EXPORT OBJECT codeOptions
+  langid:CHAR
+  useids:CHAR
+  fullcode:CHAR
+  savePath[256]:ARRAY OF CHAR
+ENDOBJECT
+
 EXPORT OBJECT codeGenForm OF reactionForm
 PRIVATE
   rbuttons:PTR TO LONG
@@ -166,16 +173,17 @@ PROC end() OF codeGenForm
   END self.gadgetActions[NUMGADS]
 ENDPROC
 
-EXPORT PROC selectLang() OF codeGenForm
-  DEF res1,res2,res3
-  SetGadgetAttrsA(self.gadgetList[ CODEGEN_LANGSELECTOR ],0,0,[RADIOBUTTON_SELECTED,0,TAG_END])
+EXPORT PROC selectLang(codeOptions:PTR TO codeOptions) OF codeGenForm
+  SetGadgetAttrsA(self.gadgetList[ CODEGEN_LANGSELECTOR ],0,0,[RADIOBUTTON_SELECTED,codeOptions.langid,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ CODEGEN_USEIDS ],0,0,[RADIOBUTTON_SELECTED,IF codeOptions.useids THEN 0 ELSE 1,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ CODEGEN_FULLCODE ],0,0,[RADIOBUTTON_SELECTED,IF codeOptions.fullcode THEN 0 ELSE 1,TAG_END])
 
   IF self.showModal()=MR_OK
-    res1:=Gets(self.gadgetList[ CODEGEN_LANGSELECTOR ],RADIOBUTTON_SELECTED)
-    res2:=IF Gets(self.gadgetList[ CODEGEN_USEIDS ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
-    res3:=IF Gets(self.gadgetList[ CODEGEN_FULLCODE ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
-    RETURN res1,res2,res3
+    codeOptions.langid:=Gets(self.gadgetList[ CODEGEN_LANGSELECTOR ],RADIOBUTTON_SELECTED)
+    codeOptions.useids:=IF Gets(self.gadgetList[ CODEGEN_USEIDS ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
+    codeOptions.fullcode:=IF Gets(self.gadgetList[ CODEGEN_FULLCODE ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
+    RETURN TRUE
   ENDIF
-ENDPROC -1,0,0
+ENDPROC FALSE
 
 

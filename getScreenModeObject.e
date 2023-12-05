@@ -701,7 +701,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getScreenModeObject
       'VGAEXTRALORESHAM_KEY','VGAPRODUCTHAMLACE_KEY',0],self.displayId),FALSE)
 
   IF self.propertyFlags<>9 THEN srcGen.componentProperty('GETSCREENMODE_PropertyFlags',ListItem(propflags,self.propertyFlags),FALSE)
-  IF self.propertyMask<>9 THEN srcGen.componentProperty('GETSCREENMODE_GETSCREENMODE_PropertyMask',ListItem(propflags,self.propertyMask),FALSE)
+  IF self.propertyMask<>9 THEN srcGen.componentProperty('GETSCREENMODE_PropertyMask',ListItem(propflags,self.propertyMask),FALSE)
  
   IF self.autoScroll=FALSE THEN srcGen.componentProperty('GETSCREENMODE_AutoScroll','FALSE',FALSE)
   IF self.infoOpened THEN srcGen.componentProperty('GETSCREENMODE_InfoOpened','TRUE',FALSE)

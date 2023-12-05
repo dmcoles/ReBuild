@@ -125,6 +125,7 @@ OPT OSVERSION=37,LARGE
   DEF menus=0
   DEF filename[255]:STRING
   DEF windowTitle[200]:STRING
+  DEF savePath[256]:STRING
   
   DEF tabsbase=0
   DEF gradientsliderbase=0
@@ -136,6 +137,7 @@ OPT OSVERSION=37,LARGE
   DEF smartbitmapbase=0
   DEF titlebarbase=0
   DEF errorState=0
+  DEF codeOptions: codeOptions
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
@@ -646,6 +648,7 @@ PROC createForm()
     WA_ACTIVATE, TRUE,
     WINDOW_POSITION, WPOS_CENTERSCREEN,
     ->WA_CustomScreen, gScreen,
+    WINDOW_ICONTITLE, 'Rebuild',
     WINDOW_APPPORT, appPort,
     WINDOW_APPWINDOW, TRUE,
     WINDOW_ICONIFYGADGET, TRUE, 
@@ -1113,7 +1116,7 @@ PROC genCode()
   DEF objectCreate[50]:STRING
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
-  DEF langid,i,useids,fullcode
+  DEF i,res
   DEF menuComp:PTR TO reactionObject
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
@@ -1124,15 +1127,16 @@ PROC genCode()
   
   setBusy()
   NEW codeGenForm.create()
-  langid,useids,fullcode:=codeGenForm.selectLang()
+  res:=codeGenForm.selectLang(codeOptions)
   END codeGenForm
   clearBusy()
-  IF langid=-1 THEN RETURN
-  
+  IF res=FALSE THEN RETURN
+
   aslbase:=OpenLibrary('asl.library',37)
   IF aslbase=NIL THEN Throw("LIB","ASL")
   tags:=NEW [ASL_HAIL,'Select a file to save',
      ASL_WINDOW, win,
+     ASLFR_INITIALDRAWER, codeOptions.savePath,
      TAG_DONE]
   fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
   setBusy()
@@ -1145,8 +1149,10 @@ PROC genCode()
   clearBusy()
 
   StrCopy(fname,fr.drawer)
+  AstrCopy(codeOptions.savePath,fr.drawer,256)
   AddPart(fname,fr.file,100)
   SetStr(fname)
+
   IF fr THEN FreeAslRequest(fr)
   IF tags THEN FastDisposeList(tags)
   IF aslbase THEN CloseLibrary(aslbase)
@@ -1166,12 +1172,12 @@ PROC genCode()
   setBusy()
   NEW fs.create(fname,MODE_NEWFILE)
 
-  SELECT langid
+ SELECT codeOptions.langid
     CASE LANG_E
-      NEW eSrcGen.create(fs,libsused,fullcode=FALSE,useids)
+      NEW eSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids)
       srcGen:=eSrcGen
     CASE LANG_C
-      NEW cSrcGen.create(fs,libsused,fullcode=FALSE,useids)
+      NEW cSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids)
       srcGen:=cSrcGen
   ENDSELECT
 
@@ -1234,7 +1240,7 @@ PROC loadFile() HANDLE
   DEF fs=0:PTR TO fileStreamer
   DEF newObj:PTR TO reactionObject
   DEF tmpObj:PTR TO reactionObject
-  DEF tempStr[255]:STRING
+  DEF tempStr[300]:STRING
   DEF loadObjectList=0:PTR TO stdlist
   DEF reactionLists:PTR TO stdlist
   DEF type,i
@@ -1251,6 +1257,7 @@ PROC loadFile() HANDLE
   IF aslbase=NIL THEN Throw("LIB","ASL")
   tags:=NEW [ASL_HAIL,'Select a file to load',
      ASL_WINDOW, win,
+     ASLFR_INITIALDRAWER, savePath,
      TAG_DONE]
   fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
   IF(AslRequest(fr,0))=FALSE
@@ -1260,6 +1267,7 @@ PROC loadFile() HANDLE
   ENDIF
 
   StrCopy(fname,fr.drawer)
+  StrCopy(savePath,fr.drawer)
   AddPart(fname,fr.file,100)
   SetStr(fname)
   StrCopy(filename,fname)
@@ -1314,8 +1322,19 @@ PROC loadFile() HANDLE
           ENDIF
         ENDIF
       ENDIF
+    ELSEIF StrCmp(tempStr,'LANGID=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      codeOptions.langid:=v
+    ELSEIF StrCmp(tempStr,'USEIDS=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      codeOptions.useids:=IF v THEN TRUE ELSE FALSE
+    ELSEIF StrCmp(tempStr,'FULLCODE=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      codeOptions.fullcode:=IF v THEN TRUE ELSE FALSE
+    ELSEIF StrCmp(tempStr,'CODEFOLDER=',STRLEN)
+      AstrCopy(codeOptions.savePath,tempStr+STRLEN,256)
     ENDIF
-    
+
     IF fs.readLine(tempStr)=FALSE
       errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
       END fs
@@ -1399,7 +1418,7 @@ PROC saveFile() HANDLE
   DEF fs=0:PTR TO fileStreamer
   DEF i,j,a=0:PTR TO menuitem
   DEF comp:PTR TO reactionObject
-  DEF tempStr[10]:STRING
+  DEF tempStr[300]:STRING
   DEF reactionLists:PTR TO stdlist
 
   IF EstrLen(filename)=0 
@@ -1423,7 +1442,14 @@ PROC saveFile() HANDLE
       fs.writeLine(tempStr)
     ENDIF
   ENDIF
-
+  StringF(tempStr,'LANGID=\d',codeOptions.langid)
+  fs.writeLine(tempStr)
+  StringF(tempStr,'USEIDS=\d',IF codeOptions.useids THEN TRUE ELSE FALSE)
+  fs.writeLine(tempStr)
+  StringF(tempStr,'FULLCODE=\d',IF codeOptions.fullcode THEN TRUE ELSE FALSE)
+  fs.writeLine(tempStr)
+  StringF(tempStr,'CODEFOLDER=\s',codeOptions.savePath)
+  fs.writeLine(tempStr)
   fs.writeLine('#')
 
   reactionLists:=getReactionLists()
@@ -1454,6 +1480,7 @@ PROC saveFileAs()
   IF aslbase=NIL THEN Throw("LIB","ASL")
   tags:=NEW [ASL_HAIL,'Enter a file to save as',
      ASL_WINDOW, win,
+     ASLFR_INITIALDRAWER, savePath,
      TAG_DONE]
 
   setBusy()
@@ -1467,9 +1494,12 @@ PROC saveFileAs()
   clearBusy()
 
   StrCopy(fname,fr.drawer)
+  StrCopy(savePath,fr.drawer)
   AddPart(fname,fr.file,100)
   SetStr(fname)
   StrCopy(filename,fname)
+  UpperStr(fname)
+  IF EndsWith(fname,'.REB')=FALSE THEN StrAdd(filename,'.reb')
   IF fr THEN FreeAslRequest(fr)
   IF tags THEN FastDisposeList(tags)
   IF aslbase THEN CloseLibrary(aslbase)
@@ -2361,6 +2391,12 @@ PROC main() HANDLE
   NEW objectList.stdlist(20)
   NEW bufferList.stdlist(20)
   initReactionLists()
+  
+  codeOptions.langid:=0
+  codeOptions.useids:=TRUE
+  codeOptions.fullcode:=TRUE
+  AstrCopy(codeOptions.savePath,'')
+  StrCopy(savePath,'')
   
   createForm()
   
