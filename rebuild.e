@@ -1401,6 +1401,10 @@ PROC loadFile() HANDLE
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
+    tmpObj:=objectList.item(i)
+    tmpObj.createPreviewObject(win.wscreen)
+    tmpObj:=objectList.item(i+ROOT_MENU_ITEM-ROOT_WINDOW_ITEM)
+    tmpObj.createPreviewObject(win.wscreen)
     addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
@@ -1994,6 +1998,7 @@ ENDPROC
 PROC togglePreview(subitem)
   DEF idx,pwin
   DEF previewWin
+  DEF menu
   DEF winObj:PTR TO windowObject
   idx:=(subitem*3)+ROOT_WINDOW_ITEM
   winObj:=objectList.item(idx)
@@ -2008,7 +2013,9 @@ PROC togglePreview(subitem)
     winObj.previewOpen:=TRUE
     Sets(previewWin,WA_LEFT,winObj.previewLeft)
     Sets(previewWin,WA_TOP,winObj.previewTop)
-    RA_OpenWindow(previewWin)
+    menu:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
+    pwin:=RA_OpenWindow(previewWin)
+    IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
   ENDIF
 ENDPROC
 
@@ -2219,11 +2226,14 @@ ENDPROC
 
 PROC openPreviews()
   DEF previewWin,i
+  DEF pwin,menu
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
     previewWin:=objectList.item(i)::windowObject.previewObject
-    RA_OpenWindow(previewWin)
+    menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
+    pwin:=RA_OpenWindow(previewWin)
+    IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
     i+=3
   ENDWHILE
   remakePreviewMenus()
@@ -2232,6 +2242,7 @@ ENDPROC
 PROC restorePreviews()
   DEF previewWin,i
   DEF winObj:PTR TO windowObject
+  DEF pwin,menu
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
@@ -2240,7 +2251,9 @@ PROC restorePreviews()
     IF winObj.previewOpen
       Sets(previewWin,WA_LEFT,winObj.previewLeft)
       Sets(previewWin,WA_TOP,winObj.previewTop)
-      RA_OpenWindow(previewWin)
+      menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
+      pwin:=RA_OpenWindow(previewWin)
+      IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
     ENDIF
     i+=3
   ENDWHILE
