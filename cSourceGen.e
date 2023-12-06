@@ -659,7 +659,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  if (SpeedBarBase) CloseLibrary( (struct Library *)SpeedBarBase );')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  if (ButtonBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('  if (BevelBase) CloseLibrary( (struct Library *)BevelBase );')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')

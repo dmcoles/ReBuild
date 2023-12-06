@@ -245,7 +245,7 @@ EXPORT PROC create(parent) OF gradSliderObject
 
   self.maxVal:=65535
   self.currVal:=0
-  self.skipVal:=$1111
+  self.skipVal:=1000
   self.knobPixels:=5
   self.orientation:=0
   self.libsused:=[TYPE_GRADSLIDER]

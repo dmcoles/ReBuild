@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37,LARGE
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist'
 
-EXPORT ENUM WINGAD_TITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
+EXPORT ENUM WINGAD_NAME, WINGAD_TITLE, WINGAD_SCREENTITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
       WINGAD_LEFTEDGE, WINGAD_TOPEDGE, WINGAD_WIDTH, WINGAD_HEIGHT,
       WINGAD_MINWIDTH, WINGAD_MINHEIGHT, WINGAD_MAXWIDTH, WINGAD_MAXHEIGHT,
       WINGAD_WINDOWPOS, WINGAD_LOCKWIDTH, WINGAD_LOCKHEIGHT,
@@ -56,6 +56,7 @@ CONST NUM_WIN_IDCMP_GADS=WINGAD_IDCMP_CANCEL+1
 
 EXPORT OBJECT windowObject OF reactionObject
   title[80]:ARRAY OF CHAR
+  screentitle[80]:ARRAY OF CHAR
   iconTitle[80]:ARRAY OF CHAR
   iconFile[80]:ARRAY OF CHAR
   leftEdge:INT
@@ -735,6 +736,16 @@ PROC create() OF windowSettingsForm
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
+          LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_NAME ]:=StringObject,
+            GA_ID, WINGAD_NAME,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Window Name',
+          LabelEnd,
+
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_TITLE ]:=StringObject,
             GA_ID, WINGAD_TITLE,
             GA_RELVERIFY, TRUE,
@@ -744,6 +755,20 @@ PROC create() OF windowSettingsForm
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, '_Window Title',
           LabelEnd,
+        LayoutEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_SCREENTITLE ]:=StringObject,
+          GA_ID, WINGAD_SCREENTITLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Screen Title',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_ICONTITLE ]:=StringObject,
             GA_ID, WINGAD_ICONTITLE,
@@ -755,17 +780,16 @@ PROC create() OF windowSettingsForm
             LABEL_TEXT, 'Ico_n Title',
           LabelEnd,
 
+          LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_ICONFILE ]:=StringObject,
+            GA_ID,  WINGAD_ICONFILE,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Icon File',
+          LabelEnd,
         LayoutEnd,
-        LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_ICONFILE ]:=StringObject,
-          GA_ID,  WINGAD_ICONFILE,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          STRINGA_MAXCHARS, 80,
-        StringEnd,
-
-        CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Icon File',
-        LabelEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -1023,7 +1047,9 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
   self.tmpFlags:=comp.flags
   self.tmpIDCMP:=comp.idcmp
 
+  SetGadgetAttrsA(self.gadgetList[ WINGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_TITLE ],0,0,[STRINGA_TEXTVAL,comp.title,0])
+  SetGadgetAttrsA(self.gadgetList[ WINGAD_SCREENTITLE ],0,0,[STRINGA_TEXTVAL,comp.screentitle,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_ICONTITLE ],0,0,[STRINGA_TEXTVAL,comp.iconTitle,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_ICONFILE ],0,0,[STRINGA_TEXTVAL,comp.iconFile,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
@@ -1044,7 +1070,9 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
   res:=self.showModal()
   IF res=MR_OK
 
+    AstrCopy(comp.name,Gets(self.gadgetList[ WINGAD_NAME ],STRINGA_TEXTVAL))
     AstrCopy(comp.title,Gets(self.gadgetList[ WINGAD_TITLE ],STRINGA_TEXTVAL))
+    AstrCopy(comp.screentitle,Gets(self.gadgetList[ WINGAD_SCREENTITLE ],STRINGA_TEXTVAL))
     AstrCopy(comp.iconTitle,Gets(self.gadgetList[ WINGAD_ICONTITLE ],STRINGA_TEXTVAL))
     AstrCopy(comp.iconFile,Gets(self.gadgetList[ WINGAD_ICONFILE ],STRINGA_TEXTVAL))
     comp.leftEdge:=Gets(self.gadgetList[ WINGAD_LEFTEDGE ],INTEGER_NUMBER)
@@ -1081,8 +1109,11 @@ EXPORT PROC createPreviewObject(scr) OF windowObject
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW*/
   IF self.previewObject THEN DisposeObject(self.previewObject)
   
+
+  
   self.previewObject:=WindowObject,
     WA_TITLE, self.title,
+    IF StrLen(self.screentitle) THEN WA_SCREENTITLE ELSE TAG_IGNORE, self.screentitle,
     WA_LEFT, self.leftEdge,
     WA_TOP, self.topEdge,
     WA_HEIGHT,self.height,
@@ -1094,15 +1125,21 @@ EXPORT PROC createPreviewObject(scr) OF windowObject
     WA_PUBSCREEN, 0,
     WA_ACTIVATE, FALSE,
     WA_NEWLOOKMENUS, TRUE,
-    ->WA_CustomScreen, gScreen,
     WINDOW_APPPORT, self.appPort,
     WINDOW_ICONIFYGADGET, IF self.iconifyGadget THEN TRUE ELSE FALSE,
-    WA_CLOSEGADGET, TRUE,
-    WA_DEPTHGADGET, TRUE,
-    WA_SIZEGADGET, TRUE,
-    WA_DRAGBAR, TRUE,
-    ->WA_NOCAREREFRESH, TRUE,
-      WA_IDCMP,IDCMP_CHANGEWINDOW OR IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW,
+    IF self.windowPos THEN WINDOW_POSITION ELSE TAG_IGNORE, ListItem([WPOS_TOPLEFT,WPOS_CENTERSCREEN,WPOS_CENTERMOUSE,WPOS_TOPLEFT,WPOS_CENTERWINDOW,WPOS_FULLSCREEN,0],self.windowPos),
+    WA_CLOSEGADGET,IF self.flags AND WFLG_CLOSEGADGET THEN TRUE ELSE FALSE,
+    WA_DEPTHGADGET,IF self.flags AND WFLG_DEPTHGADGET THEN TRUE ELSE FALSE,
+    WA_SIZEGADGET,IF self.flags AND WFLG_SIZEGADGET THEN TRUE ELSE FALSE,
+    WA_DRAGBAR,IF self.flags AND WFLG_DRAGBAR THEN TRUE ELSE FALSE,
+    WA_SIZEBRIGHT, IF self.flags AND WFLG_SIZEBRIGHT THEN TRUE ELSE FALSE,
+    WA_SIZEBBOTTOM, IF self.flags AND WFLG_SIZEBBOTTOM THEN TRUE ELSE FALSE,
+    WA_GIMMEZEROZERO, IF self.flags AND WFLG_GIMMEZEROZERO THEN TRUE ELSE FALSE,
+    WA_BORDERLESS, IF self.flags AND WFLG_BORDERLESS THEN TRUE ELSE FALSE,
+    WA_SUPERBITMAP, IF self.flags AND WFLG_SUPER_BITMAP THEN TRUE ELSE FALSE,
+    WA_BACKDROP, IF self.flags AND WFLG_BACKDROP THEN TRUE ELSE FALSE,
+    WA_ZOOM, IF self.flags AND WFLG_ZOOM THEN TRUE ELSE FALSE,
+    WA_IDCMP,IDCMP_CHANGEWINDOW OR IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW,
       WINDOW_PARENTGROUP, self.previewRootLayout:=VLayoutObject,
       LAYOUT_SPACEOUTER, TRUE,  
       LAYOUT_DEFERLAYOUT, FALSE,  
@@ -1115,6 +1152,7 @@ EXPORT PROC create(parent) OF windowObject
   SUPER self.create(parent)
   
   AstrCopy(self.title,'Application Window')
+  AstrCopy(self.screentitle,'')
   AstrCopy(self.iconTitle,'MyApp')
   AstrCopy(self.iconFile,'')
   self.leftEdge:=5
@@ -1163,6 +1201,7 @@ ENDPROC res
 EXPORT PROC serialiseData() OF windowObject IS
 [
   makeProp(title,FIELDTYPE_STR),
+  makeProp(screentitle,FIELDTYPE_STR),
   makeProp(iconTitle,FIELDTYPE_STR),
   makeProp(iconFile,FIELDTYPE_STR),
   makeProp(leftEdge,FIELDTYPE_INT),
@@ -1192,6 +1231,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   DEF idcmpList:PTR TO stringlist
   
   srcGen.componentProperty('WA_Title',self.title,TRUE)
+  IF StrLen(self.screentitle) THEN srcGen.componentProperty('WA_ScreenTitle',self.screentitle,TRUE)
   StringF(tempStr,'\d',self.leftEdge)
   srcGen.componentProperty('WA_Left',tempStr,FALSE)
   StringF(tempStr,'\d',self.topEdge)

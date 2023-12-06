@@ -50,8 +50,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.4.0-beta'
-#date verstring '$VER:Rebuild 0.4.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.5.0-beta'
+#date verstring '$VER:Rebuild 0.5.0-%Y%m%d%h%n%s-alpha'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'

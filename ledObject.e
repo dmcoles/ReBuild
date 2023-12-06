@@ -110,7 +110,7 @@ PROC create() OF ledSettingsForm
           INTEGER_MAXIMUM, 8192,
         IntegerEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Import Width',
+          LABEL_TEXT, 'Width',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ LEDGAD_HEIGHT ]:=IntegerObject,
