@@ -223,7 +223,7 @@ PROC addTerminator() OF srcGen
   ENDIF
 ENDPROC
 
-PROC genHeader(screenObject,rexxObject) OF srcGen IS -1
+PROC genHeader(screenObject,rexxObject, windowNames) OF srcGen IS -1
 PROC genFooter(windowObject,rexxObject) OF srcGen IS -1
 PROC genWindowHeader(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
 PROC genWindowFooter(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1

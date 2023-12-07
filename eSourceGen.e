@@ -1,4 +1,5 @@
 OPT MODULE,LARGE
+OPT MODULE,LARGE
 
   MODULE 'images/drawlist','gadgets/tabs'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
@@ -20,7 +21,7 @@ PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject) OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF hasarexx,i
   

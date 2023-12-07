@@ -20,7 +20,7 @@ PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds
   self.indent:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) OF cSrcGen
+PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist) OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
@@ -135,6 +135,16 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject) O
     self.writeLine('#define ListView_GetClass() LISTVIEW_GetClass()')
     self.writeLine('')
   ENDIF
+
+  FOR i:=0 TO windowNames.count()-1
+    StrCopy(tempStr,windowNames.item(i))
+    LowerStr(tempStr)
+    self.write('void ')
+    self.write(tempStr)
+    self.writeLine('( void );')
+  ENDFOR
+  self.writeLine('')
+
 
   self.writeLine('struct Screen	*gScreen = NULL;')
   self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')

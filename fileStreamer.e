@@ -12,6 +12,8 @@ PROC create(fn:PTR TO CHAR,mode) OF fileStreamer
   self.fh:=Open(fn,mode)
 ENDPROC
 
+PROC isOpen() OF fileStreamer IS self.fh<>0
+
 PROC end() OF fileStreamer
   IF self.fh<>0 THEN Close(self.fh)
 ENDPROC

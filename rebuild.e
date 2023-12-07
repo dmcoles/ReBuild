@@ -33,8 +33,11 @@ OPT OSVERSION=37,LARGE
         'gadtools','libraries/gadtools',
         'dos/dos',
         'exec',
+        'icon',
         'asl','libraries/asl',
         'tools/boopsi',
+        'workbench/startup',
+        'workbench/workbench',
         'amigalib/boopsi','exec/memory',
         'listbrowser','gadgets/listbrowser',
         'intuition/intuition','intuition/imageclass','intuition/gadgetclass','intuition/classusr'
@@ -97,7 +100,8 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_BUFFER=13
   CONST MENU_EDIT_SHOW_ADD_SETTINGS=14
   CONST MENU_EDIT_WARN_ON_DEL=15
-  CONST MENU_EDIT_PREVIEW=17
+  CONST MENU_EDIT_SAVE_ICONS=16
+  CONST MENU_EDIT_PREVIEW=18
   
   CONST MENU_EDIT_MOVEUP=0
   CONST MENU_EDIT_MOVEDOWN=1
@@ -107,6 +111,15 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVELNEXT=5
 
   CONST FILE_FORMAT_VER=1
+
+  OBJECT systemOptions
+    savePath[256]:ARRAY OF CHAR
+    showBuffer:CHAR
+    showSettingsOnAdd:CHAR
+    warnOnDelete:CHAR
+    saveProjectIcons:CHAR
+  ENDOBJECT
+
 
   DEF columninfo[4]:ARRAY OF columninfo
   DEF columninfo2[2]:ARRAY OF columninfo
@@ -125,7 +138,8 @@ OPT OSVERSION=37,LARGE
   DEF menus=0
   DEF filename[255]:STRING
   DEF windowTitle[200]:STRING
-  DEF savePath[256]:STRING
+  
+  DEF startupfilename[256]:STRING
   
   DEF tabsbase=0
   DEF gradientsliderbase=0
@@ -138,9 +152,11 @@ OPT OSVERSION=37,LARGE
   DEF titlebarbase=0
   DEF errorState=0
   DEF codeOptions: codeOptions
+  DEF systemOptions: systemOptions
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
+  IF (iconbase:=OpenLibrary('icon.library',33))=NIL THEN Throw("LIB","icon")
   IF (gadtoolsbase:=OpenLibrary('gadtools.library',0))=NIL THEN Throw("LIB","gadt")
   IF (windowbase:=OpenLibrary('window.class',0))=NIL THEN Throw("LIB","win")
   IF (listbrowserbase:=OpenLibrary('gadgets/listbrowser.gadget',0))=NIL THEN Throw("LIB","list")
@@ -187,6 +203,7 @@ PROC openClasses()
 ENDPROC
 
 PROC closeClasses()
+  IF iconbase THEN CloseLibrary(iconbase)
   IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)
   IF listbrowserbase THEN CloseLibrary(listbrowserbase)
   IF radiobuttonbase THEN CloseLibrary(radiobuttonbase)
@@ -599,6 +616,68 @@ PROC createBufferGads()
       ButtonEnd,
       CHILD_WEIGHTEDHEIGHT,0,
   LayoutEnd
+ENDPROC
+
+PROC loadIconPrefs()
+  DEF wb:PTR TO wbstartup, args:PTR TO wbarg
+  DEF dobj:PTR TO diskobject
+  DEF s
+  DEF tempbuf[256]:ARRAY OF CHAR
+  DEF olddir
+  IF wbmessage=NIL
+    StrCopy(startupfilename,arg)
+    dobj:=GetDiskObject('PROGDIR:Rebuild')
+  ELSE
+    wb:=wbmessage
+    args:=wb.arglist
+    IF wb.numargs>1
+      NameFromLock(args[1].lock,tempbuf,255)
+      AddPart(tempbuf,args[1].name,255)
+      StrCopy(startupfilename,tempbuf)
+    ENDIF
+    olddir:=CurrentDir(args[].lock)
+    dobj:=GetDiskObject(args[].name)
+    CurrentDir(olddir)
+  ENDIF
+  IF dobj
+    IF(s:=FindToolType(dobj.tooltypes,'LANG'))
+      IF (MatchToolValue(s,'C')) THEN codeOptions.langid:=LANG_C ELSE codeOptions.langid:=LANG_E
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'USEIDS'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN codeOptions.useids:=FALSE ELSE codeOptions.useids:=TRUE
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'FULLCODE'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN codeOptions.fullcode:=FALSE ELSE codeOptions.fullcode:=TRUE
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'CODEPATH'))
+      AstrCopy(codeOptions.savePath,s,256)
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'SHOWBUFFER'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN systemOptions.showBuffer:=FALSE ELSE systemOptions.showBuffer:=TRUE
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'SHOWSETTINGS'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN systemOptions.showSettingsOnAdd:=FALSE ELSE systemOptions.showSettingsOnAdd:=TRUE
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'WARNONDELETE'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN systemOptions.warnOnDelete:=FALSE ELSE systemOptions.warnOnDelete:=TRUE
+    ENDIF
+    
+    IF(s:=FindToolType(dobj.tooltypes,'PROJECTICONS'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN systemOptions.saveProjectIcons:=FALSE ELSE systemOptions.saveProjectIcons:=TRUE
+    ENDIF
+    
+    IF(s:=FindToolType(dobj.tooltypes,'SAVEPATH'))
+      AstrCopy(systemOptions.savePath,s,256)
+    ENDIF
+
+    FreeDiskObject(dobj)
+  ENDIF
 ENDPROC
 
 PROC createForm()
@@ -1123,6 +1202,7 @@ PROC genCode()
   DEF screenComp:PTR TO screenObject
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
+  DEF windowNames:PTR TO stringlist
   DEF n
   
   setBusy()
@@ -1160,8 +1240,10 @@ PROC genCode()
   FOR i:=0 TO TYPE_MAX-1 DO libsused[i]:=0
 
   i:=ROOT_LAYOUT_ITEM
+  NEW windowNames.stringlist(10)
   WHILE i<objectList.count()
     findLibsUsed(objectList.item(i),libsused)
+    windowNames.add(objectList.item(i-ROOT_LAYOUT_ITEM+ROOT_WINDOW_ITEM)::windowObject.name)
     i+=3
   ENDWHILE
   
@@ -1169,8 +1251,14 @@ PROC genCode()
     IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
   ENDIF
 
-  setBusy()
   NEW fs.create(fname,MODE_NEWFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','This file could not be opened.')
+    END fs
+    RETURN
+  ENDIF
+
+  setBusy()
 
  SELECT codeOptions.langid
     CASE LANG_E
@@ -1185,7 +1273,8 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
   rexxComp:=objectList.item(ROOT_REXX_ITEM)
-  srcGen.genHeader(screenComp,rexxComp)
+  srcGen.genHeader(screenComp,rexxComp, windowNames)
+  END windowNames
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)
     menuComp:=objectList.item(i+ROOT_MENU_ITEM)
@@ -1218,7 +1307,6 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   srcGen.genFooter(windowComp,rexxComp)
   END srcGen
-  
   END fs
   clearBusy()
 ENDPROC
@@ -1236,7 +1324,7 @@ PROC processObjects(obj:PTR TO reactionObject,list:PTR TO stdlist)
   ENDFOR
 ENDPROC
 
-PROC loadFile() HANDLE
+PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
   DEF fs=0:PTR TO fileStreamer
   DEF newObj:PTR TO reactionObject
   DEF tmpObj:PTR TO reactionObject
@@ -1253,29 +1341,38 @@ PROC loadFile() HANDLE
   DEF fname[255]:STRING
 
   errorState:=FALSE
-  aslbase:=OpenLibrary('asl.library',37)
-  IF aslbase=NIL THEN Throw("LIB","ASL")
-  tags:=NEW [ASL_HAIL,'Select a file to load',
-     ASL_WINDOW, win,
-     ASLFR_INITIALDRAWER, savePath,
-     TAG_DONE]
-  fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
-  IF(AslRequest(fr,0))=FALSE
+  IF loadfilename=NIL
+    aslbase:=OpenLibrary('asl.library',37)
+    IF aslbase=NIL THEN Throw("LIB","ASL")
+    tags:=NEW [ASL_HAIL,'Select a file to load',
+       ASL_WINDOW, win,
+       ASLFR_INITIALDRAWER, systemOptions.savePath,
+       TAG_DONE]
+    fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
+    IF(AslRequest(fr,0))=FALSE
+      IF tags THEN FastDisposeList(tags)
+      IF aslbase THEN CloseLibrary(aslbase)
+      RETURN
+    ENDIF
+
+    StrCopy(fname,fr.drawer)
+    AstrCopy(systemOptions.savePath,fr.drawer)
+    AddPart(fname,fr.file,100)
+    SetStr(fname)
+    IF fr THEN FreeAslRequest(fr)
     IF tags THEN FastDisposeList(tags)
     IF aslbase THEN CloseLibrary(aslbase)
-    RETURN
+  ELSE
+    StrCopy(fname,loadfilename)
   ENDIF
-
-  StrCopy(fname,fr.drawer)
-  StrCopy(savePath,fr.drawer)
-  AddPart(fname,fr.file,100)
-  SetStr(fname)
   StrCopy(filename,fname)
-  IF fr THEN FreeAslRequest(fr)
-  IF tags THEN FastDisposeList(tags)
-  IF aslbase THEN CloseLibrary(aslbase)
 
   NEW fs.create(fname,MODE_OLDFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','This file could not be opened.')
+    END fs
+    RETURN
+  ENDIF
   
   fs.readLine(tempStr)
   IF StrCmp(tempStr,'-REBUILD-')=FALSE
@@ -1317,8 +1414,10 @@ PROC loadFile() HANDLE
         IF a
           IF v
             a.flags:=a.flags OR CHECKED
+            systemOptions.showSettingsOnAdd:=TRUE
           ELSE
             a.flags:=a.flags AND Not(CHECKED)
+            systemOptions.showSettingsOnAdd:=FALSE
           ENDIF
         ENDIF
       ENDIF
@@ -1420,18 +1519,27 @@ ENDPROC
 
 PROC saveFile() HANDLE
   DEF fs=0:PTR TO fileStreamer
-  DEF i,j,a=0:PTR TO menuitem
+  DEF i,j
   DEF comp:PTR TO reactionObject
   DEF tempStr[300]:STRING
   DEF reactionLists:PTR TO stdlist
+  DEF oldtool
+  DEF dobj:PTR TO diskobject
+  DEF lock
 
   IF EstrLen(filename)=0 
     RETURN saveFileAs()
   ENDIF
 
+  NEW fs.create(filename,MODE_NEWFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','This file could not be opened.')
+    END fs
+    RETURN
+  ENDIF
+
   setBusy()
 
-  NEW fs.create(filename,MODE_NEWFILE)
   fs.writeLine('-REBUILD-')
   StringF(tempStr,'VER=\d',FILE_FORMAT_VER)
   fs.writeLine(tempStr)
@@ -1439,13 +1547,8 @@ PROC saveFile() HANDLE
   fs.writeLine(tempStr)
   StringF(tempStr,'VIEWTMP=\d',IF bufferLayout THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
-  IF win
-    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
-    IF a
-      StringF(tempStr,'ADDSETT=\d',IF a.flags AND CHECKED THEN TRUE ELSE FALSE)
-      fs.writeLine(tempStr)
-    ENDIF
-  ENDIF
+  StringF(tempStr,'ADDSETT=\d',IF systemOptions.showSettingsOnAdd AND CHECKED THEN TRUE ELSE FALSE)
+  fs.writeLine(tempStr)
   StringF(tempStr,'LANGID=\d',codeOptions.langid)
   fs.writeLine(tempStr)
   StringF(tempStr,'USEIDS=\d',IF codeOptions.useids THEN TRUE ELSE FALSE)
@@ -1469,6 +1572,25 @@ PROC saveFile() HANDLE
     ENDIF
   ENDFOR
   
+  IF systemOptions.saveProjectIcons
+    dobj:=GetDefDiskObject(WBPROJECT)
+    IF dobj
+      oldtool:=dobj.defaulttool
+      lock:=Lock('PROGDIR:',ACCESS_READ)
+      IF lock
+        NameFromLock(lock,tempStr,300)
+        AddPart(tempStr,'Rebuild',300)
+        dobj.defaulttool:=tempStr
+        UnLock(lock)
+      ELSE
+        dobj.defaulttool:='Rebuild'
+      ENDIF
+      PutDiskObject(filename,dobj)
+      dobj.defaulttool:=oldtool
+      FreeDiskObject(dobj)
+    ENDIF
+  ENDIF
+  
   changes:=FALSE
 EXCEPT DO
   END fs 
@@ -1484,7 +1606,7 @@ PROC saveFileAs()
   IF aslbase=NIL THEN Throw("LIB","ASL")
   tags:=NEW [ASL_HAIL,'Enter a file to save as',
      ASL_WINDOW, win,
-     ASLFR_INITIALDRAWER, savePath,
+     ASLFR_INITIALDRAWER, systemOptions.savePath,
      TAG_DONE]
 
   setBusy()
@@ -1498,7 +1620,7 @@ PROC saveFileAs()
   clearBusy()
 
   StrCopy(fname,fr.drawer)
-  StrCopy(savePath,fr.drawer)
+  AstrCopy(systemOptions.savePath,fr.drawer)
   AddPart(fname,fr.file,100)
   SetStr(fname)
   StrCopy(filename,fname)
@@ -1561,7 +1683,7 @@ PROC showAbout()
   ADD.L #$100,A7
 ENDPROC
 
-PROC doLoad()
+PROC doLoad(filename=NIL)
   DEF res
   IF changes
     res:=unsavedChangesWarning()
@@ -1570,7 +1692,7 @@ PROC doLoad()
   ENDIF
   setBusy()
   closePreviews()
-  loadFile()
+  loadFile(filename)
   restorePreviews()
   IF errorState
     errorRequest(mainWindow,'Warning','This file contains gadgets that you do not have installed.\nThey will not be displayed correctly.')
@@ -1592,15 +1714,11 @@ ENDPROC
 
 PROC doAddWindow()
   DEF newwin:PTR TO windowObject
-  DEF a:PTR TO menuitem
 
   newwin:=createWindowObject(0)
   IF newwin
     setBusy()
-    IF win
-      a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
-    ENDIF
-    IF (a<>0) ANDALSO (a.flags AND CHECKED)
+    IF systemOptions.showSettingsOnAdd
       IF newwin.editSettings()=FALSE
         objectInitialise(newwin.id)
         END newwin
@@ -1651,7 +1769,6 @@ ENDPROC
 
 PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
-  DEF a=0:PTR TO menuitem
   DEF allowchildren
   newObj:=0
   
@@ -1664,10 +1781,7 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
     newObj:=createObjectByType(objType,comp)
     IF newObj 
       setBusy()
-      IF win
-        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
-      ENDIF
-      IF (a<>0) ANDALSO (a.flags AND CHECKED)
+      IF systemOptions.showSettingsOnAdd
         IF newObj.editSettings()=FALSE
           objectInitialise(newObj.id)
           END newObj
@@ -1738,9 +1852,6 @@ PROC doEdit()
 ENDPROC
 
 PROC doDelete()
-  DEF a=0:PTR TO menuitem
-  DEF skipWarn=FALSE
-
   IF selectedComp.type=TYPE_WINDOW
     IF warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this whole window?',TRUE)=1
       changes:=TRUE
@@ -1753,12 +1864,7 @@ PROC doDelete()
         removeObject(selectedComp)
       ENDIF
     ELSE
-      IF win
-        a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_WARN_ON_DEL,0))
-      ENDIF
-      IF a THEN skipWarn:=(a.flags AND CHECKED)
-      
-      IF (skipWarn=0) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
+      IF (systemOptions.warnOnDelete=FALSE) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
         changes:=TRUE
         removeObject(selectedComp)
       ENDIF
@@ -1791,11 +1897,23 @@ PROC copyToBuffer(comp:PTR TO reactionObject,recurse)
   DEF i
 
   NEW fs.create('t:tempcomp',MODE_NEWFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','error creating temporary file.')
+    END fs
+    RETURN
+  ENDIF
+  
   comp.serialise(fs)
   END fs
   
   newObj:=createObjectByType(comp.type,0)
   NEW fs.create('t:tempcomp',MODE_OLDFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','error reading temporary file.')
+    END fs
+    RETURN
+  ENDIF
+
   newObj.deserialise(fs)
   END fs
   bufferList.add(newObj)
@@ -1827,12 +1945,24 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   DEF name[100]:STRING
 
   NEW fs.create('t:tempcomp',MODE_NEWFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','error creating temporary file.')
+    END fs
+    RETURN
+  ENDIF
+
   bufferComp.serialise(fs)
   END fs
   
   newObj:=createObjectByType(bufferComp.type,0)
   oldid:=newObj.id
   NEW fs.create('t:tempcomp',MODE_OLDFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','error reading temporary file.')
+    END fs
+    RETURN
+  ENDIF
+
   newObj.deserialise(fs)
   StringF(name,'\s_\d',newObj.getTypeName(),newObj.id)
   defname:=StrCmp(newObj.name,name)
@@ -1975,6 +2105,32 @@ PROC newProject()
   changes:=FALSE
 ENDPROC
 
+PROC updateSettings()
+  DEF a:PTR TO menuitem
+  IF win
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SAVE_ICONS,0))
+    IF a
+      systemOptions.saveProjectIcons:=IF (a.flags AND CHECKED) THEN TRUE ELSE FALSE
+    ENDIF
+
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_WARN_ON_DEL,0))
+    IF a
+      systemOptions.warnOnDelete:=IF (a.flags AND CHECKED) THEN TRUE ELSE FALSE
+    ENDIF
+
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
+    IF a
+      systemOptions.showSettingsOnAdd:=IF (a.flags AND CHECKED) THEN TRUE ELSE FALSE
+    ENDIF
+
+    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_BUFFER,0))
+    IF a
+      systemOptions.showBuffer:=IF (a.flags AND CHECKED) THEN TRUE ELSE FALSE
+    ENDIF
+  ENDIF
+
+ENDPROC
+
 PROC toggleBuffer()
   DEF a=0:PTR TO menuitem
 
@@ -2057,20 +2213,12 @@ PROC remakePreviewMenus()
   DEF menuData:PTR TO newmenu,scr,visInfo
   DEF winObj:PTR TO windowObject
   DEF count,n,i
-  DEF addSett=TRUE
   DEF a:PTR TO menuitem
   DEF menuSetup:PTR TO LONG
 
   count:=(objectList.count()-ROOT_WINDOW_ITEM)/3
   IF count<0 THEN count:=0
   count++
-
-  IF win
-    a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
-    IF (a)
-      IF (a.flags AND CHECKED)=0 THEN addSett:=FALSE
-    ENDIF
-  ENDIF
 
   IF menus THEN FreeMenus(menus)
   
@@ -2146,8 +2294,9 @@ PROC remakePreviewMenus()
   NM_ITEM,'Edit Lists',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
   NM_ITEM,'Show Buffer',0,(CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,'Warn On Delete',0,(CHECKIT OR (IF addSett THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF systemOptions.showSettingsOnAdd THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,'Warn On Delete',0,(CHECKIT OR (IF systemOptions.warnOnDelete THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
+  NM_ITEM,'Save Project Icons',0,(CHECKIT OR (IF systemOptions.saveProjectIcons THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
   NM_ITEM,NM_BARLABEL,0,0,
   NM_ITEM,'Preview Windows',0,0
   ]
@@ -2409,15 +2558,24 @@ PROC main() HANDLE
   codeOptions.useids:=TRUE
   codeOptions.fullcode:=TRUE
   AstrCopy(codeOptions.savePath,'')
-  StrCopy(savePath,'')
+
+  systemOptions.showSettingsOnAdd:=TRUE
+  systemOptions.warnOnDelete:=TRUE
+  systemOptions.showBuffer:=TRUE
+  systemOptions.saveProjectIcons:=FALSE
+  AstrCopy(systemOptions.savePath,'')
+  
+  loadIconPrefs()
   
   createForm()
   
   IF (win:=RA_OpenWindow(mainWindow))
+    IF systemOptions.showBuffer=FALSE THEN toggleBuffer()
     SetMenuStrip(win,menus)
     newProject()
     openPreviews()
     updateBufferSel(win,0)
+    IF EstrLen(startupfilename) THEN doLoad(startupfilename)
 
     GetAttr( WINDOW_SIGMASK, mainWindow, {wsig} )
     WHILE running
@@ -2489,8 +2647,15 @@ PROC main() HANDLE
                       ENDSELECT
                     CASE MENU_EDIT_LISTS
                       editLists()
+                    CASE MENU_EDIT_SHOW_ADD_SETTINGS
+                      updateSettings()
+                    CASE MENU_EDIT_WARN_ON_DEL
+                      updateSettings()
+                    CASE MENU_EDIT_SAVE_ICONS
+                      updateSettings()
                     CASE MENU_EDIT_BUFFER
                       toggleBuffer()
+                      updateSettings()
                     CASE MENU_EDIT_PREVIEW
                       togglePreview(subitem)
                   ENDSELECT
