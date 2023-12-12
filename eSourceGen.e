@@ -440,7 +440,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   ENDIF
     
     
-  self.writeLine('PROC runWindow(windowObject,menuStrip) HANDLE')
+  self.writeLine('PROC runWindow(windowObject,windowId, menuStrip, winGadgets:PTR TO LONG) HANDLE')
   self.writeLine('  DEF running=TRUE')
   self.writeLine('  DEF win:PTR TO window,wsig,code,msg,sig,result')
   IF hasarexx
@@ -469,15 +469,15 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
     self.writeLine('      sig:=Wait(wsig)')
   ENDIF
   self.writeLine('      IF (sig AND (wsig))')
-  self.writeLine('        WHILE ((result:=RA_HandleInput(windowObject,{code})) <> WMHI_LASTMSG)')
+  self.writeLine('        WHILE ((result:=RA_HandleInput(windowObject,{code}+2)) <> WMHI_LASTMSG)')
   self.writeLine('          msg:=(result AND WMHI_CLASSMASK)')
   self.writeLine('          SELECT msg')
   self.writeLine('            CASE WMHI_CLOSEWINDOW')
   self.writeLine('              running:=FALSE')
   self.writeLine('            CASE WMHI_GADGETUP')
-  self.writeLine('              WriteF(\agadget press\a)')
+  self.writeLine('              WriteF(\agadget press\\n\a)')
   self.writeLine('            CASE WMHI_MENUPICK')
-  self.writeLine('              WriteF(\amenu pick\a)')
+  self.writeLine('              WriteF(\amenu pick\\n\a)')
   self.writeLine('            CASE WMHI_ICONIFY')
   self.writeLine('              RA_Iconify(windowObject)')
   self.writeLine('            CASE WMHI_UNICONIFY')
@@ -756,9 +756,11 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    self.writeLine('  runWindow(windowObject,menuStrip)')
+    StringF(tempStr,'  runWindow(windowObject,\d,menuStrip,mainGadgets)',windowObject.id)
+    self.writeLine(tempStr)
   ELSE
-    self.writeLine('  runWindow(windowObject,NIL)')
+    StringF(tempStr,'  runWindow(windowObject,\d,NIL,mainGadgets)',windowObject.id)
+    self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
   self.writeLine('EXCEPT DO')

@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.5.0-beta'
-#date verstring '$VER:Rebuild 0.5.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.6.0-beta'
+#date verstring '$VER:Rebuild 0.6.0-%Y%m%d%h%n%s-alpha'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -2176,7 +2176,7 @@ PROC togglePreview(subitem)
 ENDPROC
 
 PROC handlePreviewInputs()
-  DEF pwin:PTR TO window,previewWin,i,code
+  DEF pwin:PTR TO window,previewWin,i,code=0
   DEF winObj:PTR TO windowObject
   DEF result,tmp
   
@@ -2185,7 +2185,7 @@ PROC handlePreviewInputs()
     winObj:=objectList.item(i)
     previewWin:=winObj.previewObject
     pwin:=Gets(previewWin,WINDOW_WINDOW)
-    WHILE ((result:=RA_HandleInput(previewWin,{code})) <> WMHI_LASTMSG)
+    WHILE ((result:=RA_HandleInput(previewWin,{code}+2)) <> WMHI_LASTMSG)
       tmp:=(result AND WMHI_CLASSMASK)
       SELECT tmp
         CASE WMHI_CHANGEWINDOW
@@ -2538,7 +2538,7 @@ ENDPROC wsig
 
 PROC main() HANDLE
   DEF running=TRUE
-  DEF wsig,code,code2,tmp,sig,result
+  DEF wsig,code=0,tmp,sig,result
   DEF objType
   DEF newObj:PTR TO reactionObject
   DEF comp:PTR TO reactionObject
@@ -2583,7 +2583,7 @@ PROC main() HANDLE
       sig:=Wait(wsig)
       handlePreviewInputs()
       IF (sig AND (wsig))
-        WHILE ((result:=RA_HandleInput(mainWindow,{code})) <> WMHI_LASTMSG)
+        WHILE ((result:=RA_HandleInput(mainWindow,{code}+2)) <> WMHI_LASTMSG)
           tmp:=(result AND WMHI_CLASSMASK)
           SELECT tmp
             CASE WMHI_MENUPICK

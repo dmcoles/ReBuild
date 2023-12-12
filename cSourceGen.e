@@ -468,7 +468,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('               *GetColorBase = NULL,')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('               *GradientSliderBase = NULL,')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('               *TapeDeckBase = NULL,')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('               *TextEditorBase = NULL,')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('               *TextFieldBase = NULL,')
   IF self.libsused[TYPE_LED] THEN self.writeLine('               *LedBase = NULL,')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('               *ListViewBase = NULL,')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('               *VirtualBase = NULL,')
@@ -610,7 +610,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   ENDIF
 
   IF self.libsused[TYPE_TEXTEDITOR]
-    self.writeLine('  if( !(TextEditorBase = (struct Library*) OpenLibrary("gadgets/texteditor.gadget",0L) ) ) return 0;')
+    self.writeLine('  if( !(TextFieldBase = (struct Library*) OpenLibrary("gadgets/texteditor.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused[TYPE_LED]
@@ -682,7 +682,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  if (GetColorBase) CloseLibrary( (struct Library *)GetColorBase );')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  if (GradientSliderBase) CloseLibrary( (struct Library *)GradientSliderBase );')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  if (TapeDeckBase) CloseLibrary( (struct Library *)TapeDeckBase );')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  if (TextEditorBase) CloseLibrary( (struct Library *)TextEditorBase );')
+  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
   IF self.libsused[TYPE_LED] THEN self.writeLine('  if (LedBase) CloseLibrary( (struct Library *)LedBase );')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  if (ListViewBase) CloseLibrary( (struct Library *)ListViewBase );')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  if (VirtualBase) CloseLibrary( (struct Library *)VirtualBase );')
@@ -696,7 +696,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
 
   self.writeLine('}')
   self.writeLine('')
-  self.writeLine('void runWindow( Object *window_object, struct Menu *menu_strip )')
+  self.writeLine('void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[] )')
   self.writeLine('{')
   self.writeLine('  struct Window	*main_window = NULL;')
   IF hasarexx
@@ -997,9 +997,11 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    self.writeLine('  runWindow( window_object,menu_strip );')
+    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets );',windowObject.id)
+    self.writeLine(tempStr)
   ELSE
-    self.writeLine('  runWindow( window_object, 0 );')
+    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets );',windowObject.id)
+    self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
   self.writeLine('  if ( window_object ) DisposeObject( window_object );')

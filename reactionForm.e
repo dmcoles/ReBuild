@@ -41,7 +41,7 @@ EXPORT PROC menuPick(menu,menuitem,subItem) OF reactionForm IS 0
 
 EXPORT PROC showModal() OF reactionForm HANDLE
   DEF running=TRUE,menu,menuitem,subitem
-  DEF win:PTR TO window,wsig,code,tmp,sig,result
+  DEF win:PTR TO window,wsig,code,tmp,sig,result=0
   self.modalResult:=MR_NONE
   IF (win:=RA_OpenWindow(self.windowObj))
     GetAttr( WINDOW_SIGMASK, self.windowObj, {wsig} )
@@ -49,11 +49,12 @@ EXPORT PROC showModal() OF reactionForm HANDLE
     WHILE running AND (self.modalResult=MR_NONE)
       sig:=Wait(wsig)
       IF (sig AND (wsig))
-        WHILE ((result:=RA_HandleInput(self.windowObj,{code})) <> WMHI_LASTMSG)
+        
+        WHILE ((result:=RA_HandleInput(self.windowObj,{code}+2)) <> WMHI_LASTMSG)
           tmp:=(result AND WMHI_CLASSMASK)
           SELECT tmp
             CASE WMHI_GADGETUP
-              self.gadgetPress(result AND $FFFF,Shr(code,16))
+              self.gadgetPress(result AND $FFFF,code AND $FFFF)
             CASE WMHI_CLOSEWINDOW
               IF self.canClose() THEN running:=FALSE
             CASE WMHI_INTUITICK
