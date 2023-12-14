@@ -440,7 +440,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   ENDIF
     
     
-  self.writeLine('PROC runWindow(windowObject,windowId, menuStrip, winGadgets:PTR TO LONG) HANDLE')
+  self.writeLine('PROC runWindow(windowObject,windowId, menuStrip, winGadgets:PTR TO LONG, gadgetIds:PTR TO LONG) HANDLE')
   self.writeLine('  DEF running=TRUE')
   self.writeLine('  DEF win:PTR TO window,wsig,code,msg,sig,result')
   IF hasarexx
@@ -524,7 +524,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine('() HANDLE')
   ENDIF
   self.writeLine('  DEF windowObject')
-  StringF(tempStr,'  DEF mainGadgets[\d]:ARRAY OF LONG',count)
+  StringF(tempStr,'  DEF mainGadgets[\d]:ARRAY OF LONG',count+1)
+  self.writeLine(tempStr)
+  StringF(tempStr,'  DEF gadgetIds[\d]:ARRAY OF LONG',count+1)
   self.writeLine(tempStr)
   IF menuObject.menuItems.count()>0
     self.writeLine('  DEF menuStrip=0,menuData=0:PTR TO newmenu')
@@ -748,6 +750,11 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF reactionObject:PTR TO reactionObject
   DEF i
 
+  StringF(tempStr,'  mainGadgets[\d]:=0',count)
+  self.writeLine(tempStr)
+  StringF(tempStr,'  gadgetIds[\d]:=0',count)
+  self.writeLine(tempStr)
+
   IF self.definitionOnly
     self.writeLine('ENDPROC')
     self.writeLine('')
@@ -756,10 +763,10 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    StringF(tempStr,'  runWindow(windowObject,\d,menuStrip,mainGadgets)',windowObject.id)
+    StringF(tempStr,'  runWindow(windowObject,\d,menuStrip,mainGadgets,gadgetIds)',windowObject.id)
     self.writeLine(tempStr)
   ELSE
-    StringF(tempStr,'  runWindow(windowObject,\d,NIL,mainGadgets)',windowObject.id)
+    StringF(tempStr,'  runWindow(windowObject,\d,NIL,mainGadgets,gadgetIds)',windowObject.id)
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
@@ -885,7 +892,12 @@ PROC assignGadgetVar(index) OF eSrcGen
   StringF(tempStr,'mainGadgets[\d]:=',index)
   self.write(tempStr)
   self.currentGadgetVar:=index
- 
+ENDPROC
+
+PROC componentPropertyGadgetId(idval,index) OF eSrcGen
+  DEF tempStr[100]:STRING
+  StringF(tempStr,'gadgetIds[\d]:=\d',index, idval)
+  self.componentProperty('GA_ID',tempStr, FALSE)
 ENDPROC
 
 PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid, end=0:PTR TO CHAR) OF eSrcGen

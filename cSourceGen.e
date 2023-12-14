@@ -696,7 +696,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
 
   self.writeLine('}')
   self.writeLine('')
-  self.writeLine('void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[] )')
+  self.writeLine('void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[], int gadget_ids[] )')
   self.writeLine('{')
   self.writeLine('  struct Window	*main_window = NULL;')
   IF hasarexx
@@ -824,7 +824,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine('')
     self.writeLine('  struct Menu	*menu_strip = NULL;')
   ENDIF
-  StringF(tempStr,'  struct Gadget	*main_gadgets[ \d ];',count)
+  StringF(tempStr,'  struct Gadget	*main_gadgets[ \d ];',count+1)
+  self.writeLine(tempStr)
+  StringF(tempStr,'  int gadget_ids[ \d ];',count+1)
   self.writeLine(tempStr)
   self.writeLine('  Object *window_object = NULL;')
 
@@ -989,6 +991,11 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF tempStr[200]:STRING
   DEF i
 
+  StringF(tempStr,'  main_gadgets[\d] = 0;',count)
+  self.writeLine(tempStr)
+  StringF(tempStr,'  gadget_ids[\d] = 0;',count)
+  self.writeLine(tempStr)
+
   IF self.definitionOnly
     self.writeLine('}')
     self.writeLine('')
@@ -997,10 +1004,10 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets, gadget_ids );',windowObject.id)
     self.writeLine(tempStr)
   ELSE
-    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets, gadget_ids );',windowObject.id)
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
@@ -1124,6 +1131,12 @@ PROC assignGadgetVar(index) OF cSrcGen
   StringF(tempStr,'main_gadgets[\d] = ',index)
   self.write(tempStr)
   self.currentGadgetVar:=index 
+ENDPROC
+
+PROC componentPropertyGadgetId(idval,index) OF cSrcGen
+  DEF tempStr[100]:STRING
+  StringF(tempStr,'gadget_ids[\d] = \d',index, idval)
+  self.componentProperty('GA_ID',tempStr,FALSE)
 ENDPROC
 
 PROC componentLibnameCreate(libname:PTR TO CHAR) OF cSrcGen

@@ -1150,13 +1150,13 @@ PROC genComponentCode(comp:PTR TO reactionObject, nptr:PTR TO LONG, srcGen:PTR T
     srcGen.componentCreate(tempStr)
   ENDIF
 
-  IF comp.type<>TYPE_LAYOUT
+  ->IF comp.type<>TYPE_LAYOUT
     IF srcGen.useIds
-      srcGen.componentPropertyInt('GA_ID',comp.id)
+      srcGen.componentPropertyGadgetId(comp.id,nptr[])
     ELSE
-      srcGen.componentPropertyInt('GA_ID',srcGen.currentGadgetVar)
+      srcGen.componentPropertyGadgetId(srcGen.currentGadgetVar,nptr[])
     ENDIF
-  ENDIF
+  ->ENDIF
   comp.genCodeProperties(srcGen)
   IF comp.children.count()>0
     comp.genChildObjectsHeader(srcGen)

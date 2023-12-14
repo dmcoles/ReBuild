@@ -214,6 +214,9 @@ PROC assignGadgetVar(index) OF srcGen
   self.currentGadgetVar:=index
 ENDPROC
 
+PROC componentPropertyGadgetId(idval,index) OF srcGen
+ENDPROC
+
 PROC addTerminator() OF srcGen
   DEF tempStr[10]:STRING
   IF self.terminator 
