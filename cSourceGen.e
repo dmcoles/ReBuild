@@ -456,7 +456,13 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('               *SpeedBarBase = NULL,')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('               *StringBase = NULL,')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('               *SpaceBase = NULL,')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('               *TextFieldBase = NULL,')
+  
+  IF (self.libsused[TYPE_TEXTFIELD]<>0) OR (self.libsused[TYPE_TEXTEDITOR]<>0)
+    IF (self.libsused[TYPE_TEXTFIELD]<>0) AND (self.libsused[TYPE_TEXTEDITOR]<>0)
+      self.writeLine('  //WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('               *TextFieldBase = NULL,')
+  ENDIF
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('               *BevelBase = NULL,')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('               *DrawListBase = NULL,')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('               *GlyphBase = NULL,')
@@ -468,7 +474,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('               *GetColorBase = NULL,')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('               *GradientSliderBase = NULL,')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('               *TapeDeckBase = NULL,')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('               *TextFieldBase = NULL,')
   IF self.libsused[TYPE_LED] THEN self.writeLine('               *LedBase = NULL,')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('               *ListViewBase = NULL,')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('               *VirtualBase = NULL,')
@@ -562,6 +567,9 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   ENDIF
 
   IF self.libsused[TYPE_TEXTFIELD]
+    IF self.libsused[TYPE_TEXTEDITOR]
+      self.writeLine('  //WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
     self.writeLine('  if( !(TextFieldBase = (struct Library*) OpenLibrary("gadgets/textfield.gadget",0L) ) ) return 0;')
   ENDIF
 
@@ -610,6 +618,9 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   ENDIF
 
   IF self.libsused[TYPE_TEXTEDITOR]
+    IF self.libsused[TYPE_TEXTFIELD]
+      self.writeLine('  //WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
     self.writeLine('  if( !(TextFieldBase = (struct Library*) OpenLibrary("gadgets/texteditor.gadget",0L) ) ) return 0;')
   ENDIF
 
@@ -669,7 +680,12 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  if (SpeedBarBase) CloseLibrary( (struct Library *)SpeedBarBase );')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  if (StringBase) CloseLibrary( (struct Library *)StringBase );')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  if (SpaceBase) CloseLibrary( (struct Library *)SpaceBase );')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  IF self.libsused[TYPE_TEXTFIELD]
+    IF self.libsused[TYPE_TEXTEDITOR]
+      self.writeLine('  //WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  ENDIF
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('  if (BevelBase) CloseLibrary( (struct Library *)BevelBase );')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  if (DrawListBase) CloseLibrary( (struct Library *)DrawListBase );')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  if (GlyphBase) CloseLibrary( (struct Library *)GlyphBase );')
@@ -682,7 +698,12 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  if (GetColorBase) CloseLibrary( (struct Library *)GetColorBase );')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  if (GradientSliderBase) CloseLibrary( (struct Library *)GradientSliderBase );')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  if (TapeDeckBase) CloseLibrary( (struct Library *)TapeDeckBase );')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  IF self.libsused[TYPE_TEXTEDITOR]
+    IF self.libsused[TYPE_TEXTFIELD]
+      self.writeLine('  //WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  if (TextFieldBase) CloseLibrary( (struct Library *)TextFieldBase );')
+  ENDIF
   IF self.libsused[TYPE_LED] THEN self.writeLine('  if (LedBase) CloseLibrary( (struct Library *)LedBase );')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  if (ListViewBase) CloseLibrary( (struct Library *)ListViewBase );')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  if (VirtualBase) CloseLibrary( (struct Library *)VirtualBase );')

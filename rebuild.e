@@ -1766,6 +1766,38 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
   ENDIF
 ENDPROC
 
+PROC countObjectsOfType(objType,comp:PTR TO reactionObject)
+  DEF count=0,i
+  
+  IF comp.type=objType THEN count:=1
+  FOR i:=0 TO comp.children.count()-1
+    count:=count+countObjectsOfType(objType,comp.children.item(i))
+  ENDFOR
+ENDPROC count
+
+PROC doTextFieldCheck(objType)
+  DEF i,count1=0,count2=0
+  IF (objType<>TYPE_TEXTEDITOR) AND (objType<>TYPE_TEXTFIELD) THEN RETURN TRUE
+
+  i:=ROOT_LAYOUT_ITEM
+  WHILE i<objectList.count()
+    count1:=count1+countObjectsOfType(TYPE_TEXTEDITOR,objectList.item(i))
+    count2:=count2+countObjectsOfType(TYPE_TEXTFIELD,objectList.item(i))
+    i+=3
+  ENDWHILE
+
+  IF objType=TYPE_TEXTEDITOR
+    IF (count2<>0) AND (count1=0)
+      IF warnRequest(mainWindow,'Warning','You are about too add a TextEditor gadget to a project\nthat already contains a TextField gadget. These will not\nwork together without manual modifications to the\ngenerated code. Do you wish to continue?',TRUE)=0 THEN RETURN FALSE
+    ENDIF
+  ELSEIF objType=TYPE_TEXTFIELD
+    IF (count1=0) AND (count2=0)
+      IF warnRequest(mainWindow,'Warning','You are about too add a TextField gadget to your project.\nThis is a legacy gadget from classact. It is not included in\nthe reaction library gadgets. Do you wish to continue?',TRUE)=0 THEN RETURN FALSE
+    ELSEIF (count1<>0) AND (count2=0)
+      IF warnRequest(mainWindow,'Warning','You are about too add a TextField gadget to a project\nthat already contains a TextEditor gadget. These will not\nwork together without manual modifications to the\ngenerated code. Also note that this is a legacy\ngadget from classact. It is not included in the\nreaction library gadgets. Do you wish to continue?',TRUE)=0 THEN RETURN FALSE
+    ENDIF
+  ENDIF
+ENDPROC TRUE
 
 PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
@@ -1778,6 +1810,8 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
     IF comp THEN allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
   ENDWHILE
   IF comp
+    IF doTextFieldCheck(objType)=FALSE THEN RETURN
+    
     newObj:=createObjectByType(objType,comp)
     IF newObj 
       setBusy()

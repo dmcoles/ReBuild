@@ -215,7 +215,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF (speedbarbase:=OpenLibrary(\agadgets/speedbar.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspdb\q)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF (stringbase:=OpenLibrary(\agadgets/string.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qstrn\q)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF (spacebase:=OpenLibrary(\agadgets/space.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qspce\q)')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/textfield.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
+  IF self.libsused[TYPE_TEXTFIELD]
+    IF (self.libsused[TYPE_TEXTEDITOR])
+      self.writeLine('  ->WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/textfield.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
+  ENDIF
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('  IF (bevelbase:=OpenLibrary(\aimages/bevel.image\a,0))=NIL THEN Throw(\qLIB\q,\qbevl\q)')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  IF (drawlistbase:=OpenLibrary(\aimages/drawlist.image\a,0))=NIL THEN Throw(\qLIB\q,\qdraw\q)')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  IF (glyphbase:=OpenLibrary(\aimages/glyph.image\a,0))=NIL THEN Throw(\qLIB\q,\qglyp\q)')
@@ -227,7 +232,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  IF (getcolorbase:=OpenLibrary(\agadgets/getcolor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qgcol\q)')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  IF (gradientsliderbase:=OpenLibrary(\agadgets/gradientslider.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qgsld\q)')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF (tapedeckbase:=OpenLibrary(\agadgets/tapedeck.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtape\q)')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/texteditor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
+  IF self.libsused[TYPE_TEXTEDITOR]
+    IF (self.libsused[TYPE_TEXTFIELD])
+      self.writeLine('  ->WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  IF (textfieldbase:=OpenLibrary(\agadgets/texteditor.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtext\q)')
+  ENDIF
   IF self.libsused[TYPE_LED] THEN self.writeLine('  IF (ledbase:=OpenLibrary(\aimages/led.image\a,0))=NIL THEN Throw(\qLIB\q,\qed\q)')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF (listviewbase:=OpenLibrary(\agadgets/listview.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qlvw\q)')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
@@ -270,7 +280,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_SPEEDBAR] THEN self.writeLine('  IF speedbarbase THEN CloseLibrary(speedbarbase)')
   IF self.libsused[TYPE_STRING] THEN self.writeLine('  IF stringbase THEN CloseLibrary(stringbase)')
   IF self.libsused[TYPE_SPACE] THEN self.writeLine('  IF spacebase THEN CloseLibrary(spacebase)')
-  IF self.libsused[TYPE_TEXTFIELD] THEN self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
+  IF self.libsused[TYPE_TEXTFIELD]
+    IF (self.libsused[TYPE_TEXTEDITOR])
+      self.writeLine('  ->WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
+  ENDIF
   IF self.libsused[TYPE_BEVEL] THEN self.writeLine('  IF bevelbase THEN CloseLibrary(bevelbase)')
   IF self.libsused[TYPE_DRAWLIST] THEN self.writeLine('  IF drawlistbase THEN CloseLibrary(drawlistbase)')
   IF self.libsused[TYPE_GLYPH] THEN self.writeLine('  IF glyphbase THEN CloseLibrary(glyphbase)')
@@ -283,7 +298,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_GETCOLOR] THEN self.writeLine('  IF getcolorbase THEN CloseLibrary(getcolorbase)')
   IF self.libsused[TYPE_GRADSLIDER] THEN self.writeLine('  IF gradientsliderbase THEN CloseLibrary(gradientsliderbase)')
   IF self.libsused[TYPE_TAPEDECK] THEN self.writeLine('  IF tapedeckbase THEN CloseLibrary(tapedeckbase)')
-  IF self.libsused[TYPE_TEXTEDITOR] THEN self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
+  IF self.libsused[TYPE_TEXTEDITOR]
+    IF (self.libsused[TYPE_TEXTFIELD])
+      self.writeLine('  ->WARNING: TextEditor and TextField both share the same librarybase variable name so this will need to be rectified manually')
+    ENDIF
+    self.writeLine('  IF textfieldbase THEN CloseLibrary(textfieldbase)')
+  ENDIF
   IF self.libsused[TYPE_LED] THEN self.writeLine('  IF ledbase THEN CloseLibrary(ledbase)')
   IF self.libsused[TYPE_LISTVIEW] THEN self.writeLine('  IF listviewbase THEN CloseLibrary(listviewbase)')
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF virtualbase THEN CloseLibrary(virtualbase)')
