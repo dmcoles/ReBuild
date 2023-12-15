@@ -173,10 +173,10 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
     FOR i:=0 TO rexxObject.commands.count()-1
       StrCopy(tempStr,rexxObject.commands.item(i))
       LowerStr(tempStr)
-      StringF(tempStr,'  { \q\s\q, \d, rexx_\s, NULL, NULL },',rexxObject.commands.item(i),i,tempStr)
+      StringF(tempStr,'  { \q\s\q, \d, rexx_\s, 0, 0 },',rexxObject.commands.item(i),i,tempStr)
       self.writeLine(tempStr)
     ENDFOR
-    self.writeLine('  { NULL, NULL, NULL, NULL, NULL }')
+    self.writeLine('  { NULL, 0, NULL, 0, 0 }')
     self.writeLine('};')
     self.writeLine('')
   ENDIF
