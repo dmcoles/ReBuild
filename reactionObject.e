@@ -39,7 +39,7 @@ EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU,
             
 EXPORT ENUM CHIGAD_MINWIDTH, CHIGAD_MINHEIGHT, CHIGAD_MAXWIDTH, CHIGAD_MAXHEIGHT,
       CHIGAD_WEIGHTEDWIDTH, CHIGAD_WEIGHTEDHEIGHT, CHIGAD_SCALEWIDTH, CHIGAD_SCALEHEIGHT,
-      CHIGAD_NOMINALSIZE, CHIGAD_WEIGHTMINIMUM, CHIGAD_CACHEDOMAIN, CHIGAD_NODISPOSE,
+      CHIGAD_NOMINALSIZE, CHIGAD_WEIGHTMINIMUM, CHIGAD_CACHEDOMAIN, CHIGAD_NODISPOSE, CHIGAD_WEIGHTBAR,
       CHIGAD_OK, CHIGAD_CANCEL
 
 EXPORT ENUM FIELDTYPE_CHAR=1, FIELDTYPE_INT=2, FIELDTYPE_LONG=3, FIELDTYPE_STR=4, FIELDTYPE_STRLIST=5, FIELDTYPE_INTLIST=6
@@ -70,6 +70,7 @@ EXPORT OBJECT reactionObject
   weightMinimum:CHAR
   cacheDomain:CHAR
   noDispose:CHAR
+  weightBar:CHAR
   
   tempParentId:INT
   drawInfo:LONG
@@ -270,6 +271,15 @@ PROC create() OF childSettingsForm
           GA_TEXT, 'No_Dispose',
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ CHIGAD_WEIGHTBAR ]:=CheckBoxObject,
+          GA_ID, CHIGAD_WEIGHTBAR,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'WeightBar',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -317,6 +327,7 @@ PROC editSettings(comp:PTR TO reactionObject) OF childSettingsForm
   SetGadgetAttrsA(self.gadgetList[ CHIGAD_WEIGHTMINIMUM ],0,0,[CHECKBOX_CHECKED,comp.weightMinimum,0]) 
   SetGadgetAttrsA(self.gadgetList[ CHIGAD_CACHEDOMAIN ],0,0,[CHECKBOX_CHECKED,comp.cacheDomain,0]) 
   SetGadgetAttrsA(self.gadgetList[ CHIGAD_NODISPOSE ],0,0,[CHECKBOX_CHECKED,comp.noDispose,0]) 
+  SetGadgetAttrsA(self.gadgetList[ CHIGAD_WEIGHTBAR ],0,0,[CHECKBOX_CHECKED,comp.weightBar,0]) 
 
   res:=self.showModal()
   IF res=MR_OK
@@ -332,6 +343,7 @@ PROC editSettings(comp:PTR TO reactionObject) OF childSettingsForm
     comp.weightMinimum:=Gets(self.gadgetList[ CHIGAD_WEIGHTMINIMUM ],CHECKBOX_CHECKED)
     comp.cacheDomain:=Gets(self.gadgetList[ CHIGAD_CACHEDOMAIN ],CHECKBOX_CHECKED)
     comp.noDispose:=Gets(self.gadgetList[ CHIGAD_NODISPOSE ],CHECKBOX_CHECKED)
+    comp.weightBar:=Gets(self.gadgetList[ CHIGAD_WEIGHTBAR ],CHECKBOX_CHECKED)
   ENDIF
 ENDPROC res=MR_OK
 
@@ -361,6 +373,7 @@ EXPORT PROC create(parent) OF reactionObject
   self.weightMinimum:=0
   self.cacheDomain:=TRUE
   self.noDispose:=0
+  self.weightBar:=0
   
   self.tempParentId:=-1
   self.previewObject:=0
@@ -490,6 +503,8 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'NODISPOSE: \d',self.noDispose)
   fser.writeLine(tempStr)
+  StringF(tempStr,'WEIGHTBAR: \d',self.weightBar)
+  fser.writeLine(tempStr)
   fser.writeLine('--')
   
   list:=self.serialiseData()
@@ -586,6 +601,8 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
         self.cacheDomain:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('NODISPOSE: ',tempStr,STRLEN)
         self.noDispose:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('WEIGHTBAR: ',tempStr,STRLEN)
+        self.weightBar:=Val(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE
@@ -652,15 +669,15 @@ EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF reactionObject
   IF self.minHeight<>-1 THEN srcGen.componentPropertyInt('CHILD_MinHeight',self.minHeight)
   IF self.maxWidth<>-1 THEN srcGen.componentPropertyInt('CHILD_MaxWidth',self.maxWidth)
   IF self.maxHeight<>-1 THEN srcGen.componentPropertyInt('CHILD_MaxHeight',self.maxHeight)
-  IF self.minWidth<>-1 THEN srcGen.componentPropertyInt('CHILD_MinWidth',self.minWidth)
   IF self.weightedWidth<>100 THEN srcGen.componentPropertyInt('CHILD_WeightedWidth',self.weightedWidth)
   IF self.weightedHeight<>100 THEN srcGen.componentPropertyInt('CHILD_WeightedHeight',self.weightedHeight)
-  IF self.scaleWidth<>0 THEN srcGen.componentPropertyInt('CHILD_ScaledWidth',self.scaleWidth)
-  IF self.scaleHeight<>0 THEN srcGen.componentPropertyInt('CHILD_ScaledHeight',self.scaleHeight)
+  IF self.scaleWidth<>0 THEN srcGen.componentPropertyInt('CHILD_ScaleWidth',self.scaleWidth)
+  IF self.scaleHeight<>0 THEN srcGen.componentPropertyInt('CHILD_ScaleHeight',self.scaleHeight)
   IF self.nominalSize THEN srcGen.componentProperty('CHILD_NominalSize','TRUE',FALSE)
   IF self.weightMinimum THEN srcGen.componentProperty('CHILD_WeightMinimum','TRUE',FALSE)
   IF self.cacheDomain=0 THEN srcGen.componentProperty('CHILD_CacheDomain','FALSE',FALSE)
   IF self.noDispose THEN srcGen.componentProperty('CHILD_NoDispose','TRUE',FALSE)
+  IF self.weightBar THEN srcGen.componentProperty('LAYOUT_WeightBar','1',FALSE)
 ENDPROC
 
 EXPORT PROC isImage() OF reactionObject IS self.errObj

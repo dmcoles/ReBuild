@@ -88,6 +88,9 @@ EXPORT PROC createPreviewObject(scr) OF layoutObject
         CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
         CHILD_SCALEWIDTH, self.scaleWidth,
         CHILD_SCALEHEIGHT, self.scaleHeight,
+        CHILD_NOMINALSIZE, self.nominalSize,
+        CHILD_WEIGHTMINIMUM, self.weightMinimum,
+        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
         TAG_END]
 ENDPROC
 
@@ -594,6 +597,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF layoutObject
 
   IF self.labelPlace THEN srcGen.componentProperty('LAYOUT_LabelPlace', ListItem(['BVJ_TOP_CENTER', 'BVJ_TOP_LEFT', 'BVJ_TOP_RIGHT', 'BVJ_IN_CENTER', 'BVJ_IN_LEFT', 'BVJ_IN_RIGHT'],self.labelPlace),FALSE)
 
+
   IF self.fixedHoriz=FALSE THEN srcGen.componentProperty('LAYOUT_FixedHoriz','FALSE',FALSE)
   
   IF self.fixedVert=FALSE THEN srcGen.componentProperty('LAYOUT_FixedVert','FALSE',FALSE)
@@ -603,6 +607,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF layoutObject
   IF self.evenSize  THEN srcGen.componentProperty('LAYOUT_EvenSize','TRUE',FALSE)
 
   IF self.deferLayout THEN srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
+
 ENDPROC
 
 EXPORT PROC allowChildren() OF layoutObject IS -1

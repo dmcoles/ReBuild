@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.6.0-beta'
-#date verstring '$VER:Rebuild 0.6.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.7.0-beta'
+#date verstring '$VER:Rebuild 0.7.0-%Y%m%d%h%n%s-alpha'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -1203,7 +1203,9 @@ PROC genCode()
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
   DEF windowNames:PTR TO stringlist
+  DEF windowObj:PTR TO windowObject
   DEF n
+  DEF sharedport=0
   
   setBusy()
   NEW codeGenForm.create()
@@ -1243,7 +1245,9 @@ PROC genCode()
   NEW windowNames.stringlist(10)
   WHILE i<objectList.count()
     findLibsUsed(objectList.item(i),libsused)
-    windowNames.add(objectList.item(i-ROOT_LAYOUT_ITEM+ROOT_WINDOW_ITEM)::windowObject.name)
+    windowObj:=objectList.item(i-ROOT_LAYOUT_ITEM+ROOT_WINDOW_ITEM)
+    IF windowObj.sharedPort THEN sharedport:=TRUE
+    windowNames.add(windowObj.name)
     i+=3
   ENDWHILE
   
@@ -1273,7 +1277,7 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
   rexxComp:=objectList.item(ROOT_REXX_ITEM)
-  srcGen.genHeader(screenComp,rexxComp, windowNames)
+  srcGen.genHeader(screenComp,rexxComp, windowNames,sharedport)
   END windowNames
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)

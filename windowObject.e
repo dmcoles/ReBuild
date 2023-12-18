@@ -1253,6 +1253,9 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   IF self.lockHeight THEN srcGen.componentProperty('WINDOW_LockHeight','TRUE',FALSE)
   IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
   IF self.gadgetHelp THEN srcGen.componentProperty('WINDOW_GadgetHelp','TRUE',FALSE)
+  IF self.sharedPort
+    srcGen.componentProperty('WINDOW_SharedPort','gSharedPort',FALSE)
+  ENDIF
   srcGen.componentProperty('WINDOW_AppPort','gAppPort',FALSE)
 
   IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)

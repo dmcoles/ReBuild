@@ -21,7 +21,7 @@ PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist) OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, sharedPort) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF hasarexx,i
   
@@ -111,6 +111,10 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   ENDIF
   
   self.writeLine('DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0')
+  IF sharedPort
+    self.writeLine('DEF gSharedPort=0')
+  ENDIF
+  
   IF hasarexx
     self.writeLine('DEF gArexxObject=0')
     IF rexxObject.replyHook
@@ -248,12 +252,18 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
   self.writeLine('  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")')
   self.writeLine('  IF (gAppPort:=CreateMsgPort())=NIL THEN Raise(\qport\q)')
+  IF sharedPort
+    self.writeLine('  IF (gSharedPort:=CreateMsgPort())=NIL THEN Raise(\qport\q)')
+  ENDIF
   self.writeLine('ENDPROC')
   self.writeLine('')
   self.writeLine('PROC cleanup()')
   self.writeLine('  IF gVisInfo THEN FreeVisualInfo(gVisInfo)')
   self.writeLine('  IF gDrawInfo THEN FreeScreenDrawInfo(gScreen,gDrawInfo)')
   self.writeLine('  IF gAppPort THEN DeleteMsgPort(gAppPort)')
+  IF sharedPort
+    self.writeLine('  IF gSharedPort THEN DeleteMsgPort(gSharedPort)')
+  ENDIF
   self.genScreenFree(screenObject)
   self.writeLine('')
   self.writeLine('  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)')

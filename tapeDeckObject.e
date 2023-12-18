@@ -225,6 +225,9 @@ EXPORT PROC createPreviewObject(scr) OF tapeDeckObject
     CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
     CHILD_SCALEWIDTH, self.scaleWidth,
     CHILD_SCALEHEIGHT, self.scaleHeight,
+    CHILD_NOMINALSIZE, self.nominalSize,
+    CHILD_WEIGHTMINIMUM, self.weightMinimum,
+    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
     TAG_END]
 ENDPROC
 

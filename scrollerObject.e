@@ -257,6 +257,9 @@ EXPORT PROC createPreviewObject(scr) OF scrollerObject
       CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
       CHILD_SCALEWIDTH, self.scaleWidth,
       CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
       TAG_END]
   ELSE
     self.previewChildAttrs:=[
@@ -271,6 +274,9 @@ EXPORT PROC createPreviewObject(scr) OF scrollerObject
       CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
       CHILD_SCALEWIDTH, self.scaleWidth,
       CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
       TAG_END]
   ENDIF
 ENDPROC
