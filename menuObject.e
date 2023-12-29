@@ -43,6 +43,7 @@ ENDOBJECT
 OBJECT menuSettingsForm OF reactionForm
 PRIVATE
   menuObject:PTR TO menuObject
+  rootLayout:LONG
   selectedItem:LONG
   tempMenuItems:PTR TO stdlist
   columninfo[4]:ARRAY OF columninfo
@@ -284,7 +285,7 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
     ->restore type so we can add again quickly
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, menuItem.type , TAG_END])
 
-    IF gadget=self.gadgetList[MENUGAD_ITEM_NAME] THEN ActivateGadget(gadget, win, 0)
+    IF gadget=self.gadgetList[MENUGAD_ITEM_NAME] THEN ActivateLayoutGadget(self.rootLayout, win, 0, gadget)
   ENDIF
 ENDPROC
 
@@ -348,7 +349,7 @@ PROC create() OF menuSettingsForm
     WA_DRAGBAR, TRUE,
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
 
-    WINDOW_PARENTGROUP, VLayoutObject,
+    WINDOW_PARENTGROUP, self.rootLayout:=VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
       LAYOUT_ADDCHILD, LayoutObject,

@@ -50,6 +50,7 @@ ENDOBJECT
 OBJECT speedBarSettingsForm OF reactionForm
 PRIVATE
   speedBarObject:PTR TO speedBarObject
+  rootLayout:LONG
   columninfo[3]:ARRAY OF columninfo
   tempItems:PTR TO stringlist
   selectedItem:INT
@@ -105,7 +106,7 @@ PROC addItem(nself,gadget,id,code) OF speedBarSettingsForm
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
     SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],win,0,[LISTBROWSER_SELECTEDNODE, 0,0])
     self.selectItem(self,0,0,-1)
-    IF gadget=self.gadgetList[SBARGAD_BUTTON_TEXT] THEN ActivateGadget(gadget, win, 0)
+    IF gadget=self.gadgetList[SBARGAD_BUTTON_TEXT] THEN ActivateLayoutGadget(self.rootLayout, win, 0, gadget)
 
   ENDIF
 ENDPROC
@@ -171,7 +172,7 @@ PROC create() OF speedBarSettingsForm
     WA_DRAGBAR, TRUE,
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
 
-    WINDOW_PARENTGROUP, VLayoutObject,
+    WINDOW_PARENTGROUP, self.rootLayout:=VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 

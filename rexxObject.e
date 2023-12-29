@@ -44,6 +44,7 @@ ENDOBJECT
 
 OBJECT rexxCommandSettingsForm OF reactionForm
   rexxObject:PTR TO rexxObject
+  rootLayout:LONG
   selectedItem:LONG
   browserlist:PTR TO mlh
 ENDOBJECT
@@ -237,7 +238,7 @@ PROC create() OF rexxCommandSettingsForm
     WA_DRAGBAR, TRUE,
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
 
-    WINDOW_PARENTGROUP, VLayoutObject,
+    WINDOW_PARENTGROUP, self.rootLayout:=VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
       LAYOUT_ADDCHILD, LayoutObject,
@@ -325,7 +326,7 @@ PROC addCommand(nself,gadget,id,code) OF rexxCommandSettingsForm
   SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_COMMAND],win,0,[STRINGA_TEXTVAL, '', TAG_END])
 
   SetGadgetAttrsA(self.gadgetList[REXXCMDGAD_CMDLIST],win,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
-  ActivateGadget(gadget, win, 0)
+  ActivateLayoutGadget(self.rootLayout, win, 0, gadget)
 ENDPROC
 
 PROC delCommand(nself,gadget,id,code) OF rexxCommandSettingsForm

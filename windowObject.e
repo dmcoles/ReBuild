@@ -559,7 +559,7 @@ PROC create() OF windowFlagsSettingsForm
           GA_ID, WINGAD_FLAGS_BACKDROP,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          GA_TEXT, 'BackDop',
+          GA_TEXT, 'BackDrop',
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
       LayoutEnd,

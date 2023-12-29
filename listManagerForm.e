@@ -27,6 +27,7 @@ CONST NUMGADS=LISTMANAGER_SORTITEM+1
 
 EXPORT OBJECT listManagerForm OF reactionForm
 PRIVATE
+  rootLayout:LONG
   lists:PTR TO stdlist
   selectedList:LONG
   selectedItem:LONG
@@ -114,7 +115,7 @@ PROC addList(nself,gadget,id,code) OF listManagerForm
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTLIST],win,0,[LISTBROWSER_LABELS, self.browserlist1, LISTBROWSER_SELECTED, self.selectedList, TAG_END])
     self.selectList(self,self.gadgetList[LISTMANAGER_LISTLIST],LISTMANAGER_LISTLIST,self.selectedList)
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL,'',TAG_END])
-    IF gadget=self.gadgetList[LISTMANAGER_LISTNAME] THEN ActivateGadget(gadget, win, 0)
+    IF gadget=self.gadgetList[LISTMANAGER_LISTNAME] THEN ActivateLayoutGadget(self.rootLayout, win,0,gadget)
   ENDIF
 ENDPROC
 
@@ -174,7 +175,7 @@ PROC newItem(nself,gadget,id,code) OF listManagerForm
       Raise("MEM")    
     ENDIF
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, TAG_END])
-    IF gadget=self.gadgetList[LISTMANAGER_ITEMNAME] THEN ActivateGadget(gadget, win, 0)
+    IF gadget=self.gadgetList[LISTMANAGER_ITEMNAME] THEN ActivateLayoutGadget(self.rootLayout, win, 0, gadget)
   ENDIF
 ENDPROC
 
@@ -274,7 +275,7 @@ EXPORT PROC create() OF listManagerForm
     WA_SIZEGADGET, TRUE,
     WA_DRAGBAR, TRUE,
     WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW,
-    WINDOW_PARENTGROUP, VLayoutObject,
+    WINDOW_PARENTGROUP, self.rootLayout:=VLayoutObject,
       LAYOUT_SPACEOUTER, TRUE,
       LAYOUT_DEFERLAYOUT, TRUE,
 
@@ -411,10 +412,55 @@ EXPORT PROC manageLists() OF listManagerForm
   DEF i
   DEF tempStr[4]:STRING
   DEF n
+  DEF hintInfo:PTR TO hintinfo
   self.lists:=getReactionLists()
   self.selectedList:=-1
 
   self.makeItemsList(0)
+
+  hintInfo:=New(SIZEOF hintinfo*9)
+  hintInfo[0].gadgetid:=LISTMANAGER_ADD
+  hintInfo[0].code:=-1
+  hintInfo[0].flags:=0
+  hintInfo[0].text:='Add a new list'
+
+  hintInfo[1].gadgetid:=LISTMANAGER_MODIFYNAME
+  hintInfo[1].code:=-1
+  hintInfo[1].flags:=0
+  hintInfo[1].text:='Update the name of the selected list'
+
+  hintInfo[2].gadgetid:=LISTMANAGER_DELNAME
+  hintInfo[2].code:=-1
+  hintInfo[2].flags:=0
+  hintInfo[2].text:='Remove the selected list entirely'
+
+  hintInfo[3].gadgetid:=LISTMANAGER_DELITEM
+  hintInfo[3].code:=-1
+  hintInfo[3].flags:=0
+  hintInfo[3].text:='Delete the currently selected list item'
+
+  hintInfo[4].gadgetid:=LISTMANAGER_SORTITEM
+  hintInfo[4].code:=-1
+  hintInfo[4].flags:=0
+  hintInfo[4].text:='Sort the currently selected list'
+
+  hintInfo[5].gadgetid:=LISTMANAGER_OK
+  hintInfo[5].code:=-1
+  hintInfo[5].flags:=0
+  hintInfo[5].text:='Close the list editor and save changes'
+
+  hintInfo[6].gadgetid:=LISTMANAGER_LISTNAME
+  hintInfo[6].code:=-1
+  hintInfo[6].flags:=0
+  hintInfo[6].text:='Enter the list name here'
+
+  hintInfo[7].gadgetid:=LISTMANAGER_ITEMNAME
+  hintInfo[7].code:=-1
+  hintInfo[7].flags:=0
+  hintInfo[7].text:='Enter the list item name here'
+  
+  Sets(self.windowObj,WINDOW_HINTINFO,hintInfo)
+  Sets(self.windowObj,WINDOW_GADGETHELP, TRUE)
 
   SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTLIST],0,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
 
@@ -425,6 +471,7 @@ EXPORT PROC manageLists() OF listManagerForm
       rlist.listnode:=n
       AddTail(self.browserlist1, n)
     ELSE 
+      Dispose(hintInfo)
       Raise("MEM")    
     ENDIF
   ENDFOR
@@ -432,4 +479,5 @@ EXPORT PROC manageLists() OF listManagerForm
 
   IF self.showModal()=MR_OK
   ENDIF
+  Dispose(hintInfo)
 ENDPROC -1

@@ -353,6 +353,7 @@ PROC editSettings(comp:PTR TO fuelGaugeObject) OF fuelGaugeSettingsForm
     comp.level:=Gets(self.gadgetList[ FGAUGEGAD_LEVEL ],INTEGER_NUMBER)
     comp.tickSize:=Gets(self.gadgetList[ FGAUGEGAD_TICKSIZE ],INTEGER_NUMBER)
     comp.ticks:=Gets(self.gadgetList[ FGAUGEGAD_TICKS ],INTEGER_NUMBER)
+    IF comp.ticks=1 THEN comp.ticks:=2   ->will cause a crash if ticks=1
 
     comp.orientation:=Gets(self.gadgetList[ FGAUGEGAD_ORIENTATION ],CHOOSER_SELECTED)
     comp.justification:=Gets(self.gadgetList[ FGAUGEGAD_JUSTIFICATION ],CHOOSER_SELECTED)

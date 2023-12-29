@@ -174,6 +174,37 @@ PROC end() OF codeGenForm
 ENDPROC
 
 EXPORT PROC selectLang(codeOptions:PTR TO codeOptions) OF codeGenForm
+  DEF hintInfo:PTR TO hintinfo
+  
+  hintInfo:=New(SIZEOF hintinfo*6)
+  hintInfo[0].gadgetid:=CODEGEN_LANGSELECTOR
+  hintInfo[0].code:=-1
+  hintInfo[0].flags:=0
+  hintInfo[0].text:='Select which language you would like the code generated in'
+
+  hintInfo[1].gadgetid:=CODEGEN_USEIDS
+  hintInfo[1].code:=-1
+  hintInfo[1].flags:=0
+  hintInfo[1].text:='Select whether you want the unique rebuild IDs to be used\nto identifythe gadgets or the array element indexes.'
+
+  hintInfo[2].gadgetid:=CODEGEN_FULLCODE
+  hintInfo[2].code:=-1
+  hintInfo[2].flags:=0
+  hintInfo[2].text:='Generate an entire code snippet including a sample\nmessage processing loop or just the definitions.'
+
+  hintInfo[3].gadgetid:=CODEGEN_OK
+  hintInfo[3].code:=-1
+  hintInfo[3].flags:=0
+  hintInfo[3].text:='Proceed with the code generation'
+
+  hintInfo[4].gadgetid:=CODEGEN_CANCEL
+  hintInfo[4].code:=-1
+  hintInfo[4].flags:=0
+  hintInfo[4].text:='Cancel the code generation'
+
+  Sets(self.windowObj,WINDOW_HINTINFO,hintInfo)
+  Sets(self.windowObj,WINDOW_GADGETHELP, TRUE)
+
   SetGadgetAttrsA(self.gadgetList[ CODEGEN_LANGSELECTOR ],0,0,[RADIOBUTTON_SELECTED,codeOptions.langid,TAG_END])
   SetGadgetAttrsA(self.gadgetList[ CODEGEN_USEIDS ],0,0,[RADIOBUTTON_SELECTED,IF codeOptions.useids THEN 0 ELSE 1,TAG_END])
   SetGadgetAttrsA(self.gadgetList[ CODEGEN_FULLCODE ],0,0,[RADIOBUTTON_SELECTED,IF codeOptions.fullcode THEN 0 ELSE 1,TAG_END])
@@ -182,8 +213,10 @@ EXPORT PROC selectLang(codeOptions:PTR TO codeOptions) OF codeGenForm
     codeOptions.langid:=Gets(self.gadgetList[ CODEGEN_LANGSELECTOR ],RADIOBUTTON_SELECTED)
     codeOptions.useids:=IF Gets(self.gadgetList[ CODEGEN_USEIDS ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
     codeOptions.fullcode:=IF Gets(self.gadgetList[ CODEGEN_FULLCODE ],RADIOBUTTON_SELECTED)=0 THEN TRUE ELSE FALSE
+    Dispose(hintInfo)
     RETURN TRUE
   ENDIF
+  Dispose(hintInfo)
 ENDPROC FALSE
 
 

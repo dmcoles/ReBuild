@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.7.0-beta'
-#date verstring '$VER:Rebuild 0.7.0-%Y%m%d%h%n%s-alpha'
+#define vernum '0.8.0-beta'
+#date verstring '$VER:Rebuild 0.8.0-%Y%m%d%h%n%s-beta'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -118,6 +118,10 @@ OPT OSVERSION=37,LARGE
     showSettingsOnAdd:CHAR
     warnOnDelete:CHAR
     saveProjectIcons:CHAR
+    windowTop:INT
+    windowLeft:INT
+    windowWidth:INT
+    windowHeight:INT
   ENDOBJECT
 
 
@@ -416,9 +420,9 @@ PROC updateSel(node)
           IF menuItem
             type:=GTMENUITEM_USERDATA(menuItem)
             IF type<>-1
-              check:=(allowchildren=FALSE) OR (comp.type=TYPE_WINDOW) OR (type==[TYPE_STATUSBAR,
-                TYPE_PAGE, TYPE_PROGRESS, TYPE_TEXTENTRY, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
-              menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i,check)
+              dis:=((comp.parent=0) AND (allowchildren=FALSE)) OR (comp.type=TYPE_WINDOW) OR
+               (type==[TYPE_STATUSBAR, TYPE_PAGE, TYPE_PROGRESS, TYPE_TEXTENTRY, TYPE_SMARTBITMAP, TYPE_TITLEBAR])
+              menuDisable(win,MENU_EDIT,IF j=0 THEN MENU_EDIT_ADD_GADGET ELSE MENU_EDIT_ADD_IMAGE,i,dis)
             ENDIF
           ENDIF
         ENDIF
@@ -459,7 +463,7 @@ PROC updateSel(node)
       ENDIF
     ENDIF
     
-    dis:=allowchildren=FALSE
+    dis:=(comp.parent=0) AND (allowchildren=FALSE) OR (comp.type=TYPE_WINDOW)
     menuDisable(win,MENU_EDIT,MENU_EDIT_EDIT,0,FALSE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_VLAYOUT,0,dis)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_HLAYOUT,0,dis)
@@ -471,7 +475,8 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELPREV,disprevgroup)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELNEXT,disnextgroup)
     
-    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW),TAG_END])
+    dis:=(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW)
+    SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,dis,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,Not((comp.parent<>0) ANDALSO (comp.parent.parent<>0)),TAG_END])
 
     IF bufferLayout
@@ -676,6 +681,22 @@ PROC loadIconPrefs()
       AstrCopy(systemOptions.savePath,s,256)
     ENDIF
 
+    IF(s:=FindToolType(dobj.tooltypes,'WINDOWLEFT'))
+      systemOptions.windowLeft:=Val(s)
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'WINDOWTOP'))
+      systemOptions.windowTop:=Val(s)
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'WINDOWWIDTH'))
+      systemOptions.windowWidth:=Val(s)
+    ENDIF
+
+    IF(s:=FindToolType(dobj.tooltypes,'WINDOWHEIGHT'))
+      systemOptions.windowHeight:=Val(s)
+    ENDIF
+
     FreeDiskObject(dobj)
   ENDIF
 ENDPROC
@@ -715,17 +736,17 @@ PROC createForm()
 
   mainWindow:=WindowObject,
     WA_TITLE, windowTitle,
-    WA_LEFT, 100,
-    WA_TOP, 100,
-    WA_HEIGHT, 280,
-    WA_WIDTH, 150,
+    WA_LEFT, IF systemOptions.windowLeft=-1 THEN 100 ELSE systemOptions.windowLeft,
+    WA_TOP, IF systemOptions.windowTop=-1 THEN 100 ELSE systemOptions.windowTop,
+    WA_HEIGHT, IF systemOptions.windowHeight=-1 THEN 280 ELSE systemOptions.windowHeight,
+    WA_WIDTH, IF systemOptions.windowWidth=-1 THEN 150 ELSE systemOptions.windowWidth,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
     WA_MINHEIGHT, 80,
     WA_MAXHEIGHT, 8192,
     WA_PUBSCREEN, 0,
     WA_ACTIVATE, TRUE,
-    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    IF (systemOptions.windowLeft=-1) AND (systemOptions.windowTop=-1) THEN WINDOW_POSITION ELSE TAG_IGNORE, WPOS_CENTERSCREEN,
     ->WA_CustomScreen, gScreen,
     WINDOW_ICONTITLE, 'Rebuild',
     WINDOW_APPPORT, appPort,
@@ -2586,12 +2607,95 @@ PROC main() HANDLE
   DEF i
   DEF item,type
 
+  DEF hintInfo:PTR TO hintinfo
+  
   openClasses()
   initialise()
   NEW objectList.stdlist(20)
   NEW bufferList.stdlist(20)
   initReactionLists()
+
+  hintInfo:=New(SIZEOF hintinfo*17)
+  hintInfo[0].gadgetid:=GAD_ADD
+  hintInfo[0].code:=-1
+  hintInfo[0].flags:=0
+  hintInfo[0].text:='Add a new gadget'
+
+  hintInfo[1].gadgetid:=GAD_GENMINUS
+  hintInfo[1].code:=-1
+  hintInfo[1].flags:=0
+  hintInfo[1].text:='Move the current gadget up to the parent hierarchy'
+
+  hintInfo[2].gadgetid:=GAD_GENPLUS
+  hintInfo[2].code:=-1
+  hintInfo[2].flags:=0
+  hintInfo[2].text:='Move the current gadget down to the child hierarchy'
+
+  hintInfo[3].gadgetid:=GAD_DELETE
+  hintInfo[3].code:=-1
+  hintInfo[3].flags:=0
+  hintInfo[3].text:='Delete the currently selected gadget/window'
+
+  hintInfo[4].gadgetid:=GAD_MOVEUP
+  hintInfo[4].code:=-1
+  hintInfo[4].flags:=0
+  hintInfo[4].text:='Move the currently selected gadget/window up'
+
+  hintInfo[5].gadgetid:=GAD_MOVEDOWN
+  hintInfo[5].code:=-1
+  hintInfo[5].flags:=0
+  hintInfo[5].text:='Move the currently selected gadget/window down'
+
+  hintInfo[6].gadgetid:=GAD_LISTS
+  hintInfo[6].code:=-1
+  hintInfo[6].flags:=0
+  hintInfo[6].text:='Open the list editor'
+
+  hintInfo[7].gadgetid:=GAD_CODE
+  hintInfo[7].code:=-1
+  hintInfo[7].flags:=0
+  hintInfo[7].text:='Open the code generator'
+
+  hintInfo[8].gadgetid:=GAD_LOAD
+  hintInfo[8].code:=-1
+  hintInfo[8].flags:=0
+  hintInfo[8].text:='Load a rebuild project file'
+
+  hintInfo[9].gadgetid:=GAD_SAVE
+  hintInfo[9].code:=-1
+  hintInfo[9].flags:=0
+  hintInfo[9].text:='Save current rebuild project file'
+
+  hintInfo[10].gadgetid:=GAD_NEW
+  hintInfo[10].code:=-1
+  hintInfo[10].flags:=0
+  hintInfo[10].text:='Start a new rebuild project'
   
+  hintInfo[11].gadgetid:=GAD_TEMP_COPYTO
+  hintInfo[11].code:=-1
+  hintInfo[11].flags:=0
+  hintInfo[11].text:='Copy the currently selected gadget to the buffer'
+
+  hintInfo[12].gadgetid:=GAD_TEMP_MOVETO
+  hintInfo[12].code:=-1
+  hintInfo[12].flags:=0
+  hintInfo[12].text:='Move the currently selected gadget to the buffer'
+
+  hintInfo[13].gadgetid:=GAD_TEMP_COPYFROM
+  hintInfo[13].code:=-1
+  hintInfo[13].flags:=0
+  hintInfo[13].text:='Copy the buffered gadget to the elements area'
+
+  hintInfo[14].gadgetid:=GAD_TEMP_MOVEFROM
+  hintInfo[14].code:=-1
+  hintInfo[14].flags:=0
+  hintInfo[14].text:='Move the buffered gadget to the elements area'
+
+  hintInfo[15].gadgetid:=GAD_TEMP_REMOVE
+  hintInfo[15].code:=-1
+  hintInfo[15].flags:=0
+  hintInfo[15].text:='Delete the buffered gadget'
+
   codeOptions.langid:=0
   codeOptions.useids:=TRUE
   codeOptions.fullcode:=TRUE
@@ -2601,11 +2705,18 @@ PROC main() HANDLE
   systemOptions.warnOnDelete:=TRUE
   systemOptions.showBuffer:=TRUE
   systemOptions.saveProjectIcons:=FALSE
+  systemOptions.windowLeft:=-1
+  systemOptions.windowTop:=-1
+  systemOptions.windowWidth:=-1
+  systemOptions.windowHeight:=-1
+  
   AstrCopy(systemOptions.savePath,'')
   
   loadIconPrefs()
   
   createForm()
+  Sets(mainWindow,WINDOW_HINTINFO,hintInfo)
+  Sets(mainWindow,WINDOW_GADGETHELP, TRUE)
   
   IF (win:=RA_OpenWindow(mainWindow))
     IF systemOptions.showBuffer=FALSE THEN toggleBuffer()
@@ -2857,6 +2968,7 @@ EXCEPT DO
   IF list2 THEN freeBrowserNodes( list2 )
   IF mainWindow THEN DisposeObject(mainWindow)
   IF (appPort) THEN DeleteMsgPort(appPort)
+  Dispose(hintInfo)
   deinitialise()
   closeClasses()
 ENDPROC
