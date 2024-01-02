@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen'
 
-EXPORT ENUM STRGAD_NAME, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE,
+EXPORT ENUM STRGAD_NAME, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE, STRGAD_JUSTIFY,
       STRGAD_DISABLED, STRGAD_READONLY, STRGAD_TABCYCLE, STRGAD_REPLACEMODE,
       STRGAD_OK, STRGAD_CHILD, STRGAD_CANCEL
       
@@ -30,6 +30,7 @@ EXPORT OBJECT stringObject OF reactionObject
   maxChars:CHAR
   value[80]:ARRAY OF CHAR
   minVisible:INT
+  justify:CHAR
   disabled:CHAR
   readOnly:CHAR
   tabCycle:CHAR
@@ -39,6 +40,7 @@ ENDOBJECT
 OBJECT stringSettingsForm OF reactionForm
 PRIVATE
   stringObject:PTR TO stringObject
+  labels1:PTR TO LONG
 ENDOBJECT
 
 PROC create() OF stringSettingsForm
@@ -124,6 +126,20 @@ PROC create() OF stringSettingsForm
         LABEL_TEXT, 'MinVisible',
       LabelEnd,
 
+      LAYOUT_ADDCHILD, self.gadgetList[ STRGAD_JUSTIFY ]:=ChooserObject,
+        GA_ID, STRGAD_JUSTIFY,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        CHOOSER_POPUP, TRUE,
+        CHOOSER_MAXLABELS, 12,
+        CHOOSER_ACTIVE, 0,
+        CHOOSER_WIDTH, -1,
+        CHOOSER_LABELS, self.labels1:=chooserLabelsA(['GACT_STRINGLEFT','GACT_STRINGCENTER','GACT_STRINGRIGHT',0]),
+      ChooserEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Justification',
+      LabelEnd,
+
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
@@ -200,6 +216,7 @@ PROC editChildSettings(nself,gadget,id,code) OF stringSettingsForm
 ENDPROC
 
 PROC end() OF stringSettingsForm
+  freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_STR_GADS]
   END self.gadgetActions[NUM_STR_GADS]
 ENDPROC
@@ -213,6 +230,8 @@ PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
   SetGadgetAttrsA(self.gadgetList[ STRGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,comp.maxChars,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_VALUE ],0,0,[STRINGA_TEXTVAL,comp.value,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_MINVISIBLE ],0,0,[INTEGER_NUMBER,comp.minVisible,0])
+  SetGadgetAttrsA(self.gadgetList[ STRGAD_JUSTIFY ],0,0,[CHOOSER_SELECTED,comp.justify,0]) 
+
   SetGadgetAttrsA(self.gadgetList[ STRGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ STRGAD_READONLY ],0,0,[CHECKBOX_CHECKED,comp.readOnly,0]) 
   SetGadgetAttrsA(self.gadgetList[ STRGAD_TABCYCLE ],0,0,[CHECKBOX_CHECKED,comp.tabCycle,0]) 
@@ -224,6 +243,7 @@ PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
     comp.maxChars:=Gets(self.gadgetList[ STRGAD_MAXCHARS ],INTEGER_NUMBER)
     AstrCopy(comp.value,Gets(self.gadgetList[ STRGAD_VALUE ],STRINGA_TEXTVAL))
     comp.minVisible:=Gets(self.gadgetList[ STRGAD_MINVISIBLE ],INTEGER_NUMBER)
+    comp.justify:=Gets(self.gadgetList[ STRGAD_JUSTIFY ],CHOOSER_SELECTED)
     comp.disabled:=Gets(self.gadgetList[ STRGAD_DISABLED ],CHECKBOX_CHECKED)
     comp.readOnly:=Gets(self.gadgetList[ STRGAD_READONLY ],CHECKBOX_CHECKED)
     comp.tabCycle:=Gets(self.gadgetList[ STRGAD_TABCYCLE ],CHECKBOX_CHECKED)
@@ -241,6 +261,7 @@ EXPORT PROC createPreviewObject(scr) OF stringObject
     GA_DISABLED, self.disabled,
     GA_READONLY, self.readOnly,
     STRINGA_REPLACEMODE, self.replaceMode,
+    STRINGA_JUSTIFICATION, ListItem([GACT_STRINGLEFT,GACT_STRINGCENTER,GACT_STRINGRIGHT],self.justify),
   StringEnd
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
@@ -290,6 +311,7 @@ EXPORT PROC create(parent) OF stringObject
   self.maxChars:=80
   AstrCopy(self.value,'')
   self.minVisible:=4
+  self.justify:=0
   self.disabled:=0
   self.readOnly:=0
   self.tabCycle:=TRUE
@@ -314,6 +336,7 @@ EXPORT PROC serialiseData() OF stringObject IS
   makeProp(maxChars,FIELDTYPE_CHAR),
   makeProp(value,FIELDTYPE_STR),
   makeProp(minVisible,FIELDTYPE_INT),
+  makeProp(justify,FIELDTYPE_CHAR),
   makeProp(disabled,FIELDTYPE_CHAR),
   makeProp(readOnly,FIELDTYPE_CHAR),
   makeProp(tabCycle,FIELDTYPE_CHAR),
@@ -333,6 +356,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF stringObject
   IF StrLen(self.value) THEN srcGen.componentProperty('STRINGA_TextVal',self.value,TRUE)
   srcGen.componentPropertyInt('STRINGA_MaxChars',self.maxChars)
   IF self.minVisible<>4 THEN srcGen.componentPropertyInt('STRINGA_MinVisible',self.minVisible)
+  IF self.justify THEN  srcGen.componentProperty('STRINGA_Justification',ListItem(['GACT_STRINGLEFT','GACT_STRINGCENTER','GACT_STRINGRIGHT'],self.justify),FALSE)
   IF self.replaceMode THEN srcGen.componentProperty('STRINGA_ReplaceMode', 'TRUE', FALSE)
 ENDPROC
 
