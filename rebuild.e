@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.8.0-beta'
-#date verstring '$VER:Rebuild 0.8.0-%Y%m%d%h%n%s-beta'
+#define vernum '0.9.0-rc1'
+#date verstring '$VER:Rebuild 0.9.0-%Y%m%d%h%n%s-rc1'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -1826,6 +1826,7 @@ ENDPROC TRUE
 
 PROC doAddComp(comp:PTR TO reactionObject, objType)
   DEF newObj:PTR TO reactionObject
+  DEF layoutObj:PTR TO reactionObject
   DEF allowchildren
   newObj:=0
   
@@ -1848,6 +1849,11 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
         ENDIF
       ENDIF
       IF newObj
+        IF (comp.type=TYPE_VIRTUAL) AND (newObj.isImage())
+          layoutObj:=createLayoutObject(comp)
+          addObject(comp,layoutObj)
+          comp:=layoutObj
+        ENDIF
         changes:=TRUE
         addObject(comp,newObj)
       ENDIF
@@ -1998,6 +2004,7 @@ ENDPROC
 
 PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   DEF newObj:PTR TO reactionObject
+  DEF layoutObj:PTR TO reactionObject
   DEF comp:PTR TO reactionObject
   DEF fs:PTR TO fileStreamer
   DEF oldid,defname
@@ -2037,7 +2044,12 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
 
   comp:=selectedComp
   WHILE (comp<>0) AND (comp.allowChildren()=FALSE) DO comp:=comp.parent
-  IF comp 
+  IF comp
+    IF (comp.type=TYPE_VIRTUAL) AND (newObj.isImage())
+      layoutObj:=createLayoutObject(comp)
+      addObject(comp,layoutObj)
+      comp:=layoutObj
+    ENDIF
     addObject(comp,newObj)
     SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newObj.node, TAG_END])
     updateSel(newObj.node)
