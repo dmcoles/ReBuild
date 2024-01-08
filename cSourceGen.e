@@ -382,7 +382,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
       self.writeLine('    NewList( newList );')
       self.writeLine('    while(*nameList)')
       self.writeLine('    {')
-      self.writeLine('      AddTail(newList, AllocRadioButtonNode(RBNA_Labels, *nameList, TAG_END));')
+      self.writeLine('      AddTail(newList, AllocRadioButtonNode(0,RBNA_Labels, *nameList, TAG_END));')
       self.writeLine('      nameList++;')
       self.writeLine('    }')
       self.writeLine('  }')
