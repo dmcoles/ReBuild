@@ -20,13 +20,16 @@ PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds
   self.indent:=0
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, sharedPort) OF cSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, windowLayouts:PTR TO stdlist, sharedPort) OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
   DEF itemType
-  DEF hasarexx,i
+  DEF hasarexx,i,j
+  DEF layoutObject:PTR TO reactionObject
+  DEF listObjects:PTR TO stdlist
+  DEF listObject:PTR TO reactionObject
 
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
 
@@ -144,7 +147,6 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
     self.writeLine('( void );')
   ENDFOR
   self.writeLine('')
-
 
   self.writeLine('struct Screen	*gScreen = NULL;')
   self.writeLine('struct DrawInfo	*gDrawInfo = NULL;')
@@ -486,10 +488,38 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
   self.writeLine('               *LayoutBase = NULL,')
   self.writeLine('               *IconBase = NULL;')
   self.writeLine('struct IntuitionBase *IntuitionBase = NULL;')
+
+  NEW listObjects.stdlist(20)
+  self.writeLine('')
+  FOR i:=0 TO windowNames.count()-1
+    self.write('enum ')
+    StringF(tempStr,'\s_idx { ',windowNames.item(i))
+    LowerStr(tempStr)
+    self.write(tempStr)
+    layoutObject:=windowLayouts.item(i)
+    listObjects.clear()
+    layoutObject.findObjectsByType(listObjects,-1)
+    FOR j:=0 TO listObjects.count()-1
+      IF j>0 THEN self.write(', ')
+      StrCopy(tempStr,windowNames.item(i))
+      StrAdd(tempStr,'_')
+      listObject:=listObjects.item(j)
+      listObject.gadindex:=j
+      StrAdd(tempStr,listObject.getTypeName())
+      LowerStr(tempStr)
+      StrAdd(tempStr,'_')
+      self.write(tempStr)
+      StringF(tempStr,'\d',listObject.id)
+      self.write(tempStr)
+    ENDFOR
+    
+    self.writeLine(' };')
+  ENDFOR
+  END listObjects
+  self.writeLine('')
   
   IF self.definitionOnly THEN RETURN
   
-  self.writeLine('')
   self.writeLine('int setup( void )')
   self.writeLine('{')
   self.writeLine('  if( !(IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L)) ) return 0;')
@@ -727,7 +757,7 @@ PROC genHeader(screenObject:PTR TO screenObject, rexxObject:PTR TO rexxObject, w
 
   self.writeLine('}')
   self.writeLine('')
-  self.writeLine('void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[], int gadget_ids[] )')
+  self.writeLine('void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[] )')
   self.writeLine('{')
   self.writeLine('  struct Window	*main_window = NULL;')
   IF hasarexx
@@ -856,8 +886,6 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine('  struct Menu	*menu_strip = NULL;')
   ENDIF
   StringF(tempStr,'  struct Gadget	*main_gadgets[ \d ];',count+1)
-  self.writeLine(tempStr)
-  StringF(tempStr,'  int gadget_ids[ \d ];',count+1)
   self.writeLine(tempStr)
   self.writeLine('  Object *window_object = NULL;')
 
@@ -1024,8 +1052,6 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   StringF(tempStr,'  main_gadgets[\d] = 0;',count)
   self.writeLine(tempStr)
-  StringF(tempStr,'  gadget_ids[\d] = 0;',count)
-  self.writeLine(tempStr)
 
   IF self.definitionOnly
     self.writeLine('}')
@@ -1035,10 +1061,10 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets, gadget_ids );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets );',windowObject.id)
     self.writeLine(tempStr)
   ELSE
-    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets, gadget_ids );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets );',windowObject.id)
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
@@ -1164,9 +1190,9 @@ PROC assignGadgetVar(index) OF cSrcGen
   self.currentGadgetVar:=index 
 ENDPROC
 
-PROC componentPropertyGadgetId(idval,index) OF cSrcGen
+PROC componentPropertyGadgetId(idval) OF cSrcGen
   DEF tempStr[100]:STRING
-  StringF(tempStr,'gadget_ids[\d] = \d',index, idval)
+  StringF(tempStr,'\d',idval)
   self.componentProperty('GA_ID',tempStr,FALSE)
 ENDPROC
 

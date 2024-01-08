@@ -214,7 +214,7 @@ PROC assignGadgetVar(index) OF srcGen
   self.currentGadgetVar:=index
 ENDPROC
 
-PROC componentPropertyGadgetId(idval,index) OF srcGen
+PROC componentPropertyGadgetId(idval) OF srcGen
 ENDPROC
 
 PROC addTerminator() OF srcGen
@@ -226,7 +226,7 @@ PROC addTerminator() OF srcGen
   ENDIF
 ENDPROC
 
-PROC genHeader(screenObject,rexxObject, windowNames, sharedport) OF srcGen IS -1
+PROC genHeader(screenObject,rexxObject, windowNames, windowLayouts, sharedport) OF srcGen IS -1
 PROC genFooter(windowObject,rexxObject) OF srcGen IS -1
 PROC genWindowHeader(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
 PROC genWindowFooter(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1

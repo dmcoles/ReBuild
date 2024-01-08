@@ -144,6 +144,7 @@ OPT OSVERSION=37,LARGE
   DEF windowTitle[200]:STRING
   
   DEF startupfilename[256]:STRING
+  DEF iconFileName[256]:STRING
   
   DEF tabsbase=0
   DEF gradientsliderbase=0
@@ -631,7 +632,8 @@ PROC loadIconPrefs()
   DEF olddir
   IF wbmessage=NIL
     StrCopy(startupfilename,arg)
-    dobj:=GetDiskObject('PROGDIR:Rebuild')
+    StrCopy(iconFileName,'PROGDIR:Rebuild')
+    dobj:=GetDiskObject(iconFileName)
   ELSE
     wb:=wbmessage
     args:=wb.arglist
@@ -641,8 +643,8 @@ PROC loadIconPrefs()
       StrCopy(startupfilename,tempbuf)
     ENDIF
     olddir:=CurrentDir(args[].lock)
-    dobj:=GetDiskObject(args[].name)
-    CurrentDir(olddir)
+    StrCopy(iconFileName,args[].name)
+    dobj:=GetDiskObject(iconFileName)
   ENDIF
   IF dobj
     IF(s:=FindToolType(dobj.tooltypes,'LANG'))
@@ -752,6 +754,7 @@ PROC createForm()
     WINDOW_APPPORT, appPort,
     WINDOW_APPWINDOW, TRUE,
     WINDOW_ICONIFYGADGET, TRUE, 
+    WINDOW_ICON, GetDiskObject(iconFileName),
     WA_CLOSEGADGET, TRUE,
     WA_DEPTHGADGET, TRUE,
     WA_SIZEGADGET, TRUE,
@@ -1149,7 +1152,7 @@ PROC countGads(from=0:PTR TO reactionObject,n=0)
   FOR i:=0 TO from.children.count()-1 DO n:=countGads(from.children.item(i),n)
 ENDPROC n+1
 
-PROC genComponentCode(comp:PTR TO reactionObject, nptr:PTR TO LONG, srcGen:PTR TO srcGen)
+PROC genComponentCode(comp:PTR TO reactionObject, srcGen:PTR TO srcGen)
   DEF i
   DEF tempStr[200]:STRING
   DEF libname,libtype,addTag
@@ -1161,7 +1164,7 @@ PROC genComponentCode(comp:PTR TO reactionObject, nptr:PTR TO LONG, srcGen:PTR T
     srcGen.componentAddChild(addTag)
   ENDIF
 
-  srcGen.assignGadgetVar(nptr[])
+  srcGen.assignGadgetVar(comp.gadindex)
   IF (libtype:=comp.libTypeCreate())
     srcGen.componentLibtypeCreate(libtype)
   ELSEIF (libname:=comp.libNameCreate())
@@ -1173,17 +1176,16 @@ PROC genComponentCode(comp:PTR TO reactionObject, nptr:PTR TO LONG, srcGen:PTR T
 
   ->IF comp.type<>TYPE_LAYOUT
     IF srcGen.useIds
-      srcGen.componentPropertyGadgetId(comp.id,nptr[])
+      srcGen.componentPropertyGadgetId(comp.id)
     ELSE
-      srcGen.componentPropertyGadgetId(srcGen.currentGadgetVar,nptr[])
+      srcGen.componentPropertyGadgetId(srcGen.currentGadgetVar)
     ENDIF
   ->ENDIF
   comp.genCodeProperties(srcGen)
   IF comp.children.count()>0
     comp.genChildObjectsHeader(srcGen)
     FOR i:=0 TO comp.children.count()-1
-      nptr[]:=nptr[]+1
-      genComponentCode(comp.children.item(i),nptr,srcGen)
+      genComponentCode(comp.children.item(i),srcGen)
     ENDFOR
     comp.genChildObjectsFooter(srcGen)
   ENDIF
@@ -1224,8 +1226,8 @@ PROC genCode()
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
   DEF windowNames:PTR TO stringlist
+  DEF windowLayouts:PTR TO stdlist
   DEF windowObj:PTR TO windowObject
-  DEF n
   DEF sharedport=0
   
   setBusy()
@@ -1264,11 +1266,13 @@ PROC genCode()
 
   i:=ROOT_LAYOUT_ITEM
   NEW windowNames.stringlist(10)
+  NEW windowLayouts.stdlist(10)
   WHILE i<objectList.count()
     findLibsUsed(objectList.item(i),libsused)
     windowObj:=objectList.item(i-ROOT_LAYOUT_ITEM+ROOT_WINDOW_ITEM)
     IF windowObj.sharedPort THEN sharedport:=TRUE
     windowNames.add(windowObj.name)
+    windowLayouts.add(objectList.item(i))
     i+=3
   ENDWHILE
   
@@ -1298,8 +1302,9 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
   rexxComp:=objectList.item(ROOT_REXX_ITEM)
-  srcGen.genHeader(screenComp,rexxComp, windowNames,sharedport)
+  srcGen.genHeader(screenComp,rexxComp, windowNames,windowLayouts, sharedport)
   END windowNames
+  END windowLayouts
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)
     menuComp:=objectList.item(i+ROOT_MENU_ITEM)
@@ -1321,8 +1326,7 @@ PROC genCode()
     srcGen.componentProperty('LAYOUT_SpaceOuter','TRUE',FALSE)
     srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
     srcGen.increaseIndent()
-    n:=0
-    genComponentCode(layoutComp,{n},srcGen)
+    genComponentCode(layoutComp,srcGen)
     srcGen.componentEnd('LayoutEnd,') 
     srcGen.finalComponentEnd(objectEnd) 
     srcGen.decreaseIndent()

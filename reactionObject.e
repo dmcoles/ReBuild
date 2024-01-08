@@ -78,6 +78,7 @@ EXPORT OBJECT reactionObject
   previewObject:LONG
   previewChildAttrs:LONG
   node:LONG
+  gadindex:LONG
 PRIVATE
   imageData:PTR TO CHAR
   errObj:CHAR
@@ -730,7 +731,7 @@ PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   DEF i
   DEF child:PTR TO reactionObject
 
-  IF self.type=type THEN res.add(self)
+  IF (self.type=type) OR (type=-1) THEN res.add(self)
   FOR i:=0 TO self.children.count()-1 
     child:=self.children.item(i)
     child.findObjectsByType(res,type)
