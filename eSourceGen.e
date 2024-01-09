@@ -21,12 +21,43 @@ PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
+PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF eSrcGen
+  DEF n=0, j
+  DEF listObject:PTR TO reactionObject
+  DEF tempStr[255]:STRING
+
+  self.write('ENUM ')
+  FOR j:=0 TO listObjects.count()-1
+    IF j>0
+      self.write(', ')
+      n:=n+2
+    ENDIF
+    
+    IF n>60
+      self.writeLine('')
+      self.write('  ')
+      n:=0
+    ENDIF
+    listObject:=listObjects.item(j)
+    listObject.gadindex:=j
+    StrCopy(tempStr,listObject.ident)
+    UpperStr(tempStr)
+    self.write(tempStr)
+    n:=n+StrLen(tempStr)
+    IF ids
+      StringF(tempStr,'_ID = \d',listObject.id)
+      n:=n+StrLen(tempStr)
+      self.write(tempStr)
+    ENDIF
+  ENDFOR
+  self.writeLine('')
+ENDPROC
+
 PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, windowLayouts:PTR TO stdlist, sharedPort) OF eSrcGen
   DEF tempStr[200]:STRING
-  DEF hasarexx,i,j,n
+  DEF hasarexx,i
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
-  DEF listObject:PTR TO reactionObject
   
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
   
@@ -103,36 +134,13 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   NEW listObjects.stdlist(20)
   self.writeLine('')
   FOR i:=0 TO windowNames.count()-1
-    self.write('ENUM ')
     layoutObject:=windowLayouts.item(i)
     listObjects.clear()
     layoutObject.findObjectsByType(listObjects,-1)
-    n:=0
-    FOR j:=0 TO listObjects.count()-1
-      IF j>0
-        self.write(', ')
-        n:=n+2
-      ENDIF
-      
-      IF n>60
-        self.writeLine('')
-        self.write('  ')
-        n:=0
-      ENDIF
-      StrCopy(tempStr,windowNames.item(i))
-      StrAdd(tempStr,'_')
-      listObject:=listObjects.item(j)
-      listObject.gadindex:=j
-      StrAdd(tempStr,listObject.getTypeName())
-      UpperStr(tempStr)
-      StrAdd(tempStr,'_')
-      self.write(tempStr)
-      n:=n+StrLen(tempStr)
-      StringF(tempStr,'\d',listObject.id)
-      n:=n+StrLen(tempStr)
-      self.write(tempStr)
-    ENDFOR
-    self.writeLine('')
+    StringF(tempStr,'->\s',windowNames.item(i))
+    self.writeLine(tempStr)
+    self.createEnum(windowNames.item(i),listObjects,FALSE)
+    IF self.useIds THEN self.createEnum(windowNames.item(i),listObjects,TRUE)
   ENDFOR
   END listObjects
   self.writeLine('')
@@ -953,16 +961,19 @@ PROC genScreenFree(screenObject:PTR TO screenObject) OF eSrcGen
   ENDIF
 ENDPROC
 
-PROC assignGadgetVar(index) OF eSrcGen
+PROC assignGadgetVar(ident,index) OF eSrcGen
   DEF tempStr[100]:STRING
-  StringF(tempStr,'mainGadgets[\d]:=',index)
+  StrCopy(tempStr,ident)
+  UpperStr(tempStr)
+  StringF(tempStr,'mainGadgets[\s]:=',tempStr)
   self.write(tempStr)
   self.currentGadgetVar:=index
 ENDPROC
 
 PROC componentPropertyGadgetId(idval) OF eSrcGen
   DEF tempStr[100]:STRING
-  StringF(tempStr,'\d',idval)
+  StrCopy(tempStr,idval)
+  UpperStr(tempStr)
   self.componentProperty('GA_ID',tempStr, FALSE)
 ENDPROC
 

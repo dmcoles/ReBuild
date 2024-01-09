@@ -205,7 +205,7 @@ PROC assignWindowVar() OF srcGen
   self.write(tempStr)
 ENDPROC
 
-PROC assignGadgetVar(index) OF srcGen
+PROC assignGadgetVar(ident,index) OF srcGen
   DEF tempStr[100]:STRING
   DEF padding
   IF self.extraPadding THEN padding:=' ' ELSE padding:=''

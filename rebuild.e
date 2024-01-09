@@ -1164,7 +1164,7 @@ PROC genComponentCode(comp:PTR TO reactionObject, srcGen:PTR TO srcGen)
     srcGen.componentAddChild(addTag)
   ENDIF
 
-  srcGen.assignGadgetVar(comp.gadindex)
+  srcGen.assignGadgetVar(comp.ident,comp.gadindex)
   IF (libtype:=comp.libTypeCreate())
     srcGen.componentLibtypeCreate(libtype)
   ELSEIF (libname:=comp.libNameCreate())
@@ -1174,13 +1174,12 @@ PROC genComponentCode(comp:PTR TO reactionObject, srcGen:PTR TO srcGen)
     srcGen.componentCreate(tempStr)
   ENDIF
 
-  ->IF comp.type<>TYPE_LAYOUT
-    IF srcGen.useIds
-      srcGen.componentPropertyGadgetId(comp.id)
-    ELSE
-      srcGen.componentPropertyGadgetId(srcGen.currentGadgetVar)
-    ENDIF
-  ->ENDIF
+  IF srcGen.useIds
+    StringF(tempStr,'\s_id',comp.ident)
+  ELSE
+    StringF(tempStr,'\s',comp.ident)
+  ENDIF
+  srcGen.componentPropertyGadgetId(tempStr)
   comp.genCodeProperties(srcGen)
   IF comp.children.count()>0
     comp.genChildObjectsHeader(srcGen)
@@ -2729,7 +2728,6 @@ PROC main() HANDLE
   AstrCopy(systemOptions.savePath,'')
   
   loadIconPrefs()
-  
   createForm()
   Sets(mainWindow,WINDOW_HINTINFO,hintInfo)
   Sets(mainWindow,WINDOW_GADGETHELP, TRUE)

@@ -52,6 +52,7 @@ EXPORT DEF errorState
 EXPORT DEF imageData:PTR TO CHAR
 
 EXPORT OBJECT reactionObject
+  ident[80]:ARRAY OF CHAR
   name[80]:ARRAY OF CHAR
   parent:PTR TO reactionObject
   children:PTR TO stdlist
@@ -358,6 +359,7 @@ EXPORT PROC create(parent) OF reactionObject
   objCount:=objCount+1
   StringF(name,'\s_\d',self.getTypeName(),self.id)
   AstrCopy(self.name,name)
+  AstrCopy(self.ident,name)
 
   NEW stdlist.stdlist(20)
   self.children:=stdlist
@@ -480,6 +482,8 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'NAME: \s',self.name)
   fser.writeLine(tempStr)
+  StringF(tempStr,'IDENT: \s',self.ident)
+  fser.writeLine(tempStr)
   StringF(tempStr,'MINWIDTH: \d',self.minWidth)
   fser.writeLine(tempStr)
   StringF(tempStr,'MINHEIGHT: \d',self.minHeight)
@@ -578,6 +582,8 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
         ENDIF
       ELSEIF StrCmp('NAME: ',tempStr,STRLEN)
         AstrCopy(self.name,tempStr+STRLEN,80)
+      ELSEIF StrCmp('IDENT: ',tempStr,STRLEN)
+        AstrCopy(self.ident,tempStr+STRLEN,80)
       ELSEIF StrCmp('MINWIDTH: ',tempStr,STRLEN)
         self.minWidth:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MINHEIGHT: ',tempStr,STRLEN)

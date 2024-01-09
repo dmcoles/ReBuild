@@ -292,7 +292,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF bitmapObject
   srcGen.componentPropertyInt('IA_Left',self.leftEdge)
   srcGen.componentPropertyInt('IA_Top',self.topEdge)
   srcGen.componentPropertyInt('IA_Width',self.width)
-  srcGen.componentPropertyInt('IA_Height',self.topEdge)
+  srcGen.componentPropertyInt('IA_Height',self.height)
 
   srcGen.componentProperty('BITMAP_Screen','gScreen',FALSE) 
   srcGen.componentProperty('BITMAP_SourceFile',self.sourceFile,TRUE)
