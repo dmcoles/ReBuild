@@ -1,0 +1,236 @@
+
+---------------------------------------------------------------------------
+
+                      Rebuild - Reaction GUI Builder
+
+---------------------------------------------------------------------------
+
+1. Introduction
+
+Rebuild is a GUI builder for the reaction user inteface system. Reaction is
+part of the Amiga OS for all versions from 3.2 and above. Reaction started
+out as a product called ClassAct which was later enhanced and turned into
+Reaction.
+
+ClassAct had a GUI builder program called ClassMate (developed in 1997)
+which was shareware and only freely available in demo form which had
+severly limited functionality. I used ClassMate as a design template when
+I made Rebuild. It has a similar look but the code is entirely new.
+
+It includes support for many more gadget types than ClassMate did and has
+been improved in many ways to allow for easier use.
+
+Just a few of the improvements are:
+
+1) Support for both E and C languages
+2) Menu design is shown in the preview window
+3) Support for multiple windows in a single project
+4) Copy buffer making it easier to move or duplicate gadgets 
+5) More flexible system of arranging gadgets and layouts
+
+2. License
+
+The program is released into the public domain for anyone to use however
+they wish with no restrictions apart from that the program should not be
+sold for profit.
+
+You may use this program to assist with the development any application
+without restriction however use of this project is entirely at your own
+risk. I will not accept responsibilty for any issues arising from the
+use of Rebuild.
+
+3. Using Rebuild
+
+Upon loading Rebuild you will be presented with the main working window of
+the GUI designer. GUI designs in Rebuild are built using a hierarchical
+structure represented as a tree layout in the main window. You will also
+see a preview window where you will see an accurate representation of your
+current GUI design.
+
+Initially you will be presented with a default design that has a single
+window and a root layout gadget. You can add/remove windows from your
+design using buttons in the toolbar at the bottom or by using the menus.
+
+The toolbar buttons are context sensitive, so if you select the window
+node in the tree view and press the 'Add' button it will add a new window.
+If you have selected a layout or any other gadget, selecting 'Add' will
+allow you to add more gadgets to your design.
+
+The default window layout starts with a vertical layout gadget. Any
+gadgets added to this will be displayed stacked vertically. You can change
+this in the gadget properties (double click on the layout in the tree
+structure).
+
+You can create complicated layout designs by breaking them down into
+smaller parts and using layouts within layouts to denote the arrangement
+of horizontal or vertical within that layout area.
+
+If you wanted to create a screen similar to this:
+
+.--------------------.  .-------.
+|                    |  |  Ok   |
+|    ListView        |  '-------'
+|                    |  .-------.
+|                    |  | Canel |
+`--------------------'  `-------'
+.-----. .------. .----. .-------.
+| Add | | Edit | | Up | |  Down |
+`------ `------  `----' `-------'
+
+You could create it using an arrangement like this:
+
+        Layout - Vert
+          Layout - Horiz
+            ListBrowser Object
+            Layout - Vert
+              Button Object
+              Button Object
+          Layout - Horiz
+            Buton Object
+            Buton Object
+            Buton Object
+            Buton Object
+
+There are some example files included in the examples folder.
+
+You can also control the screen settings that are using for your GUI design
+and add menu definitions for each window. You can also specify a set of
+Arexx commands. The screen settings and Arexx commands will not affect how
+the design works in Rebuild but they will be included in the source code
+that you generate.
+
+4. The list manager
+
+Some of the gadget types (List Browser, Chooser, RadioButton and ClickTab)
+require a list of items to function. You can set up any number of lists
+in the list manager and add items to those lists. Once this is done you can
+add them to a gadget. You can add the same list to more than one gadget.
+
+If you need to go back later and modify the list, it can easily be edited
+in the list manager even after it has been added to a gadget.
+
+5. The copy buffer
+
+On the right side of the main window you will see the copy buffer.
+Using the buttons below you can copy or move items from the main design
+window into the copy buffer. This is highly useful if you want to
+duplicate a gadget several times with the same settings or move a gadget
+from one window to another in your design.
+
+6. Source code generation
+
+Rebuild is able to generate fully working SAS C and Amiga E code for the
+GUI designs you create. In order to compile the source code you will need
+the Amiga OS 3.2 NDK. The E-VO E compiler has this as standard so I
+recommend if you plan to use the E source code then I recommend you use this.
+
+If you are using C then the NDK can be obtained from the aminet
+http://aminet.net/package/dev/misc/NDK3.2
+
+Compiling the E or C source should not require any additional libraries or
+includes than the ones present in the NDK and as part of the OS.
+
+You may also be able to use the resulting code with older versions of the OS
+if you have ClassAct installed - although it should be noted that despite
+the ClassAct documentation stating that it works with OS2.0 and above, it is
+my experience that it does not actually work with anything below OS 3.0
+
+When you click the 'Code' button you will be presented with 3 options:
+
+   1. E or C source
+	 2. Use ids for GA_ID / Use array index for GA_ID
+	 3. Generate full code / Generate definitions only
+	
+The first option is pretty self explantory. You can pick between E or C
+language and the GUI design will be exported to a code file in that language.
+
+The last option will determine whether the resulting code will be a complete
+working example that can be compiled. If you compile and run the code you
+will be presented with a window very similar to the preview window shown in
+Rebuild. The code generated can then be expanded to include any logic you
+need to form your application.
+
+If you choose 'Generate definitions only' then the resulting code will not
+be complete and is intended for you to copy and paste the GUI definitions
+into an application source file.
+
+The second option controls how the GUI code is constructed and will impact
+on the value used for the GA_ID property for each gadget. When you are
+coding the message processing loop for your application the GA_ID values
+will be important for you to identify the gadget that is sending the
+message.
+
+IF you choose to 'Use ids for GA_ID' then each gadget will have a GA_ID
+value based upon its unique ID allocated by Rebuild. every item in the GUI
+design gets a unique ID and these will never change (unless you delete the
+gadget). Even after you delete a gadget the old ID will never be re-used.
+
+This means you are free to reference these ID's in your custom code and
+you don't have to worry that changing the GUI design and re-generating the
+code will mean you have to re-write your code.
+
+If you choose to use the option 'Use array index for GA_ID' then the GA_ID
+for each gadget will be numbered sequentially from 0 for each window.
+This means that it is simpler to handle the coding to manage the GUI because
+you can always use the ID as an index into the gadgets array generated in
+the code but it does also mean that if you rearrange the GUI design in any
+way then the GA_ID values will change and if you have hard code any of these
+values into your custom code then it will need to be re-coded.
+
+There is more information regarding this in the next section.
+
+7. Tips on working with the rebuild generated source code.
+
+   to be completed.
+
+8. Tooltype settings
+
+Some of the defaults for the Rebuild application can be configured by
+editing the Rebuild.info file.
+
+Many of these settings are also saved into your project file, so if you
+reload the file it will also restore the state of the settings you had
+last used.
+
+Here is a list of the tooltypes that can be defined
+
+   LANG=E / C        (controls the default language shown)
+	 USEIDS=YES / NO   (code export default setting)
+	 FULLCODE=YES / NO (code export default setting)
+	 CODEPATH=         (select the default path for the code save)
+	 SAVEPATH=         (select the default path for project save)
+	 SHOWBUFFER=YES / NO (show the copy buffer at startup)
+	 SHOWSETTINGS=YES / NO (show settings when adding new gadgets)
+	 PROJECTICONS=YES / NO (create an icon for project files)
+   WINDOWTOP = 
+	 WINDOWLEFT =
+	 WINDOWWIDTH =
+	 WINDOWHEIGHT = (override the main window size and position)
+
+9. Futher inforation
+
+ReBuild is written using my own E-VO compiler.
+
+The full source code is available on gitgub:
+https://github.com/dmcoles/ReBuild
+
+If you find any issues with this product please do feel free to raise an
+issue in the gitgub repo or if you wish to contact me for any reason
+regarding this project please do.
+
+10. Future (possible) enhancements
+
+I have many ideas for future enhancements to this project. My plan was to
+release something which could at least cover all of the functionality of
+the old ClassMate tool for the first version of Rebuild.
+
+Just a few of my ideas (some of which may or may not be possible) are:
+
+   * add more languages to the code generator
+	 * add hint text options for all of the gadgets
+	 * add checkable and mutually exclusive menus
+	 * requester designer 
+	 * option to generate codecraft project files
+	 * add hint text to the settings pages to help users
+
+(C) Darren Coles 2024
