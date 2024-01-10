@@ -195,17 +195,17 @@ last used.
 Here is a list of the tooltypes that can be defined
 
    LANG=E / C        (controls the default language shown)
-	 USEIDS=YES / NO   (code export default setting)
-	 FULLCODE=YES / NO (code export default setting)
-	 CODEPATH=         (select the default path for the code save)
-	 SAVEPATH=         (select the default path for project save)
-	 SHOWBUFFER=YES / NO (show the copy buffer at startup)
-	 SHOWSETTINGS=YES / NO (show settings when adding new gadgets)
-	 PROJECTICONS=YES / NO (create an icon for project files)
+   USEIDS=YES / NO   (code export default setting)
+   FULLCODE=YES / NO (code export default setting)
+   CODEPATH=         (select the default path for the code save)
+   SAVEPATH=         (select the default path for project save)
+   SHOWBUFFER=YES / NO (show the copy buffer at startup)
+   SHOWSETTINGS=YES / NO (show settings when adding new gadgets)
+   PROJECTICONS=YES / NO (create an icon for project files)
    WINDOWTOP = 
-	 WINDOWLEFT =
-	 WINDOWWIDTH =
-	 WINDOWHEIGHT = (override the main window size and position)
+   WINDOWLEFT =
+   WINDOWWIDTH =
+   WINDOWHEIGHT = (override the main window size and position)
 
 9. Futher inforation
 
@@ -227,10 +227,10 @@ the old ClassMate tool for the first version of Rebuild.
 Just a few of my ideas (some of which may or may not be possible) are:
 
    * add more languages to the code generator
-	 * add hint text options for all of the gadgets
-	 * add checkable and mutually exclusive menus
-	 * requester designer 
-	 * option to generate codecraft project files
-	 * add hint text to the settings pages to help users
+   * add hint text options for all of the gadgets
+   * add checkable and mutually exclusive menus
+   * requester designer 
+   * option to generate codecraft project files
+   * add hint text to the settings pages to help users
 
 (C) Darren Coles 2024
