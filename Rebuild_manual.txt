@@ -138,9 +138,9 @@ my experience that it does not actually work with anything below OS 3.0
 When you click the 'Code' button you will be presented with 3 options:
 
    1. E or C source
-	 2. Use ids for GA_ID / Use array index for GA_ID
-	 3. Generate full code / Generate definitions only
-	
+   2. Use ids for GA_ID / Use array index for GA_ID
+   3. Generate full code / Generate definitions only
+
 The first option is pretty self explantory. You can pick between E or C
 language and the GUI design will be exported to a code file in that language.
 
