@@ -9,6 +9,8 @@ OPT MODULE,LARGE
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
 
+ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
+
 PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
   SUPER self.create(fser,libsused,definitionOnly,useIds)
   self.type:=ESOURCE_GEN
@@ -21,7 +23,7 @@ PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
   self.terminator:=0
 ENDPROC
 
-PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF eSrcGen
+PROC createEnum(enumName:PTR TO CHAR, listObjects:PTR TO stdlist, enumType) OF eSrcGen
   DEF n=0, j
   DEF listObject:PTR TO reactionObject
   DEF tempStr[255]:STRING
@@ -40,11 +42,12 @@ PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF eSrc
     ENDIF
     listObject:=listObjects.item(j)
     listObject.gadindex:=j
+
     StrCopy(tempStr,listObject.ident)
     UpperStr(tempStr)
     self.write(tempStr)
     n:=n+StrLen(tempStr)
-    IF ids
+    IF (enumType=ENUM_IDS) OR (enumType=ENUM_IDENTS)
       StringF(tempStr,'_ID = \d',listObject.id)
       n:=n+StrLen(tempStr)
       self.write(tempStr)
@@ -53,9 +56,10 @@ PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF eSrc
   self.writeLine('')
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, windowLayouts:PTR TO stdlist, sharedPort) OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowItems:PTR TO stdlist, windowLayouts:PTR TO stdlist, sharedPort) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF hasarexx,i
+  DEF windowObject:PTR TO reactionObject
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
   
@@ -133,14 +137,24 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
 
   NEW listObjects.stdlist(20)
   self.writeLine('')
-  FOR i:=0 TO windowNames.count()-1
+  FOR i:=0 TO windowItems.count()-1
+    windowObject:=windowItems.item(i)
+    listObjects.add(windowObject)
+  ENDFOR
+  self.writeLine('->window ids')
+  self.createEnum('win',listObjects,ENUM_IDENTS)
+  self.writeLine('')
+
+  listObjects.clear()  
+  FOR i:=0 TO windowItems.count()-1
     layoutObject:=windowLayouts.item(i)
+    windowObject:=windowItems.item(i)
     listObjects.clear()
     layoutObject.findObjectsByType(listObjects,-1)
-    StringF(tempStr,'->\s',windowNames.item(i))
+    StringF(tempStr,'->\s gadgets',windowObject.ident)
     self.writeLine(tempStr)
-    self.createEnum(windowNames.item(i),listObjects,FALSE)
-    IF self.useIds THEN self.createEnum(windowNames.item(i),listObjects,TRUE)
+    self.createEnum(windowObject.ident,listObjects,ENUM_IDXS)
+    IF self.useIds THEN self.createEnum(windowObject.ident,listObjects,ENUM_IDS)
   ENDFOR
   END listObjects
   self.writeLine('')
@@ -592,7 +606,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF colWidth
   DEF colTitle
 
-  StrCopy(tempStr,windowObject.name)
+  StrCopy(tempStr,windowObject.ident)
   LowerStr(tempStr)
   self.write('PROC ')
   self.write(tempStr)
@@ -822,12 +836,16 @@ ENDPROC
 
 PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
   DEF tempStr[200]:STRING
+  DEF windowName[200]:STRING
   DEF listObjects:PTR TO stdlist
   DEF reactionObject:PTR TO reactionObject
   DEF i
 
   StringF(tempStr,'  mainGadgets[\d]:=0',count)
   self.writeLine(tempStr)
+
+  StrCopy(windowName,windowObject.ident)
+  UpperStr(windowName)
 
   IF self.definitionOnly
     self.writeLine('ENDPROC')
@@ -837,10 +855,10 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    StringF(tempStr,'  runWindow(windowObject,\d,menuStrip,mainGadgets)',windowObject.id)
+    StringF(tempStr,'  runWindow(windowObject,\s_ID,menuStrip,mainGadgets)',windowName)
     self.writeLine(tempStr)
   ELSE
-    StringF(tempStr,'  runWindow(windowObject,\d,NIL,mainGadgets)',windowObject.id)
+    StringF(tempStr,'  runWindow(windowObject,\s_ID,NIL,mainGadgets)',windowName)
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
@@ -901,7 +919,7 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   ENDIF
   self.writeLine('')
 
-  StringF(tempStr,'  \s',windowObject.name)
+  StringF(tempStr,'  \s',windowObject.ident)
   LowerStr(tempStr)
   StrAdd(tempStr,'()')
 

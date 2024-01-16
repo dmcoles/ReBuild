@@ -615,6 +615,14 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
       done:=TRUE
     ENDIF
   UNTIL done  
+  IF (StrLen(self.ident)=0)
+    IF (StrLen(self.name))
+      AstrCopy(self.ident,self.name,80)
+    ELSE
+      StringF(tempStr,'\s_\d',self.getTypeName(),self.id)
+      AstrCopy(self.ident,tempStr,80)
+    ENDIF
+  ENDIF
 
   list:=self.serialiseData()
   count:=ListLen(list)

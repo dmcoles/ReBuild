@@ -279,7 +279,12 @@ struct Library *WindowBase = NULL,
                *IconBase = NULL;
 struct IntuitionBase *IntuitionBase = NULL;
 
-//Window_3
+//window ids
+//this enumeration will contain all of the window ids contained in the
+//rebuild project.
+enum win { window_3_id = 3 };
+
+//Window_3 gadgets
 //this enumeration should be used to access the main_gadgets array. the names
 //of the enumerations have the reaction gadget id's on the end so these names
 //will never change even if the design is update (eg another gadget added).
@@ -487,8 +492,9 @@ void window_3( void )
   main_gadgets[6] = 0;
 
   //call the code to display the window
-  //the window id is 3 and it has no menu structure.
-  runWindow( window_object, 3, 0, main_gadgets );
+  //the window id is window_3_id from the window ids enumeration and
+  //it has no menu structure.
+  runWindow( window_object, window_3_id, 0, main_gadgets );
 
   if ( window_object ) DisposeObject( window_object );
 }
@@ -501,6 +507,193 @@ int main( int argc, char **argv )
   }
   cleanup();
 }
+
+Here is the same example GUI design in E
+
+OPT OSVERSION=37
+
+  MODULE 'reaction/reaction_macros',
+      'reaction/reaction_lib',
+      'window','classes/window',
+      'gadgets/layout','layout',
+      'libraries/gadtools','gadtools',
+      'icon',
+      'button','gadgets/button',
+      'string','gadgets/string',
+      'label','images/label',
+      'images/bevel',
+      'amigalib/boopsi',
+      'exec',
+      'intuition/intuition',
+      'intuition/imageclass',
+      'intuition/screens',
+      'intuition/gadgetclass'
+
+
+->window ids
+ENUM WINLOGON_ID = 3
+
+->winLogon gadgets
+ENUM LAYOUT_5, STRING_6, STRING_7, LAYOUT_8, BUTTON_9, BUTTON_10
+ENUM LAYOUT_5_ID = 5, STRING_6_ID = 6, STRING_7_ID = 7, LAYOUT_8_ID = 8, 
+  BUTTON_9_ID = 9, BUTTON_10_ID = 10
+
+DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0
+
+PROC setup()
+  IF (windowbase:=OpenLibrary('window.class',0))=NIL THEN Throw("LIB","win")
+  IF (layoutbase:=OpenLibrary('gadgets/layout.gadget',0))=NIL THEN Throw("LIB","layo")
+  IF (gadtoolsbase:=OpenLibrary('gadtools.library',0))=NIL THEN Throw("LIB","gadt")
+  IF (iconbase:=OpenLibrary('icon.library',0))=NIL THEN Throw("LIB","icon")
+  IF (buttonbase:=OpenLibrary('gadgets/button.gadget',0))=NIL THEN Throw("LIB","btn")
+  IF (stringbase:=OpenLibrary('gadgets/string.gadget',0))=NIL THEN Throw("LIB","strn")
+  IF (labelbase:=OpenLibrary('images/label.image',0))=NIL THEN Throw("LIB","labl")
+  IF (gScreen:=LockPubScreen(NIL))=NIL THEN Raise("pub")
+  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise("visi")
+  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")
+  IF (gAppPort:=CreateMsgPort())=NIL THEN Raise("port")
+ENDPROC
+
+PROC cleanup()
+  IF gVisInfo THEN FreeVisualInfo(gVisInfo)
+  IF gDrawInfo THEN FreeScreenDrawInfo(gScreen,gDrawInfo)
+  IF gAppPort THEN DeleteMsgPort(gAppPort)
+  IF gScreen THEN UnlockPubScreen(NIL,gScreen)
+
+  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)
+  IF iconbase THEN CloseLibrary(iconbase)
+  IF windowbase THEN CloseLibrary(windowbase)
+  IF layoutbase THEN CloseLibrary(layoutbase)
+  IF buttonbase THEN CloseLibrary(buttonbase)
+  IF stringbase THEN CloseLibrary(stringbase)
+  IF labelbase THEN CloseLibrary(labelbase)
+ENDPROC
+
+PROC runWindow(windowObject,windowId, menuStrip, winGadgets:PTR TO LONG) HANDLE
+  DEF running=TRUE
+  DEF win:PTR TO window,wsig,code,msg,sig,result
+
+  IF (win:=RA_OpenWindow(windowObject))
+    GetAttr( WINDOW_SIGMASK, windowObject, {wsig} )
+    IF menuStrip THEN SetMenuStrip( win, menuStrip )
+
+    WHILE running
+      sig:=Wait(wsig)
+      IF (sig AND (wsig))
+        WHILE ((result:=RA_HandleInput(windowObject,{code}+2)) <> WMHI_LASTMSG)
+          msg:=(result AND WMHI_CLASSMASK)
+          SELECT msg
+            CASE WMHI_CLOSEWINDOW
+              running:=FALSE
+            CASE WMHI_GADGETUP
+              WriteF('gadget press\n')
+            CASE WMHI_MENUPICK
+              WriteF('menu pick\n')
+            CASE WMHI_ICONIFY
+              RA_Iconify(windowObject)
+            CASE WMHI_UNICONIFY
+              win:=RA_OpenWindow(windowObject)
+              IF menuStrip THEN SetMenuStrip( win, menuStrip )
+          ENDSELECT
+        ENDWHILE
+      ENDIF
+    ENDWHILE
+  ENDIF
+EXCEPT DO
+  RA_CloseWindow(windowObject)
+ENDPROC
+
+PROC winlogon() HANDLE
+  DEF windowObject
+  DEF mainGadgets[7]:ARRAY OF LONG
+
+
+  windowObject:=WindowObject,
+    WA_TITLE, 'Please log in...',
+    WA_LEFT, 5,
+    WA_TOP, 20,
+    WA_WIDTH, 250,
+    WA_HEIGHT, 80,
+    WA_MINWIDTH, 150,
+    WA_MINHEIGHT, 80,
+    WA_MAXWIDTH, 8192,
+    WA_MAXHEIGHT, 8192,
+    WINDOW_APPPORT, gAppPort,
+    WA_CLOSEGADGET, TRUE,
+    WA_DEPTHGADGET, TRUE,
+    WA_SIZEGADGET, TRUE,
+    WA_DRAGBAR, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    WINDOW_ICONTITLE, 'MyApp',
+    WA_NOCAREREFRESH, TRUE,
+    WA_IDCMP, IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW,
+    WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_SPACEOUTER, TRUE,
+    LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_ADDCHILD, mainGadgets[LAYOUT_5]:=LayoutObject,
+        GA_ID, LAYOUT_5_ID,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+        LAYOUT_ADDCHILD, mainGadgets[STRING_6]:=StringObject,
+          GA_ID, STRING_6_ID,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'User name',
+        LabelEnd,
+        LAYOUT_ADDCHILD, mainGadgets[STRING_7]:=StringObject,
+          GA_ID, STRING_7_ID,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Password',
+        LabelEnd,
+        LAYOUT_ADDCHILD, mainGadgets[LAYOUT_8]:=LayoutObject,
+          GA_ID, LAYOUT_8_ID,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_ADDCHILD, mainGadgets[BUTTON_9]:=ButtonObject,
+            GA_ID, BUTTON_9_ID,
+            GA_TEXT, 'OK',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+          ButtonEnd,
+          LAYOUT_ADDCHILD, mainGadgets[BUTTON_10]:=ButtonObject,
+            GA_ID, BUTTON_10_ID,
+            GA_TEXT, 'Cancel',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+          ButtonEnd,
+        LayoutEnd,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd  
+  mainGadgets[6]:=0
+
+  runWindow(windowObject,WINLOGON_ID,NIL,mainGadgets)
+
+EXCEPT DO
+  IF windowObject THEN DisposeObject(windowObject);
+ENDPROC
+
+PROC main() HANDLE
+  setup()
+
+  winlogon()
+
+EXCEPT DO
+  cleanup()
+ENDPROC
 
 
 8. Tooltype settings

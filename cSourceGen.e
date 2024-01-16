@@ -8,6 +8,8 @@ OPT MODULE,LARGE
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
 
+ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
+
 PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds) OF cSrcGen
   SUPER self.create(fser,libsused,definitionOnly,useIds)
   self.type:=CSOURCE_GEN
@@ -20,17 +22,21 @@ PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds
   self.indent:=0
 ENDPROC
 
-PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF cSrcGen
+PROC createEnum(enumName:PTR TO CHAR, listObjects:PTR TO stdlist, enumType) OF cSrcGen
   DEF n=0, j
   DEF listObject:PTR TO reactionObject
   DEF tempStr[255]:STRING
 
   self.write('enum ')
-  IF ids
-    StringF(tempStr,'\s_id { ',windowName)
-  ELSE
-    StringF(tempStr,'\s_idx { ',windowName)
-  ENDIF
+  SELECT enumType
+    CASE ENUM_IDS
+      StringF(tempStr,'\s_id { ',enumName)
+    CASE ENUM_IDXS
+      StringF(tempStr,'\s_idx { ',enumName)
+    CASE ENUM_IDENTS
+      StringF(tempStr,'\s { ',enumName)
+  ENDSELECT
+
   LowerStr(tempStr)
   self.write(tempStr)
   n:=0
@@ -47,12 +53,13 @@ PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF cSrc
     ENDIF
     listObject:=listObjects.item(j)
     listObject.gadindex:=j
+
     StrCopy(tempStr,listObject.ident)
     LowerStr(tempStr)
     self.write(tempStr)
     n:=n+StrLen(tempStr)
 
-    IF ids
+    IF (enumType=ENUM_IDS) OR (enumType=ENUM_IDENTS)
       StringF(tempStr,'_id = \d',listObject.id)
       self.write(tempStr)
       n:=n+StrLen(tempStr)
@@ -62,13 +69,14 @@ PROC createEnum(windowName:PTR TO CHAR, listObjects:PTR TO stdlist, ids) OF cSrc
   self.writeLine(' };')
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowNames:PTR TO stringlist, windowLayouts:PTR TO stdlist, sharedPort) OF cSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowItems:PTR TO stdlist, windowLayouts:PTR TO stdlist, sharedPort) OF cSrcGen
   DEF tempStr[200]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
   DEF itemType
   DEF hasarexx,i,j,n
+  DEF windowObject:PTR TO reactionObject
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
   DEF listObject:PTR TO reactionObject
@@ -181,8 +189,9 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
     self.writeLine('')
   ENDIF
 
-  FOR i:=0 TO windowNames.count()-1
-    StrCopy(tempStr,windowNames.item(i))
+  FOR i:=0 TO windowItems.count()-1
+    windowObject:=windowItems.item(i)
+    StrCopy(tempStr,windowObject.ident)
     LowerStr(tempStr)
     self.write('void ')
     self.write(tempStr)
@@ -533,14 +542,24 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
 
   NEW listObjects.stdlist(20)
   self.writeLine('')
-  FOR i:=0 TO windowNames.count()-1
+  FOR i:=0 TO windowItems.count()-1
+    windowObject:=windowItems.item(i)
+    listObjects.add(windowObject)
+  ENDFOR
+  self.writeLine('//window ids')
+  self.createEnum('win',listObjects,ENUM_IDENTS)
+  self.writeLine('')
+
+  listObjects.clear()
+  FOR i:=0 TO windowItems.count()-1
     layoutObject:=windowLayouts.item(i)
+    windowObject:=windowItems.item(i)
     listObjects.clear()
     layoutObject.findObjectsByType(listObjects,-1)
-    StringF(tempStr,'//\s',windowNames.item(i))
+    StringF(tempStr,'//\s gadgets',windowObject.ident)
     self.writeLine(tempStr)
-    self.createEnum(windowNames.item(i),listObjects,FALSE)
-    IF self.useIds THEN self.createEnum(windowNames.item(i),listObjects,TRUE)
+    self.createEnum(windowObject.ident,listObjects,ENUM_IDXS)
+    IF self.useIds THEN self.createEnum(windowObject.ident,listObjects,ENUM_IDS)
   ENDFOR
   END listObjects
   self.writeLine('')
@@ -877,7 +896,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF listStr
   DEF drawlist:PTR TO drawlist
 
-  StrCopy(tempStr,windowObject.name)
+  StrCopy(tempStr,windowObject.ident)
   LowerStr(tempStr)
   self.write('void ')
   self.write(tempStr)
@@ -1075,10 +1094,14 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF reactionObject:PTR TO reactionObject
   DEF listStr
   DEF tempStr[200]:STRING
+  DEF windowName[200]:STRING
   DEF i
 
   StringF(tempStr,'  main_gadgets[\d] = 0;',count)
   self.writeLine(tempStr)
+  
+  StrCopy(windowName,windowObject.ident)
+  LowerStr(windowName)
 
   IF self.definitionOnly
     self.writeLine('}')
@@ -1088,10 +1111,10 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   self.writeLine('')
   IF menuObject.menuItems.count()>0
-    StringF(tempStr,'  runWindow( window_object, \d, menu_strip, main_gadgets );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \s_id, menu_strip, main_gadgets );',windowName)
     self.writeLine(tempStr)
   ELSE
-    StringF(tempStr,'  runWindow( window_object, \d, 0, main_gadgets );',windowObject.id)
+    StringF(tempStr,'  runWindow( window_object, \s_id, 0, main_gadgets );',windowName)
     self.writeLine(tempStr)
   ENDIF
   self.writeLine('')
@@ -1192,7 +1215,7 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   ENDIF
     
   
-  StringF(tempStr,'    \s',windowObject.name)
+  StringF(tempStr,'    \s',windowObject.ident)
   LowerStr(tempStr)
   StrAdd(tempStr,'();')
   self.writeLine(tempStr)

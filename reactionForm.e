@@ -19,7 +19,7 @@ EXPORT PROC gadgetPress(id,code) OF reactionForm
   DEF action,gadget
   IF (action:=self.gadgetActions[id])
     IF (action=MR_OK) OR (action=MR_CANCEL)
-      self.modalResult:=action
+      IF self.canClose(action) THEN self.modalResult:=action
     ELSE
       gadget:=self.gadgetList[id]
       action(self,gadget,id,code)
@@ -35,7 +35,7 @@ EXPORT PROC clearBusy() OF reactionForm
   IF self.windowObj THEN Sets(self.windowObj,WA_BUSYPOINTER,FALSE)
 ENDPROC
 
-EXPORT PROC canClose() OF reactionForm IS TRUE
+EXPORT PROC canClose(modalRes) OF reactionForm IS TRUE
 EXPORT PROC ticker() OF reactionForm IS 0
 EXPORT PROC menuPick(menu,menuitem,subItem) OF reactionForm IS 0
 
@@ -56,7 +56,7 @@ EXPORT PROC showModal() OF reactionForm HANDLE
             CASE WMHI_GADGETUP
               self.gadgetPress(result AND $FFFF,code AND $FFFF)
             CASE WMHI_CLOSEWINDOW
-              IF self.canClose() THEN running:=FALSE
+              IF self.canClose(MR_CANCEL) THEN running:=FALSE
             CASE WMHI_INTUITICK
               self.ticker()
             CASE WMHI_MENUPICK

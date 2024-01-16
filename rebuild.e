@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '0.9.0-beta'
-#date verstring '$VER:Rebuild 0.9.0-%Y%m%d%h%n%s-beta'
+#define vernum '0.10.0-beta'
+#date verstring '$VER:Rebuild 0.10.0-%Y%m%d%h%n%s-beta'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -1217,17 +1217,18 @@ PROC genCode()
   DEF objectCreate[50]:STRING
   DEF objectEnd[50]:STRING
   DEF codeGenForm:PTR TO codeGenForm
-  DEF i,res
+  DEF i,j,res
   DEF menuComp:PTR TO reactionObject
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
   DEF screenComp:PTR TO screenObject
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
-  DEF windowNames:PTR TO stringlist
+  DEF windowItems:PTR TO stdlist
   DEF windowLayouts:PTR TO stdlist
   DEF windowObj:PTR TO windowObject
   DEF sharedport=0
+  DEF dupeName=0
   
   setBusy()
   NEW codeGenForm.create()
@@ -1264,16 +1265,30 @@ PROC genCode()
   FOR i:=0 TO TYPE_MAX-1 DO libsused[i]:=0
 
   i:=ROOT_LAYOUT_ITEM
-  NEW windowNames.stringlist(10)
+  NEW windowItems.stdlist(10)
   NEW windowLayouts.stdlist(10)
   WHILE i<objectList.count()
     findLibsUsed(objectList.item(i),libsused)
     windowObj:=objectList.item(i-ROOT_LAYOUT_ITEM+ROOT_WINDOW_ITEM)
     IF windowObj.sharedPort THEN sharedport:=TRUE
-    windowNames.add(windowObj.name)
+    windowItems.add(windowObj)
     windowLayouts.add(objectList.item(i))
     i+=3
   ENDWHILE
+
+  FOR i:=0 TO windowItems.count()-1
+    FOR j:=0 TO windowItems.count()-1
+      IF i<>j
+        IF StriCmp(windowItems.item(i)::reactionObject.ident,windowItems.item(j)::reactionObject.ident)
+          dupeName:=TRUE
+        ENDIF
+      ENDIF
+    ENDFOR
+  ENDFOR
+  
+  IF dupeName
+    IF warnRequest(mainWindow,'Warning','You have duplicate window identifiers,\ndo you want to continue?',TRUE)=0 THEN RETURN
+  ENDIF
   
   IF FileLength(fname)>=0
     IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN
@@ -1301,8 +1316,8 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
   rexxComp:=objectList.item(ROOT_REXX_ITEM)
-  srcGen.genHeader(screenComp,rexxComp, windowNames,windowLayouts, sharedport)
-  END windowNames
+  srcGen.genHeader(screenComp,rexxComp, windowItems,windowLayouts, sharedport)
+  END windowItems
   END windowLayouts
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()
     windowComp:=objectList.item(i+ROOT_WINDOW_ITEM)

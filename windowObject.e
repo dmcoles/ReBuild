@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37,LARGE
         'intuition/gadgetclass',
         'exec'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist','*dialogs'
 
-EXPORT ENUM WINGAD_NAME, WINGAD_TITLE, WINGAD_SCREENTITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
+EXPORT ENUM WINGAD_IDENT, WINGAD_TITLE, WINGAD_SCREENTITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
       WINGAD_LEFTEDGE, WINGAD_TOPEDGE, WINGAD_WIDTH, WINGAD_HEIGHT,
       WINGAD_MINWIDTH, WINGAD_MINHEIGHT, WINGAD_MAXWIDTH, WINGAD_MAXHEIGHT,
       WINGAD_WINDOWPOS, WINGAD_LOCKWIDTH, WINGAD_LOCKHEIGHT,
@@ -736,14 +736,14 @@ PROC create() OF windowSettingsForm
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-          LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_NAME ]:=StringObject,
-            GA_ID, WINGAD_NAME,
+          LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_IDENT ]:=StringObject,
+            GA_ID, WINGAD_IDENT,
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
             STRINGA_MAXCHARS, 80,
           StringEnd,
           CHILD_LABEL, LabelObject,
-            LABEL_TEXT, '_Window Name',
+            LABEL_TEXT, '_Window Identifier',
           LabelEnd,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_TITLE ]:=StringObject,
@@ -1007,6 +1007,20 @@ PROC create() OF windowSettingsForm
   self.gadgetActions[WINGAD_OK]:=MR_OK
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF windowSettingsForm
+  DEF str:PTR TO CHAR
+  DEF i
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  str:=Gets(self.gadgetList[ WINGAD_IDENT ],STRINGA_TEXTVAL)
+  FOR i:=0 TO StrLen(str)-1
+    IF (str[i]==["_","a" TO "z","A" TO "Z","0" TO "9"])=FALSE
+      errorRequest(self.windowObj,'Error','The window identifer is not valid (A-Z, 0-9 and _)')
+      RETURN FALSE
+    ENDIF
+  ENDFOR
+ENDPROC TRUE
+
 PROC editFlags(nself,gadget,id,code) OF windowSettingsForm
   DEF res,refreshType,flags
   DEF windowFlagsSettingsForm:PTR TO windowFlagsSettingsForm
@@ -1047,7 +1061,7 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
   self.tmpFlags:=comp.flags
   self.tmpIDCMP:=comp.idcmp
 
-  SetGadgetAttrsA(self.gadgetList[ WINGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
+  SetGadgetAttrsA(self.gadgetList[ WINGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_TITLE ],0,0,[STRINGA_TEXTVAL,comp.title,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_SCREENTITLE ],0,0,[STRINGA_TEXTVAL,comp.screentitle,0])
   SetGadgetAttrsA(self.gadgetList[ WINGAD_ICONTITLE ],0,0,[STRINGA_TEXTVAL,comp.iconTitle,0])
@@ -1070,7 +1084,8 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
   res:=self.showModal()
   IF res=MR_OK
 
-    AstrCopy(comp.name,Gets(self.gadgetList[ WINGAD_NAME ],STRINGA_TEXTVAL))
+    AstrCopy(comp.ident,Gets(self.gadgetList[ WINGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.name,Gets(self.gadgetList[ WINGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.title,Gets(self.gadgetList[ WINGAD_TITLE ],STRINGA_TEXTVAL))
     AstrCopy(comp.screentitle,Gets(self.gadgetList[ WINGAD_SCREENTITLE ],STRINGA_TEXTVAL))
     AstrCopy(comp.iconTitle,Gets(self.gadgetList[ WINGAD_ICONTITLE ],STRINGA_TEXTVAL))

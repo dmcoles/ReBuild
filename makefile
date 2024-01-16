@@ -30,7 +30,7 @@ paletteObject.m:			paletteObject.e reactionObject.m reactionForm.m sourceGen.m
 screenObject.m:			screenObject.e reactionObject.m reactionForm.m sourceGen.m
 							$(compiler) screenObject $(options)
 
-windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m
+windowObject.m:			windowObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m dialogs.m
 							$(compiler) windowObject $(options)
 
 glyphObject.m:			glyphObject.e reactionObject.m reactionForm.m sourceGen.m
