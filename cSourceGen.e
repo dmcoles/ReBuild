@@ -1349,7 +1349,7 @@ PROC makeList3(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid) OF cSrcGe
     FOR i:=0 TO listitem.items.count()-1
       totsize:=totsize+EstrLen(listitem.items.item(i))+22
     ENDFOR
-    res:=String(totsize+30)
+    res:=String(totsize+35)
     StrCopy(res,start)
     StrAdd(res,'\n  {\n')
     FOR i:=0 TO listitem.items.count()-1
