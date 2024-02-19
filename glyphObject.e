@@ -228,8 +228,13 @@ EXPORT PROC serialiseData() OF glyphObject IS
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF glyphObject
   srcGen.componentProperty('GLYPH_DrawInfo','gDrawInfo',FALSE)
-  IF self.glyphType<>9 THEN srcGen.componentProperty('GLYPH_Glyph',ListItem(['GLYPH_NONE', 'GLYPH_DOWNARROW', 'GLYPH_UPARROW', 'GLYPH_LEFTARROW', 'GLYPH_RIGHTARROW', 
+  IF self.glyphType<>0 THEN srcGen.componentProperty('GLYPH_Glyph',ListItem(['GLYPH_NONE', 'GLYPH_DOWNARROW', 'GLYPH_UPARROW', 'GLYPH_LEFTARROW', 'GLYPH_RIGHTARROW', 
             'GLYPH_DROPDOWN', 'GLYPH_POPUP', 'GLYPH_CHECKMARK', 'GLYPH_POPFONT', 'GLYPH_POPFILE','GLYPH_POPDRAWER','GLYPH_POPSCREENMODE'],self.glyphType),FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF glyphObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF glyphObject

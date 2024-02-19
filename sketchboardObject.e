@@ -362,10 +362,25 @@ EXPORT PROC serialiseData() OF sketchboardObject IS
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sketchboardObject
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
+  IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
+  IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)  
+
+  srcGen.componentPropertyInt('SGA_Width',self.width)
+  srcGen.componentPropertyInt('SGA_Height',self.height)
+
+  IF self.activeTool THEN srcGen.componentProperty('SGA_Tool', ListItem(['SGTOOL_FREEHAND_DOTS','SGTOOL_FREEHAND','SGTOOL_ELLIPSE','SGTOOL_ELLIPSE_FILLED','SGTOOL_RECT',
+             'SGTOOL_RECT_FILLED','SGTOOL_LINE','SGTOOL_FILL','SGTOOL_GETPEN','SGTOOL_HOTSPOT','SGTOOL_SELECT',
+             'SGTOOL_MOVE'],self.activeTool),FALSE)
+             
+  IF self.pen<>-1 THEN srcGen.componentPropertyInt('SGA_APen',self.pen)
+
+  IF self.grid THEN srcGen.componentProperty('SGA_ShowGrid','TRUE',FALSE)  
+  IF self.scale THEN srcGen.componentProperty('SGA_Scale','1',FALSE)  
+  IF self.bevel THEN srcGen.componentProperty('SGA_WithBevel','TRUE',FALSE)   
   ->IF self.scroller=FALSE THEN srcGen.componentProperty('VIRTUALA_Scroller','FALSE',FALSE)
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF sketchboardObject IS 'SketchBoard_GetClass()'
+EXPORT PROC hasCreateMacro() OF sketchboardObject IS FALSE
 
 EXPORT PROC getTypeEndName() OF sketchboardObject
   RETURN 'End'

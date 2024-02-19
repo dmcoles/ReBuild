@@ -313,7 +313,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listViewObject
   ENDIF
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF listViewObject IS 'ListView_GetClass()'
+EXPORT PROC hasCreateMacro() OF listViewObject IS FALSE
 
 EXPORT PROC getTypeEndName() OF listViewObject
   RETURN 'End'

@@ -719,6 +719,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getScreenModeObject
   IF self.doAutoScroll THEN srcGen.componentProperty('GETSCREENMODE_DoAutoScroll','TRUE',FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF getScreenModeObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC getTypeName() OF getScreenModeObject
   RETURN 'GetScreenMode'
 ENDPROC

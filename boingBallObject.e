@@ -325,6 +325,7 @@ EXPORT PROC getTypeName() OF boingBallObject
 ENDPROC
 
 EXPORT PROC libNameCreate() OF boingBallObject IS 'boingball.image'
+EXPORT PROC hasCreateMacro() OF boingBallObject IS FALSE
 
 EXPORT PROC isImage() OF boingBallObject IS TRUE
 

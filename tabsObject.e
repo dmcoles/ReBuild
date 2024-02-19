@@ -328,6 +328,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF tabsObject
 ENDPROC
 
 EXPORT PROC libNameCreate() OF tabsObject IS 'tabs.gadget'
+EXPORT PROC hasCreateMacro() OF tabsObject IS FALSE
 
 EXPORT PROC getTypeEndName() OF tabsObject
   RETURN 'End'

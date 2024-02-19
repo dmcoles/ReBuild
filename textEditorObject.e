@@ -392,7 +392,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textEditorObject
   ENDIF
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF textEditorObject IS 'TextEditor_GetClass()'
+EXPORT PROC hasCreateMacro() OF textEditorObject IS FALSE ->create macro was missing from EVO modules
 
 EXPORT PROC getTypeEndName() OF textEditorObject
   RETURN 'End'

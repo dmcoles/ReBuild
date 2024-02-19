@@ -386,6 +386,8 @@ ENDPROC
 
 EXPORT PROC isImage() OF ledObject IS TRUE
 
+EXPORT PROC libNameCreate() OF ledObject IS 'led.image'
+
 EXPORT PROC createLedObject(parent)
   DEF led:PTR TO ledObject
   

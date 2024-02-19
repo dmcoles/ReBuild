@@ -672,6 +672,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.writeLine('')
   FOR i:=0 TO listObjects.count()-1
     reactionObject:=listObjects.item(i)
+    StrCopy(endStr,'')
     SELECT reactionObject.type
       CASE TYPE_CHOOSER
         StringF(tempStr,'  labels\d:=chooserLabelsA(',reactionObject.id)
@@ -701,7 +702,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
       self.writeLine(listStr)
       DisposeLink(listStr)
     ELSE
-      StrAdd(tempStr,'[0])')
+      StrAdd(tempStr,'[0]')
+      StrAdd(tempStr,endStr)
+      StrAdd(tempStr,')')
       self.writeLine(tempStr)
     ENDIF
   ENDFOR
@@ -947,8 +950,25 @@ ENDPROC
 
 PROC componentLibtypeCreate(libtype:PTR TO CHAR) OF eSrcGen
   DEF tempStr[200]:STRING
-  StringF(tempStr,'NewObjectA(\s,NIL,[TAG_IGNORE,0,',libtype)
+  
+  ->dirty great hack because bitmap was cased incorrectly in the module
+  IF StrCmp(libtype,'BitMap')
+    StrCopy(tempStr,'NewObjectA(Bitmap_GetClass(),NIL,[TAG_IGNORE,0,')
+  ELSE
+    StringF(tempStr,'NewObjectA(\s_GetClass(),NIL,[TAG_IGNORE,0,',libtype)
+  ENDIF
   self.componentCreate(tempStr)
+ENDPROC
+
+PROC componentPropertyCreate(property:PTR TO CHAR,libtype:PTR TO CHAR) OF eSrcGen
+  DEF tempStr[200]:STRING
+  ->dirty great hack because bitmap was cased incorrectly in the module
+  IF StrCmp(libtype,'BitMap')
+    StrCopy(tempStr,'NewObjectA(Bitmap_GetClass(),NIL,[TAG_IGNORE,0,')
+  ELSE
+    StringF(tempStr,'NewObjectA(\s_GetClass(),NIL,[TAG_IGNORE,0',libtype)
+  ENDIF
+  self.componentProperty(property,tempStr,FALSE)
 ENDPROC
 
 PROC genScreenCreate(screenObject:PTR TO screenObject) OF eSrcGen
@@ -995,6 +1015,26 @@ PROC componentPropertyGadgetId(idval) OF eSrcGen
   self.componentProperty('GA_ID',tempStr, FALSE)
 ENDPROC
 
+PROC componentEndNoMacro(addComma) OF eSrcGen
+  self.decreaseIndent()
+  IF addComma
+    self.writeLine('TAG_END]),')
+  ELSE
+    self.writeLine('TAG_END])')
+  ENDIF
+ENDPROC
+
+PROC finalComponentEnd(name:PTR TO CHAR) OF eSrcGen
+  self.decreaseIndent()
+  self.genIndent()
+  IF StrLen(name)=0
+    self.write('TAG_END])')
+  ELSE
+    self.write(name)
+  ENDIF
+  self.addTerminator()
+  self.writeLine('')
+ENDPROC
 PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid, end=0:PTR TO CHAR) OF eSrcGen
   DEF res=0
   DEF totsize=0,linelen=0

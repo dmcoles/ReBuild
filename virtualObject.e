@@ -202,7 +202,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF virtualObject
   IF self.scroller=FALSE THEN srcGen.componentProperty('VIRTUALA_Scroller','FALSE',FALSE)
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF virtualObject IS 'Virtual_GetClass()'
+EXPORT PROC hasCreateMacro() OF virtualObject IS FALSE ->create macro was missing from EVO modules
 
 EXPORT PROC getTypeEndName() OF virtualObject
   RETURN 'End'

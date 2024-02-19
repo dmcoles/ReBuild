@@ -462,12 +462,13 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
 
   penlist:=['DETAILPEN', 'BLOCKPEN', 'TEXTPEN', 'SHINEPEN','SHADOWPEN','FILLPEN','FILLTEXTPEN','BACKGROUNDPEN','HIGHLIGHTTEXTPEN']
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentPropertyInt('GA_Text',self.name)
   
   srcGen.componentPropertyInt('FUELGAUGE_Min',self.min)
   srcGen.componentPropertyInt('FUELGAUGE_Max',self.max)
   srcGen.componentPropertyInt('FUELGAUGE_Level',self.level)
   IF self.tickSize<>5 THEN srcGen.componentPropertyInt('FUELGAUGE_TickSize',self.tickSize)
-  IF self.ticks THEN srcGen.componentPropertyInt('FUELGAUGE_Ticks',self.ticks)
+  IF self.ticks<>4 THEN srcGen.componentPropertyInt('FUELGAUGE_Ticks',self.ticks)
   IF self.shortTicks THEN srcGen.componentProperty('FUELGAUGE_ShortTicks','TRUE',FALSE)
   IF self.percent=FALSE THEN srcGen.componentProperty('FUELGAUGE_Percent','FALSE',FALSE)
   IF self.orientation<>0 THEN srcGen.componentProperty('FUELGAUGE_Orientation',ListItem(['FGORIENT_HORIZ','FGORIENT_VERT'],self.orientation),FALSE)
@@ -480,7 +481,6 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
 ENDPROC
 
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF fuelGaugeObject
-  srcGen.componentAddChildLabel(self.name)
   SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 

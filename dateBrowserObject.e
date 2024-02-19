@@ -251,7 +251,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF dateBrowserObject
   IF self.showTitle THEN srcGen.componentProperty('DATEBROWSER_ShowTitle','TRUE',FALSE)
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF dateBrowserObject IS 'DateBrowser_GetClass()'
+EXPORT PROC hasCreateMacro() OF dateBrowserObject IS FALSE
 
 EXPORT PROC getTypeEndName() OF dateBrowserObject
   RETURN 'End'

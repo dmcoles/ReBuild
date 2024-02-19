@@ -196,6 +196,8 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF colorWheelObject
   IF self.bevelBox THEN srcGen.componentProperty('WHEEL_BevelBox','TRUE',FALSE)
 ENDPROC
 
+EXPORT PROC libNameCreate() OF colorWheelObject IS 'colorwheel.gadget'
+
 EXPORT PROC createColorWheelObject(parent)
   DEF colorWheel:PTR TO colorWheelObject
   

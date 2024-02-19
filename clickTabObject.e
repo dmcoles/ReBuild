@@ -340,6 +340,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF clickTabObject
   DEF tempStr[200]:STRING
 
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
+  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   IF self.disabled THEN srcGen.componentProperty('GA_Disabled','TRUE',FALSE)
   
   srcGen.componentPropertyInt('GA_Left',self.left)

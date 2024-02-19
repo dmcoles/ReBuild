@@ -20,6 +20,8 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen'
 
+EXPORT DEF errorState
+
 EXPORT ENUM BITMAPGAD_NAME, BITMAPGAD_LEFTEDGE, BITMAPGAD_TOPEDGE,
             BITMAPGAD_WIDTH, BITMAPGAD_HEIGHT, BITMAPGAD_SOURCEFILE, BITMAPGAD_MASKING, 
       BITMAPGAD_OK, BITMAPGAD_CHILD, BITMAPGAD_CANCEL
@@ -235,6 +237,7 @@ EXPORT PROC createPreviewObject(scr) OF bitmapObject
       BitMapEnd
 
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+  errorState:=FALSE
 
   self.previewChildAttrs:=[
     LAYOUT_MODIFYCHILD, self.previewObject,

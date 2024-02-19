@@ -87,6 +87,9 @@ PROC componentProperty(propName:PTR TO CHAR, propValue:PTR TO CHAR, isString) OF
   DisposeLink(str)
 ENDPROC
 
+PROC componentPropertyCreate(propName:PTR TO CHAR, libType:PTR TO CHAR) OF srcGen
+ENDPROC
+
 PROC componentPropertyInt(propName:PTR TO CHAR, propValue:LONG) OF srcGen
   DEF str
   DEF propValueStr[10]:STRING
@@ -139,10 +142,23 @@ PROC componentEnd(name:PTR TO CHAR) OF srcGen
   self.writeLine(name)
 ENDPROC
 
+PROC componentEndNoMacro(addComma) OF srcGen
+  self.decreaseIndent()
+  IF addComma
+    self.writeLine('TAG_END),')
+  ELSE
+    self.writeLine('TAG_END)')
+  ENDIF
+ENDPROC
+
 PROC finalComponentEnd(name:PTR TO CHAR) OF srcGen
   self.decreaseIndent()
   self.genIndent()
-  self.write(name)
+  IF StrLen(name)=0
+    self.write('TAG_END)')
+  ELSE
+    self.write(name)
+  ENDIF
   self.addTerminator()
   self.writeLine('')
 ENDPROC

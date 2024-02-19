@@ -270,7 +270,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF tapeDeckObject
   
   srcGen.componentProperty('TDECK_Tape',ListItem(['TRUE','FALSE'],self.anim),FALSE)
   srcGen.componentProperty('TDECK_Mode',ListItem(['BUT_REWIND','BUT_PLAY', 'BUT_FORWARD', 'BUT_STOP', 'BUT_PAUSE'],self.mode),FALSE)
-  IF self.anim
+  IF self.anim=0
     srcGen.componentPropertyInt('TDECK_Frames',self.frames)
     srcGen.componentPropertyInt('TDECK_CurrentFrame',self.currFrame)
   ENDIF
@@ -278,6 +278,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF tapeDeckObject
 ENDPROC
 
 EXPORT PROC libNameCreate() OF tapeDeckObject IS 'tapedeck.gadget'
+EXPORT PROC hasCreateMacro() OF tapeDeckObject IS FALSE
 
 EXPORT PROC getTypeEndName() OF tapeDeckObject
   RETURN 'End'

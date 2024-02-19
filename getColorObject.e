@@ -390,7 +390,7 @@ EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF getColorObject
   SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
-EXPORT PROC libTypeCreate() OF getColorObject IS 'GetColor_GetClass()'
+EXPORT PROC hasCreateMacro() OF getColorObject IS FALSE ->create macro was missing from EVO modules
 
 EXPORT PROC getTypeEndName() OF getColorObject
   RETURN 'End'

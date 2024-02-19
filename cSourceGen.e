@@ -159,36 +159,6 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   self.writeLine('#include <exec/memory.h>')
   self.writeLine('')
 
-  IF self.libsused[TYPE_VIRTUAL]
-    self.writeLine('#define Virtual_GetClass() VIRTUAL_GetClass()')
-    self.writeLine('')
-  ENDIF
-
-  IF self.libsused[TYPE_TEXTEDITOR]
-    self.writeLine('#define TextEditor_GetClass() TEXTEDITOR_GetClass()')
-    self.writeLine('')
-  ENDIF
-
-  IF self.libsused[TYPE_GETCOLOR]
-    self.writeLine('#define GetColor_GetClass() GETCOLOR_GetClass()')
-    self.writeLine('')
-  ENDIF
-
-  IF self.libsused[TYPE_SKETCH]
-    self.writeLine('#define SketchBoard_GetClass() SKETCHBOARD_GetClass()')
-    self.writeLine('')
-  ENDIF
-
-  IF self.libsused[TYPE_DATEBROWSER]
-    self.writeLine('#define DateBrowser_GetClass() DATEBROWSER_GetClass()')
-    self.writeLine('')
-  ENDIF
-
-  IF self.libsused[TYPE_LISTVIEW]
-    self.writeLine('#define ListView_GetClass() LISTVIEW_GetClass()')
-    self.writeLine('')
-  ENDIF
-
   FOR i:=0 TO windowItems.count()-1
     windowObject:=windowItems.item(i)
     StrCopy(tempStr,windowObject.ident)
@@ -1257,8 +1227,18 @@ ENDPROC
 
 PROC componentLibtypeCreate(libtype:PTR TO CHAR) OF cSrcGen
   DEF tempStr[200]:STRING
-  StringF(tempStr,'NewObject( \s, NULL, ',libtype)
+  StrCopy(tempStr,libtype)
+  UpperStr(tempStr)
+  StringF(tempStr,'NewObject( \s_GetClass(), NULL, ',tempStr)
   self.componentCreate(tempStr)
+ENDPROC
+
+PROC componentPropertyCreate(property:PTR TO CHAR,libtype:PTR TO CHAR) OF cSrcGen
+  DEF tempStr[200]:STRING
+  StrCopy(tempStr,libtype)
+  UpperStr(tempStr)
+  StringF(tempStr,'NewObject( \s_GetClass(), NULL',tempStr)
+  self.componentProperty(property,tempStr,FALSE)
 ENDPROC
 
 PROC genScreenCreate(screenObject:PTR TO screenObject) OF cSrcGen
@@ -1286,6 +1266,15 @@ PROC genScreenFree(screenObject:PTR TO screenObject) OF cSrcGen
     self.writeLine(tempStr)
   ELSE
     self.writeLine('  if ( gScreen ) CloseScreen( gScreen );')
+  ENDIF
+ENDPROC
+
+PROC componentEndNoMacro(addComma) OF cSrcGen
+  self.decreaseIndent()
+  IF addComma
+    self.writeLine('TAG_END),')
+  ELSE
+    self.writeLine('TAG_END)')
   ENDIF
 ENDPROC
 

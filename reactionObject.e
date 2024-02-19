@@ -698,7 +698,6 @@ ENDPROC
 EXPORT PROC isImage() OF reactionObject IS self.errObj
 
 EXPORT PROC libNameCreate() OF reactionObject IS 0
-EXPORT PROC libTypeCreate() OF reactionObject IS 0
 
 EXPORT PROC allowChildren() OF reactionObject IS 0
 
@@ -713,6 +712,8 @@ EXPORT PROC addChildTo() OF reactionObject IS self.previewObject
 EXPORT PROC genChildObjectsHeader(srcGen:PTR TO srcGen) OF reactionObject IS 0
 
 EXPORT PROC genChildObjectsFooter(srcGen:PTR TO srcGen) OF reactionObject IS 0
+
+EXPORT PROC hasCreateMacro() OF reactionObject IS TRUE
 
 EXPORT PROC objectInitialise(n=1)
   objCount:=n

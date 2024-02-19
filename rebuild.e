@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '1.0.0'
-#date verstring '$VER:Rebuild 1.0.0-%Y%m%d%h%n%s'
+#define vernum '1.1.0-dev'
+#date verstring '$VER:Rebuild 1.1.0-%Y%m%d%h%n%s'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -663,6 +663,10 @@ PROC loadIconPrefs()
       AstrCopy(codeOptions.savePath,s,256)
     ENDIF
 
+    IF(s:=FindToolType(dobj.tooltypes,'USEMACROS'))
+      IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN codeOptions.usemacros:=FALSE ELSE codeOptions.usemacros:=TRUE
+    ENDIF
+
     IF(s:=FindToolType(dobj.tooltypes,'SHOWBUFFER'))
       IF (MatchToolValue(s,'NO')) OR (MatchToolValue(s,'FALSE')) THEN systemOptions.showBuffer:=FALSE ELSE systemOptions.showBuffer:=TRUE
     ENDIF
@@ -1165,13 +1169,13 @@ PROC genComponentCode(comp:PTR TO reactionObject, srcGen:PTR TO srcGen)
   ENDIF
 
   srcGen.assignGadgetVar(comp.ident,comp.gadindex)
-  IF (libtype:=comp.libTypeCreate())
-    srcGen.componentLibtypeCreate(libtype)
+  IF (codeOptions.usemacros) AND (comp.hasCreateMacro())
+    StringF(tempStr,'\sObject,',comp.getTypeName())
+    srcGen.componentCreate(tempStr)
   ELSEIF (libname:=comp.libNameCreate())
     srcGen.componentLibnameCreate(libname)
   ELSE
-    StringF(tempStr,'\sObject,',comp.getTypeName())
-    srcGen.componentCreate(tempStr)
+    srcGen.componentLibtypeCreate(comp.getTypeName())
   ENDIF
 
   IF srcGen.useIds
@@ -1192,8 +1196,12 @@ PROC genComponentCode(comp:PTR TO reactionObject, srcGen:PTR TO srcGen)
   IF EstrLen(tempStr)=0
     StringF(tempStr,'\sEnd',comp.getTypeName())
   ENDIF
-  StrAddChar(tempStr,",")
-  srcGen.componentEnd(tempStr)
+  IF codeOptions.usemacros=FALSE
+    srcGen.componentEndNoMacro(TRUE)
+  ELSE
+    StrAddChar(tempStr,",")
+    srcGen.componentEnd(tempStr)
+  ENDIF
   comp.genCodeChildProperties(srcGen)
 ENDPROC
 
@@ -1227,6 +1235,7 @@ PROC genCode()
   DEF windowItems:PTR TO stdlist
   DEF windowLayouts:PTR TO stdlist
   DEF windowObj:PTR TO windowObject
+  DEF tempStr[255]:STRING
   DEF sharedport=0
   DEF dupeName=0
   
@@ -1327,21 +1336,35 @@ PROC genCode()
   
     srcGen.genWindowHeader(count,windowComp,menuComp,layoutComp, getReactionLists())
     srcGen.assignWindowVar()
-    StringF(objectCreate,'\sObject,',windowComp.getTypeName())
-    StringF(objectEnd,'\sEnd',windowComp.getTypeName())
+    IF codeOptions.usemacros
+      StringF(objectCreate,'\sObject,',windowComp.getTypeName())
+      srcGen.componentCreate(objectCreate)
+      StringF(objectEnd,'\sEnd',windowComp.getTypeName())
+    ELSE
+      srcGen.componentLibtypeCreate(windowComp.getTypeName())
+      StrCopy(objectEnd,'')
+    ENDIF
 
-    srcGen.componentCreate(objectCreate)
     windowComp.genCodeProperties(srcGen)
     
     IF screenComp.custom
       srcGen.componentProperty('WA_CustomScreen','gScreen',FALSE)
     ENDIF
-    srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
+    IF codeOptions.usemacros
+      srcGen.componentProperty('WINDOW_ParentGroup','VLayoutObject',FALSE)
+    ELSE
+      srcGen.componentPropertyCreate('WINDOW_ParentGroup','Layout')
+      srcGen.componentProperty('LAYOUT_Orientation','LAYOUT_ORIENT_VERT',FALSE)
+    ENDIF
     srcGen.componentProperty('LAYOUT_SpaceOuter','TRUE',FALSE)
     srcGen.componentProperty('LAYOUT_DeferLayout','TRUE',FALSE)
     srcGen.increaseIndent()
     genComponentCode(layoutComp,srcGen)
-    srcGen.componentEnd('LayoutEnd,') 
+    IF codeOptions.usemacros
+      srcGen.componentEnd('LayoutEnd,') 
+    ELSE
+      srcGen.componentEndNoMacro(TRUE) 
+    ENDIF
     srcGen.finalComponentEnd(objectEnd) 
     srcGen.decreaseIndent()
     srcGen.genWindowFooter(count,windowComp,menuComp,layoutComp, getReactionLists())
@@ -1475,6 +1498,9 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
       codeOptions.fullcode:=IF v THEN TRUE ELSE FALSE
     ELSEIF StrCmp(tempStr,'CODEFOLDER=',STRLEN)
       AstrCopy(codeOptions.savePath,tempStr+STRLEN,256)
+    ELSEIF StrCmp(tempStr,'USEMACROS=',STRLEN)
+      v:=Val(tempStr+STRLEN)
+      codeOptions.usemacros:=IF v THEN TRUE ELSE FALSE
     ENDIF
 
     IF fs.readLine(tempStr)=FALSE
@@ -1599,6 +1625,8 @@ PROC saveFile() HANDLE
   StringF(tempStr,'FULLCODE=\d',IF codeOptions.fullcode THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
   StringF(tempStr,'CODEFOLDER=\s',codeOptions.savePath)
+  fs.writeLine(tempStr)
+  StringF(tempStr,'USEMACROS=\d',IF codeOptions.usemacros THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
   fs.writeLine('#')
 
@@ -2728,6 +2756,7 @@ PROC main() HANDLE
 
   codeOptions.langid:=0
   codeOptions.useids:=TRUE
+  codeOptions.usemacros:=TRUE
   codeOptions.fullcode:=TRUE
   AstrCopy(codeOptions.savePath,'')
 
