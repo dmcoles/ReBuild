@@ -1737,7 +1737,7 @@ PROC showAbout()
 
   setBusy()
 
-  StrCopy(aboutStr,'ReBuilder\n\nThe Reaction UI Builder Tool\nWritten By Darren Coles\n')
+  StrCopy(aboutStr,'ReBuild\n\nThe Reaction UI Builder Tool\nWritten By Darren Coles\n')
   StrAdd(aboutStr,vernum)
   
   NEW reqmsg
