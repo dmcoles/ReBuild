@@ -2,6 +2,7 @@
 ---------------------------------------------------------------------------
 
                       Rebuild - Reaction GUI Builder
+                               Version 1.1.0
 
 ---------------------------------------------------------------------------
 
@@ -174,11 +175,12 @@ if you have ClassAct installed - although it should be noted that despite
 the ClassAct documentation stating that it works with OS2.0 and above, it is
 my experience that it does not actually work with anything below OS 3.0
 
-When you click the 'Code' button you will be presented with 3 options:
+When you click the 'Code' button you will be presented with 4 options:
 
    1. E or C source
    2. Use ids for GA_ID / Use array index for GA_ID
    3. Generate full code / Generate definitions only
+   4. Use NDK Macros in definitions
 
 The first option is pretty self explantory. You can pick between E or C
 language and the GUI design will be exported to a code file in that language.
@@ -218,6 +220,25 @@ values into your custom code then it will need to be re-coded.
 
 There is more information regarding this in the next section.
 
+Finally the option to use NDK macros or not alters the code generator and
+if the option is enabled then you will see something like this in the code
+
+         LAYOUT_AddChild, main_gadgets[button_10] = ButtonObject,
+           ...
+           ...
+         ButtonEnd,
+         
+ButtonObject and ButtonEnd are macros defined in the NDK. Many of the
+gadgets have such macros defined but they do not work well with the GCC
+compiler. So we have given the option to generate code that does not use
+them.
+
+When the macros are disabled you will instead see code that looks like this:
+
+        LAYOUT_AddChild, main_gadgets[button_10] = NewObject(BUTTON_GetClass(),NULL,
+          ...
+          ...
+        TAG_END),
 
 7. Tips on working with the rebuild generated source code.
 
@@ -710,6 +731,7 @@ Here is a list of the tooltypes that can be defined
    LANG=E / C        (controls the default language shown)
    USEIDS=YES / NO   (code export default setting)
    FULLCODE=YES / NO (code export default setting)
+   USEMACROS=YES / NO(code export default setting)
    CODEPATH=         (select the default path for the code save)
    SAVEPATH=         (select the default path for project save)
    SHOWBUFFER=YES / NO (show the copy buffer at startup)
@@ -757,5 +779,27 @@ Just a few of my ideas (some of which may or may not be possible) are:
    * requester designer 
    * option to generate codecraft project files
    * add hint text to the settings pages to help users
+
+11. Version history
+
+  1.0.0
+    - Initial release
+  
+  1.1.0
+    - Creating a virtual gadget could cause crashes (due to a bug
+      in the version of E-VO used to compile 1.0.0)
+    - About dialog changed 'Rebuilder' To 'Rebuild'
+    - Loading a bitmap with no image selected reported an incorrect error
+    - Added option to generate code that does not use macros in the object
+      definitions (for better GCC compatibility).
+    - add GA_TabCycle property to click tab
+    - code generated for fuel gauge now uses GA_Text instead child label
+    - fuel gauge used incorrect default number of ticks
+    - GetScreenMode did not include child label in generated code
+    - Glyph did not include child label in generated code
+    - Glyph used incorrect default type
+    - Added USEMACROS tooltype
+    - Sketchboard was missing many of the settings in the generated code
+    - SizeBRight and SizeBBottom did not work correctly in preview window
 
 (C) Darren Coles 2024
