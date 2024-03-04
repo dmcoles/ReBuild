@@ -53,7 +53,7 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '1.1.0-dev'
+#define vernum '1.1.0'
 #date verstring '$VER:Rebuild 1.1.0-%Y%m%d%h%n%s'
 
 #ifndef EVO_3_7_0
