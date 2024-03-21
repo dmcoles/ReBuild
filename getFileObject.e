@@ -526,7 +526,8 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF getFileObject
   IF self.drawersOnly THEN srcGen.componentProperty('GETFILE_DrawersOnly','TRUE',FALSE)
   IF self.rejectIcons THEN srcGen.componentProperty('GETFILE_RejectIcons','TRUE',FALSE)
   IF self.filterDrawers THEN srcGen.componentProperty('GETFILE_FilterDrawers','TRUE',FALSE)
-  IF self.readOnly=FALSE THEN srcGen.componentProperty(' GETFILE_ReadOnly','FALSE',FALSE)
+  //this was listed in NDK 3.9 as defaulting to TRUE but in NDK 3.2 as defaulting to FALSE
+  srcGen.componentProperty('GETFILE_ReadOnly',IF self.readOnly THEN 'TRUE' ELSE 'FALSE',FALSE)
 ENDPROC
 
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF getFileObject
