@@ -1314,10 +1314,10 @@ PROC genCode()
 
  SELECT codeOptions.langid
     CASE LANG_E
-      NEW eSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids)
+      NEW eSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids,codeOptions.usemacros)
       srcGen:=eSrcGen
     CASE LANG_C
-      NEW cSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids)
+      NEW cSrcGen.create(fs,libsused,codeOptions.fullcode=FALSE,codeOptions.useids,codeOptions.usemacros)
       srcGen:=cSrcGen
   ENDSELECT
 

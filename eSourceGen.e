@@ -11,8 +11,8 @@ ENDOBJECT
 
 ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
 
-PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds) OF eSrcGen
-  SUPER self.create(fser,libsused,definitionOnly,useIds)
+PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds,useMacros) OF eSrcGen
+  SUPER self.create(fser,libsused,definitionOnly,useIds,useMacros)
   self.type:=ESOURCE_GEN
   self.stringDelimiter:=39
   self.orOperator:='OR'
@@ -209,7 +209,11 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
     self.writeLine(tempStr)
     self.writeLine('')
 
-    self.writeLine('  gArexxObject:=ARexxObject,')
+    IF self.useMacros
+      self.writeLine('  gArexxObject:=ARexxObject,')
+    ELSE
+      self.writeLine('  gArexxObject:=NewObjectA(Arexx_GetClass(),NIL,[TAG_IGNORE,0,')
+    ENDIF
     StrCopy(tempStr,rexxObject.hostName)
     UpperStr(tempStr)
     StringF(tempStr,'    AREXX_HOSTNAME, \a\s\a,',tempStr)
@@ -226,7 +230,11 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
       StringF(tempStr,'    AREXX_DEFEXTENSION, \a\s\a,',rexxObject.extension)
       self.writeLine(tempStr)
     ENDIF
-    self.writeLine('  End')
+    IF self.useMacros
+      self.writeLine('  End')
+    ELSE
+      self.writeLine('  TAG_END])')
+    ENDIF
     self.writeLine('ENDPROC')
     self.writeLine('')
 
@@ -462,14 +470,30 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
     self.writeLine('    WHILE (text[])')
     self.writeLine('      t:=text[]')
     self.writeLine('      IF t[0]=\q1\q')
-    self.writeLine('        label:=BitMapObject,')
+    IF self.useMacros
+      self.writeLine('        label:=BitMapObject,')
+    ELSE
+      self.writeLine('        label:=NewObjectA(Bitmap_GetClass(),NIL,[TAG_IGNORE,0,')
+    ENDIF
     self.writeLine('            BITMAP_SOURCEFILE, t+1,')
     self.writeLine('            BITMAP_SCREEN, gScreen,')
-    self.writeLine('          BitMapEnd')
+    IF self.useMacros
+      self.writeLine('          BitMapEnd')
+    ELSE
+      self.writeLine('          TAG_END])')
+    ENDIF
     self.writeLine('      ELSE')
-    self.writeLine('        label:=LabelObject,')
+    IF self.useMacros
+      self.writeLine('        label:=LabelObject,')
+    ELSE
+      self.writeLine('        label:=NewObjectA(Label_GetClass(),NIL,[TAG_IGNORE,0,')
+    ENDIF
     self.writeLine('            LABEL_TEXT, t+1,')
-    self.writeLine('          LabelEnd')
+    IF self.useMacros
+      self.writeLine('          LabelEnd')
+    ELSE
+      self.writeLine('          TAG_END])')
+    ENDIF
     self.writeLine('      ENDIF')
     self.writeLine('')
     self.writeLine('      IF (node:=AllocSpeedButtonNodeA(')
@@ -1027,14 +1051,37 @@ ENDPROC
 PROC finalComponentEnd(name:PTR TO CHAR) OF eSrcGen
   self.decreaseIndent()
   self.genIndent()
-  IF StrLen(name)=0
-    self.write('TAG_END])')
-  ELSE
+  IF (StrLen(name) AND (self.useMacros))
     self.write(name)
+  ELSE
+    self.write('TAG_END])')
   ENDIF
   self.addTerminator()
   self.writeLine('')
 ENDPROC
+
+PROC componentAddChildLabel(text) OF eSrcGen
+  DEF tempStr[60]:STRING
+  IF StrLen(text)>0
+    StrCopy(tempStr,'CHILD_Label, ')
+    IF self.upperCaseProperties THEN UpperStr(tempStr)
+    IF self.useMacros
+      StrAdd(tempStr,'LabelObject,')
+    ELSE
+      StrAdd(tempStr,'NewObjectA(Label_GetClass(),NIL,[TAG_IGNORE,0,')
+    ENDIF
+    self.writeLine(tempStr)
+    self.increaseIndent()
+    self.componentProperty('LABEL_Text',text,TRUE)
+    IF self.useMacros
+      self.decreaseIndent()
+      self.writeLine('LabelEnd,')
+    ELSE
+      self.componentEndNoMacro(TRUE)
+    ENDIF
+  ENDIF
+ENDPROC
+
 PROC makeList(start:PTR TO CHAR,reactionLists:PTR TO stdlist, listid, end=0:PTR TO CHAR) OF eSrcGen
   DEF res=0
   DEF totsize=0,linelen=0

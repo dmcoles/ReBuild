@@ -20,10 +20,11 @@ EXPORT OBJECT srcGen
   indent:INT
   definitionOnly:CHAR
   useIds:CHAR
+  useMacros:CHAR
   currentGadgetVar:INT
 ENDOBJECT
 
-PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR,definitionOnly,useIds) OF srcGen
+PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF srcGen
   self.type:=NONE
   self.fser:=fser
   self.libsused:=libsused
@@ -36,6 +37,7 @@ PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR,definitionOnly,useIds)
   self.indent:=0
   self.definitionOnly:=definitionOnly
   self.useIds:=useIds
+  self.useMacros:=useMacros
   self.currentGadgetVar:=0
 ENDPROC
 
@@ -154,26 +156,34 @@ ENDPROC
 PROC finalComponentEnd(name:PTR TO CHAR) OF srcGen
   self.decreaseIndent()
   self.genIndent()
-  IF StrLen(name)=0
-    self.write('TAG_END)')
-  ELSE
+  IF StrLen(name) AND (self.useMacros)
     self.write(name)
+  ELSE
+    self.write('TAG_END)')
   ENDIF
   self.addTerminator()
   self.writeLine('')
 ENDPROC
 
 PROC componentAddChildLabel(text) OF srcGen
-  DEF tempStr[40]:STRING
+  DEF tempStr[60]:STRING
   IF StrLen(text)>0
     StrCopy(tempStr,'CHILD_Label, ')
     IF self.upperCaseProperties THEN UpperStr(tempStr)
-    StrAdd(tempStr,'LabelObject,')
+    IF self.useMacros
+      StrAdd(tempStr,'LabelObject,')
+    ELSE
+      StrAdd(tempStr,'NewObject( LABEL_GetClass(), NULL, ')
+    ENDIF
     self.writeLine(tempStr)
     self.increaseIndent()
     self.componentProperty('LABEL_Text',text,TRUE)
-    self.decreaseIndent()
-    self.writeLine('LabelEnd,')
+    IF self.useMacros
+      self.decreaseIndent()
+      self.writeLine('LabelEnd,')
+    ELSE
+      self.componentEndNoMacro(TRUE)
+    ENDIF
   ENDIF
 ENDPROC
 

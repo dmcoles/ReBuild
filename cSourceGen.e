@@ -10,8 +10,8 @@ ENDOBJECT
 
 ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
 
-PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds) OF cSrcGen
-  SUPER self.create(fser,libsused,definitionOnly,useIds)
+PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF cSrcGen
+  SUPER self.create(fser,libsused,definitionOnly,useIds,useMacros)
   self.type:=CSOURCE_GEN
   self.stringDelimiter:=34
   self.orOperator:='|'
@@ -276,14 +276,30 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
       self.writeLine('    {')
       self.writeLine('      c = (char *)(*nameList);')
       self.writeLine('      if (c[0]==\a1\a) {')
-      self.writeLine('        label = BitMapObject,')
+      IF self.useMacros
+        self.writeLine('        label = BitMapObject,')
+      ELSE
+        self.writeLine('        label = NewObject( BITMAP_GetClass(), NULL, ')
+      ENDIF
       self.writeLine('          BITMAP_SourceFile, c+1,')
       self.writeLine('          BITMAP_Screen, gScreen,')
-      self.writeLine('        BitMapEnd;')
+      IF self.useMacros
+        self.writeLine('        BitMapEnd;')
+      ELSE
+        self.writeLine('        TAG_END);')
+      ENDIF
       self.writeLine('      } else {')
-      self.writeLine('        label = LabelObject,')
+      IF self.useMacros
+        self.writeLine('        label = LabelObject,')
+      ELSE
+        self.writeLine('        label = NewObject( LABEL_GetClass(), NULL, ')
+      ENDIF
       self.writeLine('          LABEL_Text, c+1,')
-      self.writeLine('        LabelEnd;')
+      IF self.useMacros
+        self.writeLine('        LabelEnd;')
+      ELSE
+        self.writeLine('        TAG_END);')
+      ENDIF
       self.writeLine('      }')
       self.writeLine('      AddTail(newList, AllocSpeedButtonNode(i, SBNA_Image, label, SBNA_Enabled, TRUE, SBNA_Spacing, 2, SBNA_Highlight, SBH_RECESS, TAG_END));')
       self.writeLine('      nameList++;')
@@ -1158,7 +1174,11 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
   self.writeLine('  {')
 
   IF hasarexx  
-    self.writeLine('    gArexxObject = ARexxObject,')
+    IF self.useMacros
+      self.writeLine('    gArexxObject = ARexxObject,')
+    ELSE
+      self.writeLine('    gArexxObject = NewObject( AREXX_GetClass(), NULL, ')
+    ENDIF
     StrCopy(tempStr,rexxObject.hostName)
     UpperStr(tempStr)
     StringF(tempStr,'      AREXX_HostName, \q\s\q,',tempStr)
@@ -1175,7 +1195,11 @@ PROC genFooter(windowObject:PTR TO windowObject, rexxObject:PTR TO rexxObject) O
       StringF(tempStr,'      AREXX_DefExtension, \q\s\q,',rexxObject.extension)
       self.writeLine(tempStr)
     ENDIF
-    self.writeLine('    End;')
+    IF self.useMacros
+      self.writeLine('    End;')
+    ELSE
+      self.writeLine('    TAG_END);')
+    ENDIF
     self.writeLine('    if ( !gArexxObject )')
     self.writeLine('    {')
     self.writeLine('      cleanup();')
