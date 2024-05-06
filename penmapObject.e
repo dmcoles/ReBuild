@@ -254,6 +254,7 @@ EXPORT PROC createPreviewObject(scr) OF penMapObject
         PENMAP_TRANSPARENT, self.transparent,
         PENMAP_SCREEN, scr,
         PENMAP_RENDERDATA, self.bitmapData,
+        PENMAP_PALETTE,[2,-1,-1,-1,0,0,0]:LONG,
         ->LABEL_DRAWINFO, self.drawInfo,
       TAG_DONE])
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)

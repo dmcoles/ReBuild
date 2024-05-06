@@ -759,6 +759,7 @@ EXPORT PROC createErrorObject(scr) OF reactionObject
 ENDPROC NewObjectA(PenMap_GetClass(),NIL,
                                   [PENMAP_RENDERDATA, imageData,
                                   PENMAP_SCREEN, scr,
+                                  PENMAP_PALETTE,[2,-1,-1,-1,0,0,0]:LONG,
                                   TAG_DONE])
 
 EXPORT PROC getObjId() IS objCount
