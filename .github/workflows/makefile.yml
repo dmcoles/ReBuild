@@ -27,7 +27,7 @@ jobs:
           mkdir downloads
           mkdir downloads/utils
           cp $GITHUB_WORKSPACE/rebuild downloads
-          cp $GITHUB_WORKSPACE/rebuild.info downloads
+          cp $GITHUB_WORKSPACE/Rebuild.info downloads
           cp $GITHUB_WORKSPACE/Rebuild_manual.txt downloads
           cp $GITHUB_WORKSPACE/Rebuild_manual.txt.info downloads
           cd downloads
