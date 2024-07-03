@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
+EXPORT ENUM LISTBGAD_IDENT, LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
       LISTBGAD_TOP, LISTBGAD_MAKEVISIBLE,
       LISTBGAD_POSITION, LISTBGAD_VIRTUALWIDTH, LISTBGAD_NUMCOLS,
       LISTBGAD_LEFT, LISTBGAD_SPACING, LISTBGAD_SELECTED,
@@ -121,6 +121,16 @@ PROC create() OF listBrowserSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
         
+        LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_IDENT ]:=StringObject,
+          GA_ID, LISTBGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, LISTBGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
@@ -447,6 +457,15 @@ PROC end() OF listBrowserSettingsForm
   END self.gadgetActions[NUM_LISTB_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF listBrowserSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.listBrowserObject,LISTBGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
   DEF res
 
@@ -455,6 +474,7 @@ PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
   self.colTitles:=comp.colTitles
   self.colWidths:=comp.colWidths
 
+  SetGadgetAttrsA(self.gadgetList[ LISTBGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_MAKEVISIBLE ],0,0,[INTEGER_NUMBER,comp.makeVisible,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_POSITION ],0,0,[INTEGER_NUMBER,comp.position,0])
@@ -487,6 +507,7 @@ PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ LISTBGAD_IDENT ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.top:=Gets(self.gadgetList[ LISTBGAD_TOP ],INTEGER_NUMBER)
     comp.makeVisible:=Gets(self.gadgetList[ LISTBGAD_MAKEVISIBLE ],INTEGER_NUMBER)

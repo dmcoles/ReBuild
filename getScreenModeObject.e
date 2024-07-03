@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM GETSCREENGAD_NAME, GETSCREENGAD_TITLE,
+EXPORT ENUM GETSCREENGAD_IDENT, GETSCREENGAD_NAME, GETSCREENGAD_TITLE,
             GETSCREENGAD_LEFT, GETSCREENGAD_TOP, GETSCREENGAD_WIDTH, GETSCREENGAD_HEIGHT, 
             GETSCREENGAD_MINWIDTH, GETSCREENGAD_MAXWIDTH, GETSCREENGAD_MINHEIGHT, GETSCREENGAD_MAXHEIGHT, 
             GETSCREENGAD_MINDEPTH, GETSCREENGAD_MAXDEPTH, GETSCREENGAD_INFOLEFT, GETSCREENGAD_INFOTOP, 
@@ -108,6 +108,19 @@ PROC create() OF getScreenModeSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_IDENT ]:=StringObject,
+          GA_ID, GETSCREENGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+
         LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_NAME ]:=StringObject,
           GA_ID, GETSCREENGAD_NAME,
           GA_RELVERIFY, TRUE,
@@ -116,7 +129,7 @@ PROC create() OF getScreenModeSettingsForm
         StringEnd,
 
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'GetScreenMode _Name',
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_TITLE ]:=StringObject,
@@ -126,7 +139,7 @@ PROC create() OF getScreenModeSettingsForm
           STRINGA_MAXCHARS, 80,
         StringEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'GetScreenMode _Title',
+          LABEL_TEXT, '_Title',
         LabelEnd,
       LayoutEnd,
 
@@ -477,11 +490,21 @@ PROC end() OF getScreenModeSettingsForm
   END self.gadgetActions[NUM_GETSCREEN_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF getScreenModeSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.getScreenModeObject,GETSCREENGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO getScreenModeObject) OF getScreenModeSettingsForm
   DEF res
 
   self.getScreenModeObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ GETSCREENGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GETSCREENGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GETSCREENGAD_TITLE ],0,0,[STRINGA_TEXTVAL,comp.title,0])
 
@@ -516,6 +539,7 @@ PROC editSettings(comp:PTR TO getScreenModeObject) OF getScreenModeSettingsForm
   res:=self.showModal()
   IF res=MR_OK
 
+    AstrCopy(comp.ident,Gets(self.gadgetList[ GETSCREENGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ GETSCREENGAD_NAME ],STRINGA_TEXTVAL))
     AstrCopy(comp.title,Gets(self.gadgetList[ GETSCREENGAD_TITLE ],STRINGA_TEXTVAL))
 

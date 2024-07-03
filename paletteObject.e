@@ -17,9 +17,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM PALGAD_NAME, PALGAD_DISABLED,
+EXPORT ENUM PALGAD_IDENT, PALGAD_NAME, PALGAD_DISABLED,
       PALGAD_INITIAL, PALGAD_OFFSET, PALGAD_NUMCOLS,
       PALGAD_OK, PALGAD_CHILD, PALGAD_CANCEL
       
@@ -74,6 +74,16 @@ PROC create() OF paletteSettingsForm
      LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
         
+        LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_IDENT ]:=StringObject,
+          GA_ID, PALGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
         LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_NAME ]:=StringObject,
           GA_ID, PALGAD_NAME,
           GA_RELVERIFY, TRUE,
@@ -81,7 +91,7 @@ PROC create() OF paletteSettingsForm
           STRINGA_MAXCHARS, 80,
         StringEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Name',
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_DISABLED ]:=CheckBoxObject,
@@ -172,11 +182,21 @@ PROC end() OF paletteSettingsForm
   END self.gadgetActions[NUM_PAL_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF paletteSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.paletteObject,PALGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO paletteObject) OF paletteSettingsForm
   DEF res
 
   self.paletteObject:=comp
   
+  SetGadgetAttrsA(self.gadgetList[ PALGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ PALGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ PALGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0])
   SetGadgetAttrsA(self.gadgetList[ PALGAD_INITIAL ],0,0,[INTEGER_NUMBER,comp.initial,0])
@@ -185,6 +205,7 @@ PROC editSettings(comp:PTR TO paletteObject) OF paletteSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ PALGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ PALGAD_NAME ],STRINGA_TEXTVAL))
     comp.disabled:=Gets(self.gadgetList[ PALGAD_DISABLED],CHECKBOX_CHECKED)
     comp.initial:=Gets(self.gadgetList[ PALGAD_INITIAL ],INTEGER_NUMBER)
@@ -203,22 +224,45 @@ EXPORT PROC createPreviewObject(scr) OF paletteObject
     PaletteEnd
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]    
+  IF StrLen(self.name)>0   
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, self.name,
+      LabelEnd,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]    
+  ELSE
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]    
+  ENDIF
+  
 ENDPROC
 
 EXPORT PROC create(parent) OF paletteObject

@@ -2,10 +2,11 @@ OPT MODULE, OSVERSION=37
 
   MODULE 'reaction/reaction_macros',
         'classes/window',
+        'intuition/gadgetclass',
         'reaction/reaction_lib',
         'amigalib/boopsi',
         'intuition/intuition'
-
+        
 EXPORT ENUM MR_NONE, MR_OK, MR_CANCEL
 
 EXPORT OBJECT reactionForm
@@ -15,14 +16,14 @@ EXPORT OBJECT reactionForm
   gadgetActions:PTR TO LONG
 ENDOBJECT
 
-EXPORT PROC gadgetPress(id,code) OF reactionForm
+EXPORT PROC gadgetPress(id,codeval) OF reactionForm
   DEF action,gadget
   IF (action:=self.gadgetActions[id])
     IF (action=MR_OK) OR (action=MR_CANCEL)
       IF self.canClose(action) THEN self.modalResult:=action
     ELSE
       gadget:=self.gadgetList[id]
-      action(self,gadget,id,code)
+      action(self,gadget,id,codeval)
     ENDIF
   ENDIF
 ENDPROC

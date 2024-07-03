@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM GETFILEGAD_NAME, GETFILEGAD_FILEGADNAME, GETFILEGAD_DRAWERGADNAME, GETFILEGAD_FULLFILENAME,
+EXPORT ENUM GETFILEGAD_IDENT, GETFILEGAD_NAME, GETFILEGAD_FILEGADNAME, GETFILEGAD_DRAWERGADNAME, GETFILEGAD_FULLFILENAME,
             GETFILEGAD_PATTERN, GETFILEGAD_REJECTPATTERN, GETFILEGAD_ACCEPTPATTERN,
             GETFILEGAD_LEFT, GETFILEGAD_TOP, GETFILEGAD_WIDTH, GETFILEGAD_HEIGHT, 
             GETFILEGAD_FULLEXPAND, GETFILEGAD_DOSAVEMODE, GETFILEGAD_DOMULTISELECT, GETFILEGAD_DOPATTERNS, 
@@ -93,16 +93,32 @@ PROC create() OF getFileSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
-      LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_NAME ]:=StringObject,
-        GA_ID, GETFILEGAD_NAME,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+    
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'GetFile _Name',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_IDENT ]:=StringObject,
+          GA_ID, GETFILEGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_NAME ]:=StringObject,
+          GA_ID, GETFILEGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_FILEGADNAME ]:=StringObject,
         GA_ID, GETFILEGAD_FILEGADNAME,
@@ -342,11 +358,21 @@ PROC end() OF getFileSettingsForm
   END self.gadgetActions[NUM_GETFILE_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF getFileSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.getFileObject,GETFILEGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO getFileObject) OF getFileSettingsForm
   DEF res
 
   self.getFileObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_FILEGADNAME ],0,0,[STRINGA_TEXTVAL,comp.fileGadgetName,0])
   SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_DRAWERGADNAME ],0,0,[STRINGA_TEXTVAL,comp.drawerGadgetName,0])
@@ -374,6 +400,7 @@ PROC editSettings(comp:PTR TO getFileObject) OF getFileSettingsForm
   res:=self.showModal()
   IF res=MR_OK
   
+  AstrCopy(comp.ident,Gets(self.gadgetList[ GETFILEGAD_IDENT ],STRINGA_TEXTVAL))
   AstrCopy(comp.name,Gets(self.gadgetList[ GETFILEGAD_NAME ],STRINGA_TEXTVAL))
   AstrCopy(comp.fileGadgetName,Gets(self.gadgetList[ GETFILEGAD_FILEGADNAME ],STRINGA_TEXTVAL))
   AstrCopy(comp.drawerGadgetName,Gets(self.gadgetList[ GETFILEGAD_DRAWERGADNAME ],STRINGA_TEXTVAL))

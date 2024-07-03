@@ -17,9 +17,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM RADIOGAD_LISTSELECT, RADIOGAD_LABELPLACE,
+EXPORT ENUM RADIOGAD_IDENT, RADIOGAD_LISTSELECT, RADIOGAD_LABELPLACE,
       RADIOGAD_SPACING, RADIOGAD_SELECTED,
       RADIOGAD_OK, RADIOGAD_CHILD, RADIOGAD_CANCEL
       
@@ -78,27 +78,37 @@ PROC create() OF radioSettingsForm
      LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
         
+        LAYOUT_ADDCHILD, self.gadgetList[ RADIOGAD_IDENT ]:=StringObject,
+          GA_ID, RADIOGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+        
         LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, RADIOGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ RADIOGAD_LABELPLACE ]:=ChooserObject,
-          GA_ID, RADIOGAD_LABELPLACE,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          CHOOSER_POPUP, TRUE,
-          CHOOSER_MAXLABELS, 12,
-          CHOOSER_ACTIVE, 0,
-          CHOOSER_WIDTH, -1,
-          CHOOSER_LABELS, self.labels1:=chooserLabelsA(['PLACETEXT_LEFT','PLACETEXT_RIGHT',0]),
-        ChooserEnd,
-        CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_LabelPlace',
-        LabelEnd,
       LayoutEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ RADIOGAD_LABELPLACE ]:=ChooserObject,
+        GA_ID, RADIOGAD_LABELPLACE,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        CHOOSER_POPUP, TRUE,
+        CHOOSER_MAXLABELS, 12,
+        CHOOSER_ACTIVE, 0,
+        CHOOSER_WIDTH, -1,
+        CHOOSER_LABELS, self.labels1:=chooserLabelsA(['PLACETEXT_LEFT','PLACETEXT_RIGHT',0]),
+      ChooserEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_LabelPlace',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -185,18 +195,30 @@ PROC end() OF radioSettingsForm
   END self.gadgetActions[NUM_RADIO_GADS]
 ENDPROC
 
+
+EXPORT PROC canClose(modalRes) OF radioSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.radioObject,RADIOGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO radioObject) OF radioSettingsForm
   DEF res
 
   self.radioObject:=comp
   self.selectedListId:=comp.listObjectId
 
+  SetGadgetAttrsA(self.gadgetList[ RADIOGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_LABELPLACE ],0,0,[CHOOSER_SELECTED,comp.labelPlace,0])
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_SPACING ],0,0,[INTEGER_NUMBER,comp.spacing,0])
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_SELECTED ],0,0,[INTEGER_NUMBER,comp.selected,0])
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ RADIOGAD_IDENT ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.labelPlace:=Gets(self.gadgetList[ RADIOGAD_LABELPLACE ],CHOOSER_SELECTED)
     comp.spacing:=Gets(self.gadgetList[ RADIOGAD_SPACING ],INTEGER_NUMBER)

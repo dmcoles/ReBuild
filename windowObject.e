@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37,LARGE
         'intuition/gadgetclass',
         'exec'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist','*dialogs'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*stringlist','*validator'
 
 EXPORT ENUM WINGAD_IDENT, WINGAD_TITLE, WINGAD_SCREENTITLE, WINGAD_ICONTITLE, WINGAD_ICONFILE,
       WINGAD_LEFTEDGE, WINGAD_TOPEDGE, WINGAD_WIDTH, WINGAD_HEIGHT,
@@ -743,7 +743,7 @@ PROC create() OF windowSettingsForm
             STRINGA_MAXCHARS, 80,
           StringEnd,
           CHILD_LABEL, LabelObject,
-            LABEL_TEXT, '_Window Identifier',
+            LABEL_TEXT, 'Identifier',
           LabelEnd,
 
           LAYOUT_ADDCHILD, self.gadgetList[ WINGAD_TITLE ]:=StringObject,
@@ -1008,17 +1008,11 @@ PROC create() OF windowSettingsForm
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF windowSettingsForm
-  DEF str:PTR TO CHAR
-  DEF i
   IF modalRes=MR_CANCEL THEN RETURN TRUE
   
-  str:=Gets(self.gadgetList[ WINGAD_IDENT ],STRINGA_TEXTVAL)
-  FOR i:=0 TO StrLen(str)-1
-    IF (str[i]==["_","a" TO "z","A" TO "Z","0" TO "9"])=FALSE
-      errorRequest(self.windowObj,'Error','The window identifer is not valid (A-Z, 0-9 and _)')
-      RETURN FALSE
-    ENDIF
-  ENDFOR
+  IF checkIdent(self,self.windowObject,WINGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
 ENDPROC TRUE
 
 PROC editFlags(nself,gadget,id,code) OF windowSettingsForm

@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM LAYOUTGAD_ORIENTATION, LAYOUTGAD_HORZALIGN, LAYOUTGAD_VERTALIGN,
+EXPORT ENUM LAYOUTGAD_IDENT, LAYOUTGAD_ORIENTATION, LAYOUTGAD_HORZALIGN, LAYOUTGAD_VERTALIGN,
       LAYOUTGAD_EVENSIZE,LAYOUTGAD_SPACEOUTER, LAYOUTGAD_SPACEINNER, LAYOUTGAD_DEFERLAYOUT,
       LAYOUTGAD_BEVELSTYLE,LAYOUTGAD_BEVELSTATE,
       LAYOUTGAD_LEFTSPACING,LAYOUTGAD_RIGHTSPACING,LAYOUTGAD_TOPSPACING,LAYOUTGAD_BOTTOMSPACING,
@@ -100,6 +100,7 @@ EXPORT PROC create(parent) OF layoutObject
   SUPER self.create(parent)
   StringF(tempStr,'Vert_\d',self.id)
   AstrCopy(self.name,tempStr,80)
+  AstrCopy(self.ident,tempStr,80)
   self.orientation:=1
   self.horizAlignment:=0
   self.vertAlignment:=0
@@ -168,19 +169,33 @@ PROC create() OF layoutSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_ORIENTATION ]:=ChooserObject,
-        GA_ID, LAYOUTGAD_ORIENTATION,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        CHOOSER_POPUP, TRUE,
-        CHOOSER_MAXLABELS, 12,
-        CHOOSER_ACTIVE, 0,
-        CHOOSER_WIDTH, -1,
-        CHOOSER_LABELS, self.labels1:=chooserLabelsA(['LAYOUT_ORIENT_HORIZ', 'LAYOUT_ORIENT_VERT',0]),
-      ChooserEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Orientation',
-      LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_IDENT ]:=StringObject,
+          GA_ID, LAYOUTGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_ORIENTATION ]:=ChooserObject,
+          GA_ID, LAYOUTGAD_ORIENTATION,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 12,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,
+          CHOOSER_LABELS, self.labels1:=chooserLabelsA(['LAYOUT_ORIENT_HORIZ', 'LAYOUT_ORIENT_VERT',0]),
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Orientation',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -424,9 +439,31 @@ PROC create() OF layoutSettingsForm
     LayoutEnd,
   WindowEnd
 
+  self.gadgetActions[LAYOUTGAD_ORIENTATION]:={changeOrient}
   self.gadgetActions[LAYOUTGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[LAYOUTGAD_CHILD]:={editChildSettings}
   self.gadgetActions[LAYOUTGAD_OK]:=MR_OK
+ENDPROC
+
+PROC changeOrient(nself,gadget,id,code) OF layoutSettingsForm
+  DEF win,ident, orient, tempStr1[15]:STRING, tempStr2[15]:STRING
+  self:=nself
+ 
+  win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+  StringF(tempStr1,'Horiz_\d',self.layoutObject.id)
+  StringF(tempStr2,'Vert_\d',self.layoutObject.id)
+  ident:=Gets(self.gadgetList[ LAYOUTGAD_IDENT ],STRINGA_TEXTVAL)
+  orient:=Gets(self.gadgetList[ LAYOUTGAD_ORIENTATION ],CHOOSER_SELECTED)
+  IF orient=1
+    IF StrCmp(tempStr1,ident)
+      SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_IDENT ],win,0,[STRINGA_TEXTVAL,tempStr2,0])
+    ENDIF
+  ELSE
+    IF StrCmp(tempStr2,ident)
+      SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_IDENT ],win,0,[STRINGA_TEXTVAL,tempStr1,0])
+    ENDIF
+  ENDIF
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF layoutSettingsForm
@@ -447,12 +484,21 @@ PROC end() OF layoutSettingsForm
   END self.gadgetActions[NUM_LAYOUT_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF layoutSettingsForm
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.layoutObject,LAYOUTGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO layoutObject) OF layoutSettingsForm
   DEF tempStr[80]:STRING
   DEF res
  
   self.layoutObject:=comp
   
+  SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_ORIENTATION ],0,0,[CHOOSER_SELECTED,comp.orientation,0]) 
   SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_HORZALIGN ],0,0,[CHOOSER_SELECTED,comp.horizAlignment,0]) 
   SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_VERTALIGN ],0,0,[CHOOSER_SELECTED,comp.vertAlignment,0]) 
@@ -479,6 +525,7 @@ PROC editSettings(comp:PTR TO layoutObject) OF layoutSettingsForm
   res:=self.showModal()
   IF res=MR_OK
 
+    AstrCopy(comp.ident,Gets(self.gadgetList[ LAYOUTGAD_IDENT ],STRINGA_TEXTVAL))
     comp.orientation:=Gets(self.gadgetList[ LAYOUTGAD_ORIENTATION ],CHOOSER_SELECTED)
     comp.horizAlignment:=Gets(self.gadgetList[ LAYOUTGAD_HORZALIGN ],CHOOSER_SELECTED)
     comp.vertAlignment:=Gets(self.gadgetList[ LAYOUTGAD_VERTALIGN ],CHOOSER_SELECTED)

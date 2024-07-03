@@ -16,9 +16,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BTNGAD_NAME, BTNGAD_TEXTPEN, BTNGAD_BGPEN, BTNGAD_FILLTEXTPEN, BTNGAD_FILLPEN,
+EXPORT ENUM BTNGAD_IDENT, BTNGAD_NAME, BTNGAD_TEXTPEN, BTNGAD_BGPEN, BTNGAD_FILLTEXTPEN, BTNGAD_FILLPEN,
       BTNGAD_AUTOBUTTON, BTNGAD_BEVELSTYLE, BTNGAD_JUSTIFICATION, BTNGAD_SELECTED,
       BTNGAD_DISABLED, BTNGAD_READONLY, BTNGAD_PUSHBUTTON, BTNGAD_TRANSPARENT,
       BTNGAD_OK, BTNGAD_CHILD, BTNGAD_CANCEL
@@ -88,17 +88,31 @@ PROC create() OF buttonSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_NAME ]:=StringObject,
-          GA_ID, BTNGAD_NAME,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          STRINGA_MAXCHARS, 80,
-        StringEnd,
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Button Name',
-        LabelEnd,
+          LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_IDENT ]:=StringObject,
+            GA_ID, BTNGAD_IDENT,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Identifier',
+          LabelEnd,
 
+
+          LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_NAME ]:=StringObject,
+            GA_ID, BTNGAD_NAME,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Label',
+          LabelEnd,
+        LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -131,7 +145,7 @@ PROC create() OF buttonSettingsForm
             GA_TABCYCLE, TRUE,
           ButtonEnd,
 
-          LayoutEnd,
+        LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -316,6 +330,15 @@ PROC end() OF buttonSettingsForm
   END self.gadgetActions[NUM_BTN_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF buttonSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.buttonObject,BTNGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
   DEF res
 
@@ -326,6 +349,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
   self.tmpFillTextPen:=comp.fillTextPen
   self.tmpFillPen:=comp.fillPen
 
+  SetGadgetAttrsA(self.gadgetList[ BTNGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_AUTOBUTTON ],0,0,[CHOOSER_SELECTED,comp.autoButton,0]) 
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_BEVELSTYLE ],0,0,[CHOOSER_SELECTED,comp.bevelStyle,0]) 
@@ -338,6 +362,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ BTNGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ BTNGAD_NAME ],STRINGA_TEXTVAL))
     comp.textPen:=self.tmpTextPen
     comp.bgPen:=self.tmpBgPen

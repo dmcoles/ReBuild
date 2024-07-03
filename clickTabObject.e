@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM CLICKTAB_GAD_LISTSELECT,
+EXPORT ENUM CLICKTAB_GAD_IDENT,CLICKTAB_GAD_LISTSELECT,
       CLICKTAB_GAD_TOP, CLICKTAB_GAD_LEFT, CLICKTAB_GAD_HEIGHT,
       CLICKTAB_GAD_CURRENT, CLICKTAB_GAD_DISABLED, 
       CLICKTAB_GAD_OK, CLICKTAB_GAD_CHILD, CLICKTAB_GAD_CANCEL
@@ -81,12 +81,26 @@ PROC create() OF clickTabSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_LISTSELECT ]:=ButtonObject,
-          GA_ID, CLICKTAB_GAD_LISTSELECT,
-          GA_TEXT, '_Pick a List',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ CLICKTAB_GAD_IDENT ]:=StringObject,
+            GA_ID, CLICKTAB_GAD_IDENT,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Identifier',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_LISTSELECT ]:=ButtonObject,
+            GA_ID, CLICKTAB_GAD_LISTSELECT,
+            GA_TEXT, '_Pick a List',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+          ButtonEnd,
+        LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -204,12 +218,22 @@ PROC end() OF clickTabSettingsForm
   END self.gadgetActions[NUM_CLICKTAB_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF clickTabSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.clickTabObject,CLICKTAB_GAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
   DEF res
 
   self.clickTabObject:=comp
   self.selectedListId:=comp.listObjectId
 
+  SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_LEFT ],0,0,[INTEGER_NUMBER,comp.left,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0])
@@ -219,6 +243,7 @@ PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ CLICKTAB_GAD_IDENT ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.top:=Gets(self.gadgetList[ CLICKTAB_GAD_TOP ],INTEGER_NUMBER)
     comp.left:=Gets(self.gadgetList[ CLICKTAB_GAD_LEFT ],INTEGER_NUMBER)

@@ -53,8 +53,8 @@ OPT OSVERSION=37,LARGE
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject'
 
-#define vernum '1.1.1-dev'
-#date verstring '$VER:Rebuild 1.1.1-%Y%m%d%h%n%s'
+#define vernum '1.2.0-dev'
+#date verstring '$VER:Rebuild 1.2.0-%Y%m%d%h%n%s'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -83,10 +83,11 @@ OPT OSVERSION=37,LARGE
   CONST MENU_PROJECT_LOAD=1
   CONST MENU_PROJECT_SAVE=2
   CONST MENU_PROJECT_SAVEAS=3
-  CONST MENU_PROJECT_GENCODE=5
-  CONST MENU_PROJECT_SHOWLIBS=7
-  CONST MENU_PROJECT_ABOUT=9
-  CONST MENU_PROJECT_QUIT=11
+  CONST MENU_PROJECT_REOPEN=4
+  CONST MENU_PROJECT_GENCODE=6
+  CONST MENU_PROJECT_SHOWLIBS=8
+  CONST MENU_PROJECT_ABOUT=10
+  CONST MENU_PROJECT_QUIT=12
 
   CONST MENU_EDIT_ADD_GADGET=0
   CONST MENU_EDIT_ADD_IMAGE=1
@@ -158,6 +159,7 @@ OPT OSVERSION=37,LARGE
   DEF errorState=0
   DEF codeOptions: codeOptions
   DEF systemOptions: systemOptions
+  DEF recentFiles:PTR TO stringlist
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
@@ -259,18 +261,12 @@ ENDPROC
 PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newnode:PTR TO LONG)
   DEF comp2:PTR TO reactionObject
   DEF count,n,i
-  DEF compStr[30]:STRING
   DEF idStr[10]:STRING
   DEF typeStr[15]:STRING
  
-  IF StrLen(comp.name)=0
-    StringF(compStr,'\s',comp.getTypeName())
-  ELSE
-    StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
-  ENDIF
   StringF(idStr,'\d',comp.id)
   StringF(typeStr,'\s',comp.getTypeName())
-  IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+  IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, comp.ident, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
   comp.node:=n
   
   IF comp=selcomp THEN newnode[]:=n
@@ -502,8 +498,9 @@ PROC updateSel(node)
     SetGadgetAttrsA(gMain_Gadgets[GAD_MOVEDOWN],win,0,[GA_DISABLED,dismovedown,TAG_END])
 
     IF bufferLayout
-      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
-      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,selectedBuffComp=0,TAG_END])
+      dis:=(selectedBuffComp=0) OR (allowchildren=FALSE) OR (comp.type==[TYPE_SCREEN,TYPE_WINDOW,TYPE_MENU,TYPE_REXX])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_COPYFROM],win,0,[GA_DISABLED,dis,TAG_END])
+      SetGadgetAttrsA(gMain_Gadgets[GAD_TEMP_MOVEFROM],win,0,[GA_DISABLED,dis,TAG_END])
     ENDIF
   ELSE
     selectedComp:=0
@@ -524,6 +521,8 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEDOWN,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_VLAYOUT,0,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_HLAYOUT,0,TRUE)
+
+    menuDisable(win,MENU_PROJECT,MENU_PROJECT_REOPEN,0,recentFiles.count()=0)
 
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,TRUE,TAG_END])
@@ -1390,6 +1389,38 @@ PROC processObjects(obj:PTR TO reactionObject,list:PTR TO stdlist)
   ENDFOR
 ENDPROC
 
+PROC loadRecent()
+  DEF fs:PTR TO fileStreamer
+  DEF tempStr[255]:STRING
+  NEW fs.create('ENVARC:Rebuild/recent',MODE_OLDFILE)
+  IF fs.isOpen()
+    WHILE fs.readLine(tempStr)
+      recentFiles.add(tempStr)
+    ENDWHILE
+  ENDIF
+  END fs
+ENDPROC
+
+PROC saveRecent()
+  DEF fs:PTR TO fileStreamer,fl,i
+  fl:=CreateDir('ENVARC:Rebuild')
+  IF fl THEN UnLock(fl)
+  NEW fs.create('ENVARC:Rebuild/recent',MODE_NEWFILE)
+  IF fs.isOpen()
+    FOR i:=0 TO recentFiles.count()-1 DO fs.writeLine(recentFiles.item(i))
+  ENDIF
+  END fs
+ENDPROC
+
+PROC addRecent(filename:PTR TO CHAR)
+  DEF i
+  FOR i:=recentFiles.count()-1 TO 0 STEP -1
+    IF StriCmp(recentFiles.item(i),filename) THEN recentFiles.remove(i)
+  ENDFOR
+  IF recentFiles.count()>4 THEN recentFiles.remove(4)
+  recentFiles.insert(0,filename)
+ENDPROC
+
 PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
   DEF fs=0:PTR TO fileStreamer
   DEF newObj:PTR TO reactionObject
@@ -1576,6 +1607,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
     addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
+  addRecent(filename)
   remakePreviewMenus()
  
   changes:=FALSE
@@ -1704,6 +1736,7 @@ PROC saveFileAs()
   IF FileLength(filename)>=0
     IF warnRequest(mainWindow,'Warning','This file already exists,\ndo you want to overwrite?',TRUE)=0 THEN RETURN FALSE
   ENDIF
+  addRecent(filename)
 ENDPROC saveFile()
 
 PROC unsavedChangesWarning()
@@ -1828,8 +1861,9 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
     IF newObj 
       IF horiz
         newObj.orientation:=0
-        StringF(tempStr,'Horiz\d',newObj.id)
+        StringF(tempStr,'Horiz_\d',newObj.id)
         AstrCopy(newObj.name,tempStr,80)
+        AstrCopy(newObj.ident,tempStr,80)
       ENDIF
       changes:=TRUE
       addObject(comp,newObj)
@@ -2054,7 +2088,7 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   DEF comp:PTR TO reactionObject
   DEF fs:PTR TO fileStreamer
   DEF oldid,defname
-  DEF name[100]:STRING
+  DEF ident[100]:STRING
 
   NEW fs.create('t:tempcomp',MODE_NEWFILE)
   IF fs.isOpen()=FALSE
@@ -2076,14 +2110,14 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   ENDIF
 
   newObj.deserialise(fs)
-  StringF(name,'\s_\d',newObj.getTypeName(),newObj.id)
-  defname:=StrCmp(newObj.name,name)
+  StringF(ident,'\s_\d',newObj.getTypeName(),newObj.id)
+  defname:=StrCmp(newObj.ident,ident)
  
   newObj.id:=oldid
 
   IF defname
-    StringF(name,'\s_\d',newObj.getTypeName(),oldid)
-    AstrCopy(newObj.name,name)
+    StringF(ident,'\s_\d',newObj.getTypeName(),oldid)
+    AstrCopy(newObj.ident,ident)
   ENDIF
   
   END fs
@@ -2143,10 +2177,10 @@ PROC makeBufferList()
 
     FOR i:=0 TO bufferList.count()-1
       comp:=bufferList.item(i)
-      IF StrLen(comp.name)=0
+      IF StrLen(comp.ident)=0
         StringF(compStr,'\s',comp.getTypeName())
       ELSE
-        StringF(compStr,'\s - \s',comp.getTypeName(),comp.name)
+        StringF(compStr,'\s - \s',comp.getTypeName(),comp.ident)
       ENDIF
       IF (n:=AllocListBrowserNodeA(1, [LBNA_USERDATA, comp, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, compStr,TAG_END])) THEN AddTail(list2, n) ELSE Raise("MEM")
     ENDFOR
@@ -2345,6 +2379,12 @@ PROC remakePreviewMenus()
   NM_ITEM,'Open',0,0,
   NM_ITEM,'Save',0,0,
   NM_ITEM,'Save As',0,0,
+  NM_ITEM,'Reopen',0,0,
+  NM_SUB,IF recentFiles.count()>0 THEN recentFiles.item(0) ELSE 0,0,0,
+  NM_SUB,IF recentFiles.count()>1 THEN recentFiles.item(1) ELSE 0,0,0,
+  NM_SUB,IF recentFiles.count()>2 THEN recentFiles.item(2) ELSE 0,0,0,
+  NM_SUB,IF recentFiles.count()>3 THEN recentFiles.item(3) ELSE 0,0,0,
+  NM_SUB,IF recentFiles.count()>4 THEN recentFiles.item(4) ELSE 0,0,0,
   NM_ITEM,NM_BARLABEL,0,0,
   NM_ITEM,'Generate Code',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
@@ -2423,10 +2463,15 @@ PROC remakePreviewMenus()
   n:=0
   i:=0
   WHILE i<ListLen(menuSetup)
-    menuData[n].type:=menuSetup[i++]
-    menuData[n].label:=menuSetup[i++]
-    menuData[n].userdata:=menuSetup[i++]
-    menuData[n++].flags:=menuSetup[i++]
+    IF (menuSetup[i+1])
+      menuData[n].type:=menuSetup[i++]
+      menuData[n].label:=menuSetup[i++]
+      menuData[n].userdata:=menuSetup[i++]
+      menuData[n].flags:=menuSetup[i++]
+      n++
+    ELSE
+      i+=4
+    ENDIF
   ENDWHILE
 
   i:=ROOT_WINDOW_ITEM
@@ -2672,6 +2717,9 @@ PROC main() HANDLE
   NEW objectList.stdlist(20)
   NEW bufferList.stdlist(20)
   initReactionLists()
+
+  NEW recentFiles.stringlist(5)
+  loadRecent()
 
   hintInfo:=New(SIZEOF hintinfo*17)
   hintInfo[0].gadgetid:=GAD_ADD
@@ -3016,6 +3064,10 @@ EXCEPT DO
   ENDIF
   IF menus THEN FreeMenus(menus)
   disposeObjects()
+  IF recentFiles 
+    saveRecent()
+    END recentFiles
+  ENDIF
   IF objectList THEN END objectList
   IF bufferList 
     disposeBufferObjects()

@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM SCLGAD_NAME, SCLGAD_TOP, SCLGAD_VISIBLE, SCLGAD_TOTAL, SCLGAD_ARROWDELTA,
+EXPORT ENUM SCLGAD_IDENT, SCLGAD_NAME, SCLGAD_TOP, SCLGAD_VISIBLE, SCLGAD_TOTAL, SCLGAD_ARROWDELTA,
       SCLGAD_ARROWS, SCLGAD_ORIENTATION,
       SCLGAD_OK, SCLGAD_CHILD, SCLGAD_CANCEL
       
@@ -77,15 +77,29 @@ PROC create() OF scrollerSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_NAME ]:=StringObject,
-          GA_ID, SCLGAD_NAME,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          STRINGA_MAXCHARS, 80,
-        StringEnd,
-        CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Name',
-        LabelEnd,
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_IDENT ]:=StringObject,
+            GA_ID, SCLGAD_IDENT,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Identifier',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ SCLGAD_NAME ]:=StringObject,
+            GA_ID, SCLGAD_NAME,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Label',
+          LabelEnd,
+        LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -204,11 +218,21 @@ PROC end() OF scrollerSettingsForm
   END self.gadgetActions[NUM_SCL_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF scrollerSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.scrollerObject,SCLGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO scrollerObject) OF scrollerSettingsForm
   DEF res
 
   self.scrollerObject:=comp
   
+  SetGadgetAttrsA(self.gadgetList[ SCLGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ SCLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ SCLGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ SCLGAD_VISIBLE ],0,0,[INTEGER_NUMBER,comp.visible,0])
@@ -219,6 +243,7 @@ PROC editSettings(comp:PTR TO scrollerObject) OF scrollerSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ SCLGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ SCLGAD_NAME ],STRINGA_TEXTVAL))
     comp.top:=Gets(self.gadgetList[ SCLGAD_TOP ],INTEGER_NUMBER)
     comp.visible:=Gets(self.gadgetList[ SCLGAD_VISIBLE ],INTEGER_NUMBER)

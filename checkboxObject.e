@@ -17,9 +17,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*validator'
 
-EXPORT ENUM CHKGAD_NAME, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
+EXPORT ENUM CHKGAD_IDENT, CHKGAD_NAME, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
       CHKGAD_DISABLED, CHKGAD_SELECTED, CHKGAD_LABELPLACE,
       CHKGAD_OK, CHKGAD_CHILD, CHKGAD_CANCEL
       
@@ -57,8 +57,8 @@ PROC create() OF checkboxSettingsForm
     WA_LEFT, 0,
     WA_TOP, 0,
     WA_HEIGHT, 80,
-    WA_WIDTH, 150,
-    WA_MINWIDTH, 150,
+    WA_WIDTH, 420,
+    WA_MINWIDTH, 250,
     WA_MAXWIDTH, 8192,
     WA_MINHEIGHT, 80,
     WA_MAXHEIGHT, 8192,
@@ -77,17 +77,31 @@ PROC create() OF checkboxSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_NAME ]:=StringObject,
-        GA_ID, CHKGAD_NAME,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, '_Button Name',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_IDENT ]:=StringObject,
+          GA_ID, CHKGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_NAME ]:=StringObject,
+          GA_ID, CHKGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -227,6 +241,15 @@ PROC end() OF checkboxSettingsForm
   END self.gadgetActions[NUM_CHK_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF checkboxSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.checkboxObject,CHKGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   DEF res
 
@@ -235,6 +258,7 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   self.tempTextPen:=comp.textPen
   self.tempBgPen:=comp.bgPen
   self.tempFillTextPen:=comp.fillTextPen
+  SetGadgetAttrsA(self.gadgetList[ CHKGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_SELECTED ],0,0,[CHECKBOX_CHECKED,comp.selected,0]) 
@@ -242,6 +266,7 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ CHKGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ CHKGAD_NAME ],STRINGA_TEXTVAL))
     comp.textPen:=self.tempTextPen
     comp.bgPen:=self.tempBgPen

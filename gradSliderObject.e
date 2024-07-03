@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM GRADSLDGAD_MAXVAL,GRADSLDGAD_CURRVAL,GRADSLDGAD_SKIPVAL,GRADSLDGAD_KNOBPIXELS,GRADSLDGAD_ORIENTATION,
+EXPORT ENUM GRADSLDGAD_IDENT, GRADSLDGAD_NAME, GRADSLDGAD_MAXVAL,GRADSLDGAD_CURRVAL,GRADSLDGAD_SKIPVAL,GRADSLDGAD_KNOBPIXELS,GRADSLDGAD_ORIENTATION,
       GRADSLDGAD_OK, GRADSLDGAD_CHILD, GRADSLDGAD_CANCEL
       
 EXPORT DEF gradientsliderbase
@@ -73,6 +73,33 @@ PROC create() OF gradSliderSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ GRADSLDGAD_IDENT ]:=StringObject,
+          GA_ID, GRADSLDGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ GRADSLDGAD_NAME ]:=StringObject,
+          GA_ID, GRADSLDGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -190,11 +217,22 @@ PROC end() OF gradSliderSettingsForm
   END self.gadgetActions[NUM_GRADSLD_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF gradSliderSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.gradSliderObject,GRADSLDGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO gradSliderObject) OF gradSliderSettingsForm
   DEF res
 
   self.gradSliderObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_MAXVAL ],0,0,[INTEGER_NUMBER,comp.maxVal,0])
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_CURRVAL ],0,0,[INTEGER_NUMBER,comp.currVal,0])
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_SKIPVAL],0,0,[INTEGER_NUMBER,comp.skipVal,0])
@@ -203,6 +241,8 @@ PROC editSettings(comp:PTR TO gradSliderObject) OF gradSliderSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ GRADSLDGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.name,Gets(self.gadgetList[ GRADSLDGAD_NAME ],STRINGA_TEXTVAL))
     comp.maxVal:=Gets(self.gadgetList[ GRADSLDGAD_MAXVAL ],INTEGER_NUMBER)
     comp.currVal:=Gets(self.gadgetList[ GRADSLDGAD_CURRVAL ],INTEGER_NUMBER)
     comp.skipVal:=Gets(self.gadgetList[ GRADSLDGAD_SKIPVAL ],INTEGER_NUMBER)
@@ -223,23 +263,47 @@ EXPORT PROC createPreviewObject(scr) OF gradSliderObject
       GradientSliderEnd
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
-    
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+
+  IF StrLen(self.name)>0   
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, self.name,
+      LabelEnd,
+      
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]
+  ELSE
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,    
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]
+  ENDIF
+  
 ENDPROC
 
 EXPORT PROC create(parent) OF gradSliderObject
