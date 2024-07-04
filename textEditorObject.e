@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
+EXPORT ENUM TEXTEDGAD_IDENT, TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
       TEXTEDGAD_INDENTWIDTH,TEXTEDGAD_LINEENDING,TEXTEDGAD_LINENUMBERS,TEXTEDGAD_SPACESPERTAB,TEXTEDGAD_TABTYPE,TEXTEDGAD_READONLY,
       TEXTEDGAD_OK, TEXTEDGAD_CHILD, TEXTEDGAD_CANCEL
      
@@ -85,6 +85,18 @@ PROC create() OF textEditorSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_IDENT ]:=StringObject,
+        GA_ID, TEXTEDGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
 
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_EXPORTWRAP ]:=CheckBoxObject,
           GA_ID, TEXTEDGAD_EXPORTWRAP,
@@ -168,29 +180,32 @@ PROC create() OF textEditorSettingsForm
         CheckBoxEnd,
       LayoutEnd,
 
-      LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_IMPORTWRAP ]:=IntegerObject,
-        GA_ID, TEXTEDGAD_IMPORTWRAP,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        INTEGER_MAXCHARS, 2,
-        INTEGER_MINIMUM, 0,
-        INTEGER_MAXIMUM, 99,
-      IntegerEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Import Wrap',
-      LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_IMPORTWRAP ]:=IntegerObject,
+          GA_ID, TEXTEDGAD_IMPORTWRAP,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 2,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 99,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Import Wrap',
+        LabelEnd,
 
-      LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_INDENTWIDTH ]:=IntegerObject,
-        GA_ID, TEXTEDGAD_INDENTWIDTH,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        INTEGER_MAXCHARS, 2,
-        INTEGER_MINIMUM, 0,
-        INTEGER_MAXIMUM, 99,
-      IntegerEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Indent Width',
-      LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_INDENTWIDTH ]:=IntegerObject,
+          GA_ID, TEXTEDGAD_INDENTWIDTH,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 2,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 99,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Indent Width',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_SPACESPERTAB ]:=IntegerObject,
         GA_ID, TEXTEDGAD_SPACESPERTAB,
@@ -253,11 +268,21 @@ PROC end() OF textEditorSettingsForm
   END self.gadgetActions[NUM_TEXTED_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF textEditorSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.textEditorObject,TEXTEDGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
   DEF res
 
   self.textEditorObject:=comp
     
+  SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])   
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_EXPORTWRAP ],0,0,[CHECKBOX_CHECKED,comp.exportWrap,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_FIXEDFONT ],0,0,[CHECKBOX_CHECKED,comp.fixedFont,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_FLOW ],0,0,[CHOOSER_SELECTED,comp.flow,0]) 
@@ -271,6 +296,7 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ TEXTEDGAD_IDENT ],STRINGA_TEXTVAL))
     comp.exportWrap:=Gets(self.gadgetList[ TEXTEDGAD_EXPORTWRAP ],CHECKBOX_CHECKED)   
     comp.fixedFont:=Gets(self.gadgetList[ TEXTEDGAD_FIXEDFONT ],CHECKBOX_CHECKED)   
     comp.flow:=Gets(self.gadgetList[ TEXTEDGAD_FLOW ],CHOOSER_SELECTED)   

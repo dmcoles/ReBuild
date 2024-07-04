@@ -23,9 +23,9 @@ OPT MODULE, OSVERSION=37
         'exec/nodes',
         'amigalib/lists'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*fileStreamer','*sourceGen','*stringlist'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*fileStreamer','*sourceGen','*stringlist','*validator'
 
-EXPORT ENUM DRAWLISTGAD_LIST,DRAWLISTGAD_ADD, DRAWLISTGAD_EDIT, DRAWLISTGAD_DEL,
+EXPORT ENUM DRAWLISTGAD_IDENT, DRAWLISTGAD_LIST,DRAWLISTGAD_ADD, DRAWLISTGAD_EDIT, DRAWLISTGAD_DEL,
       DRAWLISTGAD_OK, DRAWLISTGAD_CHILD, DRAWLISTGAD_CANCEL
 
 CONST NUM_DRAWLIST_GADS=DRAWLISTGAD_CANCEL+1
@@ -329,6 +329,18 @@ PROC create() OF drawListSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
+
+      LAYOUT_ADDCHILD, self.gadgetList[ DRAWLISTGAD_IDENT ]:=StringObject,
+        GA_ID, DRAWLISTGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
       LAYOUT_ADDCHILD,self.gadgetList[DRAWLISTGAD_LIST]:=ListBrowserObject,
           GA_ID, DRAWLISTGAD_LIST,
           GA_RELVERIFY, TRUE,
@@ -561,12 +573,22 @@ PROC createItemFromNode(node:PTR TO LONG) OF drawListSettingsForm
   drawitem.pen:=Val(pen)
 ENDPROC drawitem
 
+EXPORT PROC canClose(modalRes) OF drawListSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.drawListObject,DRAWLISTGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO drawListObject) OF drawListSettingsForm
   DEF res,i,n
   DEF drawitem:PTR TO drawlist
 
   self.drawListObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ DRAWLISTGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0]) 
   SetGadgetAttrsA(self.gadgetList[DRAWLISTGAD_LIST],0,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   FOR i:=0 TO comp.drawItemsList.count()-1 
     drawitem:=comp.drawItemsList.item(i)
@@ -578,6 +600,7 @@ PROC editSettings(comp:PTR TO drawListObject) OF drawListSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ DRAWLISTGAD_IDENT ],STRINGA_TEXTVAL))
     FOR i:=0 TO comp.drawItemsList.count()-1
       drawitem:=comp.drawItemsList.item(i)
       END drawitem

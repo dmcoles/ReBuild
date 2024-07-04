@@ -18,11 +18,11 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen','*colourPicker'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*colourPicker','*validator'
 
 EXPORT DEF ledbase
 
-EXPORT ENUM LEDGAD_FGPEN,LEDGAD_BGPEN,LEDGAD_WIDTH,LEDGAD_HEIGHT,LEDGAD_COLON,
+EXPORT ENUM LEDGAD_IDENT, LEDGAD_FGPEN,LEDGAD_BGPEN,LEDGAD_WIDTH,LEDGAD_HEIGHT,LEDGAD_COLON,
           LEDGAD_NEGATIVE,LEDGAD_SIGNED,LEDGAD_TIME,LEDGAD_HEX,
       LEDGAD_OK, LEDGAD_CHILD, LEDGAD_CANCEL
 
@@ -79,6 +79,16 @@ PROC create() OF ledSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ LEDGAD_IDENT ]:=StringObject,
+        GA_ID, LEDGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -248,6 +258,15 @@ PROC end() OF ledSettingsForm
   END self.gadgetActions[NUM_LED_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF ledSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.ledObject,LEDGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
   DEF res
 
@@ -256,6 +275,7 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
   self.tmpFgPen:=comp.fgPen
   self.tmpBgPen:=comp.bgPen
 
+  SetGadgetAttrsA(self.gadgetList[ LEDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0]) 
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0]) 
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_COLON ],0,0,[CHECKBOX_CHECKED,comp.colon,0]) 
@@ -269,6 +289,7 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
     comp.fgPen:=self.tmpFgPen
     comp.bgPen:=self.tmpBgPen
   
+    AstrCopy(comp.ident,Gets(self.gadgetList[ LEDGAD_IDENT ],STRINGA_TEXTVAL))
     comp.width:=Gets(self.gadgetList[ LEDGAD_WIDTH ],INTEGER_NUMBER)   
     comp.height:=Gets(self.gadgetList[ LEDGAD_HEIGHT ],INTEGER_NUMBER)   
     comp.colon:=Gets(self.gadgetList[ LEDGAD_COLON ],CHECKBOX_CHECKED)   

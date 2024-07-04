@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM TAPEGAD_ANIM,TAPEGAD_MODE,TAPEGAD_FRAMES,TAPEGAD_CURRFRAME,
+EXPORT ENUM TAPEGAD_IDENT, TAPEGAD_ANIM,TAPEGAD_MODE,TAPEGAD_FRAMES,TAPEGAD_CURRFRAME,
       TAPEGAD_OK, TAPEGAD_CHILD, TAPEGAD_CANCEL
       
 EXPORT DEF tapedeckbase
@@ -76,6 +76,16 @@ PROC create() OF tapeDeckSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
+      LAYOUT_ADDCHILD, self.gadgetList[ TAPEGAD_IDENT ]:=StringObject,
+        GA_ID, TAPEGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -182,11 +192,21 @@ PROC end() OF tapeDeckSettingsForm
   END self.gadgetActions[NUM_TAPE_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF tapeDeckSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.tapeDeckObject,TAPEGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO tapeDeckObject) OF tapeDeckSettingsForm
   DEF res
 
   self.tapeDeckObject:=comp
-    
+
+  SetGadgetAttrsA(self.gadgetList[ TAPEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])   
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_ANIM ],0,0,[CHOOSER_SELECTED,comp.anim,0]) 
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_MODE ],0,0,[CHOOSER_SELECTED,comp.mode,0]) 
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_FRAMES ],0,0,[INTEGER_NUMBER,comp.frames,0]) 
@@ -194,6 +214,7 @@ PROC editSettings(comp:PTR TO tapeDeckObject) OF tapeDeckSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ TAPEGAD_IDENT ],STRINGA_TEXTVAL))
     comp.anim:=Gets(self.gadgetList[ TAPEGAD_ANIM ],CHOOSER_SELECTED)   
     comp.mode:=Gets(self.gadgetList[ TAPEGAD_MODE ],CHOOSER_SELECTED)   
     comp.frames:=Gets(self.gadgetList[ TAPEGAD_FRAMES ],INTEGER_NUMBER)   

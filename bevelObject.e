@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BEVELGAD_NAME, BEVELGAD_LEFT, BEVELGAD_TOP, BEVELGAD_WIDTH, BEVELGAD_HEIGHT,
+EXPORT ENUM BEVELGAD_IDENT, BEVELGAD_NAME, BEVELGAD_LEFT, BEVELGAD_TOP, BEVELGAD_WIDTH, BEVELGAD_HEIGHT,
       BEVELGAD_FILLPEN, BEVELGAD_TEXTPEN, BEVELGAD_STYLE, BEVELGAD_PLACETEXT,
       BEVELGAD_HIGHLIGHTPEN, BEVELGAD_FOREGROUNDPEN, BEVELGAD_BACKGROUNDPEN, BEVELGAD_SHADOWPEN,
       BEVELGAD_RECESSED, BEVELGAD_EDGESONLY, BEVELGAD_TRANSPARENT,
@@ -99,17 +99,31 @@ PROC create() OF bevelSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_NAME ]:=StringObject,
-        GA_ID, BEVELGAD_NAME,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, '_Bevel Name',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_IDENT ]:=StringObject,
+          GA_ID, BEVELGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_NAME ]:=StringObject,
+          GA_ID, BEVELGAD_NAME,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -382,6 +396,15 @@ PROC end() OF bevelSettingsForm
   END self.gadgetActions[NUM_BEVEL_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF bevelSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.bevelObject,BEVELGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
   DEF res
 
@@ -390,6 +413,7 @@ PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
   self.tmpFillPen:=comp.fillPen
   self.tmpTextPen:=comp.textPen
 
+  SetGadgetAttrsA(self.gadgetList[ BEVELGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_LEFT ],0,0,[INTEGER_NUMBER,comp.left,0]) 
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0]) 
@@ -409,6 +433,7 @@ PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ BEVELGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ BEVELGAD_NAME ],STRINGA_TEXTVAL))
     comp.fillPen:=self.tmpFillPen
     comp.textPen:=self.tmpTextPen

@@ -20,9 +20,9 @@ OPT MODULE, OSVERSION=37
         'intuition/gadgetclass',
         'utility/tagitem'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
+EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
       TEXTFIELDGAD_BLINKRATE, TEXTFIELDGAD_MAXSIZE, TEXTFIELDGAD_SPACING, TEXTFIELDGAD_TABSPACES,
       TEXTFIELDGAD_DISABLED, TEXTFIELDGAD_TABCYCLE, TEXTFIELDGAD_BLOCK, TEXTFIELDGAD_MAXSIZEBEEP, TEXTFIELDGAD_PARTIAL,
       TEXTFIELDGAD_NOGHOST, TEXTFIELDGAD_READONLY, TEXTFIELDGAD_NONPRINTCHARS, TEXTFIELDGAD_INVERTED, TEXTFIELDGAD_VCENTER,
@@ -174,6 +174,18 @@ PROC create() OF textFieldSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
+
+      LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_IDENT ]:=StringObject,
+        GA_ID, TEXTFIELDGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -509,6 +521,15 @@ PROC end() OF textFieldSettingsForm
   END self.gadgetActions[NUM_TEXTFIELD_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF textFieldSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.textFieldObject,TEXTFIELDGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   DEF res
 
@@ -518,6 +539,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   self.tempInkPen:=comp.inkPen
   self.tempLinePen:=comp.linePen
     
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_DELIM ],0,0,[STRINGA_TEXTVAL,comp.delimiters,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_ACCEPT ],0,0,[STRINGA_TEXTVAL,comp.acceptChars,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_REJECT ],0,0,[STRINGA_TEXTVAL,comp.rejectChars,0])
@@ -553,6 +575,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
     comp.inkPen:=self.tempInkPen
     comp.linePen:=self.tempLinePen
 
+    AstrCopy(comp.ident,Gets(self.gadgetList[ TEXTFIELDGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.delimiters,Gets(self.gadgetList[ TEXTFIELDGAD_DELIM ],STRINGA_TEXTVAL))
     AstrCopy(comp.acceptChars,Gets(self.gadgetList[ TEXTFIELDGAD_ACCEPT ],STRINGA_TEXTVAL))
     AstrCopy(comp.rejectChars,Gets(self.gadgetList[ TEXTFIELDGAD_REJECT ],STRINGA_TEXTVAL))

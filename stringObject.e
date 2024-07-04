@@ -17,9 +17,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM STRGAD_NAME, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE, STRGAD_JUSTIFY,
+EXPORT ENUM STRGAD_IDENT, STRGAD_NAME, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE, STRGAD_JUSTIFY,
       STRGAD_DISABLED, STRGAD_READONLY, STRGAD_TABCYCLE, STRGAD_REPLACEMODE,
       STRGAD_OK, STRGAD_CHILD, STRGAD_CANCEL
       
@@ -79,6 +79,17 @@ PROC create() OF stringSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
+        LAYOUT_ADDCHILD, self.gadgetList[ STRGAD_IDENT ]:=StringObject,
+          GA_ID, STRGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
         LAYOUT_ADDCHILD, self.gadgetList[ STRGAD_NAME ]:=StringObject,
           GA_ID, STRGAD_NAME,
           GA_RELVERIFY, TRUE,
@@ -87,9 +98,22 @@ PROC create() OF stringSettingsForm
         StringEnd,
 
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'String _Name',
+          LABEL_TEXT, '_Label',
         LabelEnd,
+      LayoutEnd,
 
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ STRGAD_VALUE ]:=StringObject,
+          GA_ID, STRGAD_VALUE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'String _Value',
+        LabelEnd,
         LAYOUT_ADDCHILD,  self.gadgetList[ STRGAD_MAXCHARS ]:=IntegerObject,
           GA_ID, STRGAD_MAXCHARS,
           GA_RELVERIFY, TRUE,
@@ -102,17 +126,6 @@ PROC create() OF stringSettingsForm
           LABEL_TEXT, 'MaxCha_rs',
         LabelEnd,
       LayoutEnd,
-
-      LAYOUT_ADDCHILD, self.gadgetList[ STRGAD_VALUE ]:=StringObject,
-        GA_ID, STRGAD_VALUE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'String _Value',
-      LabelEnd,
       
       LAYOUT_ADDCHILD,  self.gadgetList[ STRGAD_MINVISIBLE ]:=IntegerObject,
         GA_ID, STRGAD_MINVISIBLE,
@@ -221,11 +234,21 @@ PROC end() OF stringSettingsForm
   END self.gadgetActions[NUM_STR_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF stringSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.stringObject,STRGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
   DEF res
 
   self.stringObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ STRGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,comp.maxChars,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_VALUE ],0,0,[STRINGA_TEXTVAL,comp.value,0])
@@ -239,6 +262,7 @@ PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ STRGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ STRGAD_NAME ],STRINGA_TEXTVAL))
     comp.maxChars:=Gets(self.gadgetList[ STRGAD_MAXCHARS ],INTEGER_NUMBER)
     AstrCopy(comp.value,Gets(self.gadgetList[ STRGAD_VALUE ],STRINGA_TEXTVAL))

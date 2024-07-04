@@ -16,9 +16,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
+EXPORT ENUM LBLGAD_IDENT, LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
       LBLGAD_OK, LBLGAD_CHILD, LBLGAD_CANCEL
 
 CONST NUM_LBL_GADS=LBLGAD_CANCEL+1
@@ -70,6 +70,16 @@ PROC create() OF labelSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_IDENT ]:=StringObject,
+        GA_ID, LBLGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
       LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_NAME ]:=StringObject,
         GA_ID, LBLGAD_NAME,
         GA_RELVERIFY, TRUE,
@@ -77,7 +87,7 @@ PROC create() OF labelSettingsForm
         STRINGA_MAXCHARS, 80,
       StringEnd,
       CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Label _Text',
+        LABEL_TEXT, '_Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -195,6 +205,15 @@ PROC selectPen(nself,gadget,id,code) OF labelSettingsForm
   self.clearBusy()
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF labelSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.labelObject,LBLGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
   DEF res
 
@@ -202,12 +221,14 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
 
   self.tempFgPen:=comp.fgPen
   self.tempBgPen:=comp.bgPen
+  SetGadgetAttrsA(self.gadgetList[ LBLGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_DISPOSE  ],0,0,[CHECKBOX_CHECKED,comp.dispose,0]) 
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_JUSTIFICATION  ],0,0,[CHOOSER_SELECTED,comp.justify,0]) 
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ LBLGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ LBLGAD_NAME ],STRINGA_TEXTVAL))
     comp.fgPen:=self.tempFgPen
     comp.bgPen:=self.tempBgPen

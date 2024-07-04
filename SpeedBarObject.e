@@ -24,9 +24,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*stringlist'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*stringlist','*validator'
 
-EXPORT ENUM SBARGAD_NAME, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
+EXPORT ENUM SBARGAD_IDENT,SBARGAD_NAME, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
             SBARGAD_STRUMBAR, SBARGAD_BEVELSTYLE,
       SBARGAD_OK, SBARGAD_CHILD, SBARGAD_CANCEL
       
@@ -178,14 +178,15 @@ PROC create() OF speedBarSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_NAME ]:=StringObject,
-          GA_ID, SBARGAD_NAME,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_IDENT ]:=StringObject,
+          GA_ID, SBARGAD_IDENT,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           STRINGA_MAXCHARS, 80,
         StringEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'SpeedBar Name',
+          LABEL_TEXT, 'Identifier',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BGPEN ]:=ButtonObject,
@@ -365,6 +366,15 @@ PROC end() OF speedBarSettingsForm
   END self.gadgetActions[NUM_SBAR_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF speedBarSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.speedBarObject,SBARGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   DEF res,i,n
   DEF typeStr[10]:STRING
@@ -392,6 +402,7 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],0,0,[LISTBROWSER_LABELS, self.browserlist, TAG_END])
   self.selectItem(self,0,0,-1)
 
+  SetGadgetAttrsA(self.gadgetList[ SBARGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_STRUMBAR ],0,0,[CHECKBOX_CHECKED,comp.strumBar,0]) 
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_ORIENTATION ],0,0,[CHOOSER_SELECTED,comp.orientation,0]) 
@@ -399,6 +410,7 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ SBARGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ SBARGAD_NAME ],STRINGA_TEXTVAL))
     comp.bgPen:=self.tempBgPen
     comp.strumBar:=Gets(self.gadgetList[ SBARGAD_STRUMBAR ],CHECKBOX_CHECKED)   

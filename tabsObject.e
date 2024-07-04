@@ -19,9 +19,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen','*stringlist','*listPicker','*reactionListObject','*reactionLists'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*stringlist','*listPicker','*reactionListObject','*reactionLists','*validator'
 
-EXPORT ENUM TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
+EXPORT ENUM TABSGAD_IDENT, TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
       TABSGAD_OK, TABSGAD_CHILD, TABSGAD_CANCEL
 
 EXPORT DEF tabsbase
@@ -76,12 +76,27 @@ PROC create() OF tabsSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD,  self.gadgetList[ TABSGAD_LISTSELECT ]:=ButtonObject,
-        GA_ID, TABSGAD_LISTSELECT,
-        GA_TEXT, '_Pick a List',
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-      ButtonEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TABSGAD_IDENT ]:=StringObject,
+          GA_ID, TABSGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ TABSGAD_LISTSELECT ]:=ButtonObject,
+          GA_ID, TABSGAD_LISTSELECT,
+          GA_TEXT, '_Pick a List',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -175,17 +190,28 @@ PROC end() OF tabsSettingsForm
   END self.gadgetActions[NUM_TABS_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF tabsSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.tabsObject,TABSGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO tabsObject) OF tabsSettingsForm
   DEF res
 
   self.tabsObject:=comp
   self.selectedListId:=comp.listObjectId    
+  SetGadgetAttrsA(self.gadgetList[ TABSGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_CHILDMAXWIDTH ],0,0,[CHECKBOX_CHECKED,comp.childMaxWidth,0]) 
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_CURRENT ],0,0,[INTEGER_NUMBER,comp.current,0]) 
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ TABSGAD_IDENT ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.disabled:=Gets(self.gadgetList[ TABSGAD_DISABLED ],CHECKBOX_CHECKED)   
     comp.childMaxWidth:=Gets(self.gadgetList[ TABSGAD_CHILDMAXWIDTH ],CHECKBOX_CHECKED)   

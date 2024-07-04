@@ -18,11 +18,11 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
 EXPORT DEF errorState
 
-EXPORT ENUM BITMAPGAD_NAME, BITMAPGAD_LEFTEDGE, BITMAPGAD_TOPEDGE,
+EXPORT ENUM BITMAPGAD_IDENT, BITMAPGAD_LEFTEDGE, BITMAPGAD_TOPEDGE,
             BITMAPGAD_WIDTH, BITMAPGAD_HEIGHT, BITMAPGAD_SOURCEFILE, BITMAPGAD_MASKING, 
       BITMAPGAD_OK, BITMAPGAD_CHILD, BITMAPGAD_CANCEL
 
@@ -74,6 +74,17 @@ PROC create() OF bitmapSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
       LAYOUT_SPACEOUTER, TRUE,
       LAYOUT_DEFERLAYOUT, TRUE,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ BITMAPGAD_IDENT ]:=StringObject,
+        GA_ID, BITMAPGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -201,11 +212,21 @@ PROC end() OF bitmapSettingsForm
   END self.gadgetActions[NUM_BITMAP_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF bitmapSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.bitmapObject,BITMAPGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO bitmapObject) OF bitmapSettingsForm
   DEF res
 
   self.bitmapObject:=comp
 
+  SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_SOURCEFILE ],0,0,[GETFILE_FULLFILE,comp.sourceFile,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
@@ -215,6 +236,7 @@ PROC editSettings(comp:PTR TO bitmapObject) OF bitmapSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ BITMAPGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.sourceFile,Gets(self.gadgetList[ BITMAPGAD_SOURCEFILE ],GETFILE_FULLFILE),255)
     comp.leftEdge:=Gets(self.gadgetList[ BITMAPGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ BITMAPGAD_TOPEDGE ],INTEGER_NUMBER)

@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM GLYGAD_NAME, GLYGAD_TYPE,
+EXPORT ENUM GLYGAD_IDENT, GLYGAD_NAME, GLYGAD_TYPE,
       GLYGAD_OK, GLYGAD_CHILD, GLYGAD_CANCEL
       
 
@@ -70,6 +70,16 @@ PROC create() OF glyphSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
     
+      LAYOUT_ADDCHILD, self.gadgetList[ GLYGAD_IDENT ]:=StringObject,
+        GA_ID, GLYGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
       LAYOUT_ADDCHILD, self.gadgetList[ GLYGAD_NAME ]:=StringObject,
         GA_ID, GLYGAD_NAME,
         GA_RELVERIFY, TRUE,
@@ -77,7 +87,7 @@ PROC create() OF glyphSettingsForm
         STRINGA_MAXCHARS, 80,
       StringEnd,
       CHILD_LABEL, LabelObject,
-        LABEL_TEXT, '_Name',
+        LABEL_TEXT, '_Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, self.gadgetList[ GLYGAD_TYPE ]:=ChooserObject,
@@ -141,16 +151,27 @@ PROC end() OF glyphSettingsForm
   END self.gadgetActions[NUM_GLY_GADS]
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF glyphSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.glyphObject,GLYGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO glyphObject) OF glyphSettingsForm
   DEF res
 
   self.glyphObject:=comp
   
+  SetGadgetAttrsA(self.gadgetList[ GLYGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GLYGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GLYGAD_TYPE ],0,0,[CHOOSER_SELECTED,comp.glyphType,0])
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ GLYGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ GLYGAD_NAME ],STRINGA_TEXTVAL))
     comp.glyphType:=Gets(self.gadgetList[ GLYGAD_TYPE ],CHOOSER_SELECTED)
   ENDIF

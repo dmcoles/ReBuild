@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM PENMAPGAD_NAME, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
+EXPORT ENUM PENMAPGAD_IDENT, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
             PENMAPGAD_WIDTH, PENMAPGAD_HEIGHT, PENMAPGAD_BGPEN, PENMAPGAD_TRANSPARENT, 
       PENMAPGAD_OK, PENMAPGAD_CHILD, PENMAPGAD_CANCEL
 
@@ -78,6 +78,16 @@ PROC create() OF penMapSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ PENMAPGAD_IDENT ]:=StringObject,
+        GA_ID, PENMAPGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -221,12 +231,22 @@ PROC selectPen(nself,gadget,id,code) OF penMapSettingsForm
   self.clearBusy()
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF penMapSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.penMapObject,PENMAPGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
   DEF res
 
   self.penMapObject:=comp
 
   self.tempBgPen:=comp.bgPen
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
@@ -235,6 +255,7 @@ PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ PENMAPGAD_IDENT ],STRINGA_TEXTVAL))
     comp.leftEdge:=Gets(self.gadgetList[ PENMAPGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ PENMAPGAD_TOPEDGE ],INTEGER_NUMBER)
     comp.width:=Gets(self.gadgetList[ PENMAPGAD_WIDTH ],INTEGER_NUMBER)

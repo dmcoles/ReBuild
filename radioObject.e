@@ -195,7 +195,6 @@ PROC end() OF radioSettingsForm
   END self.gadgetActions[NUM_RADIO_GADS]
 ENDPROC
 
-
 EXPORT PROC canClose(modalRes) OF radioSettingsForm
   DEF res
   IF modalRes=MR_CANCEL THEN RETURN TRUE

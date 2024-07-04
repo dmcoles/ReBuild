@@ -18,9 +18,9 @@ OPT MODULE, OSVERSION=37
         'intuition/imageclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BBGAD_NAME, BBGAD_LEFTEDGE, BBGAD_TOPEDGE,
+EXPORT ENUM BBGAD_IDENT, BBGAD_LEFTEDGE, BBGAD_TOPEDGE,
             BBGAD_WIDTH, BBGAD_HEIGHT, BBGAD_BGPEN, BBGAD_TRANSPARENT, 
       BBGAD_OK, BBGAD_CHILD, BBGAD_CANCEL
 
@@ -74,6 +74,18 @@ PROC create() OF boingBallSettingsForm
     WINDOW_PARENTGROUP, VLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ BBGAD_IDENT ]:=StringObject,
+        GA_ID, BBGAD_IDENT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
@@ -216,12 +228,22 @@ PROC selectPen(nself,gadget,id,code) OF boingBallSettingsForm
   self.clearBusy()
 ENDPROC
 
+EXPORT PROC canClose(modalRes) OF boingBallSettingsForm
+  DEF res
+  IF modalRes=MR_CANCEL THEN RETURN TRUE
+  
+  IF checkIdent(self,self.boingBallObject,BBGAD_IDENT)=FALSE
+    RETURN FALSE
+  ENDIF
+ENDPROC TRUE
+
 PROC editSettings(comp:PTR TO boingBallObject) OF boingBallSettingsForm
   DEF res
 
   self.boingBallObject:=comp
 
   self.tempBgPen:=comp.bgPen
+  SetGadgetAttrsA(self.gadgetList[ BBGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0]) 
   SetGadgetAttrsA(self.gadgetList[ BBGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BBGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BBGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
@@ -230,6 +252,7 @@ PROC editSettings(comp:PTR TO boingBallObject) OF boingBallSettingsForm
 
   res:=self.showModal()
   IF res=MR_OK
+    AstrCopy(comp.ident,Gets(self.gadgetList[ BBGAD_IDENT ],STRINGA_TEXTVAL))
     comp.leftEdge:=Gets(self.gadgetList[ BBGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ BBGAD_TOPEDGE ],INTEGER_NUMBER)
     comp.width:=Gets(self.gadgetList[ BBGAD_WIDTH ],INTEGER_NUMBER)
