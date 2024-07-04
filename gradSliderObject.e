@@ -357,6 +357,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF gradSliderObject
   IF self.orientation THEN srcGen.componentProperty('PGA_FREEDOM','LORIENT_VERT',FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF gradSliderObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
 EXPORT PROC libNameCreate() OF gradSliderObject IS 'gradientslider.gadget'
   
 EXPORT PROC createGradSliderObject(parent)

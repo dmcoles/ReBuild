@@ -11,6 +11,7 @@ OPT MODULE, OSVERSION=37
         'gadtools',
         'gadgets/checkbox','checkbox',
         'gadgets/chooser','chooser',
+        'gadgets/integer','integer',
         'images/label','label',
         'amigalib/boopsi',
         'libraries/gadtools',
@@ -22,6 +23,7 @@ OPT MODULE, OSVERSION=37
   MODULE '*reactionObject','*reactionForm','*stringlist','*fileStreamer','*dialogs'
 
 EXPORT ENUM MENUGAD_ITEMLIST, MENUGAD_ITEM_NAME, MENUGAD_ITEM_COMMKEY, MENUGAD_ITEM_TYPE, MENUGAD_ITEM_MENUBAR,
+      MENUGAD_ITEM_CHECK, MENUGAD_ITEM_TOGGLE, MENUGAD_ITEM_CHECKED, MENUGAD_ITEM_DISABLED, MENUGAD_ITEM_MUTUALGROUP, 
       MENUGAD_ADD, MENUGAD_DELETE, MENUGAD_MODIFY, MENUGAD_MOVEUP, MENUGAD_MOVEDOWN, 
       MENUGAD_OK, MENUGAD_CANCEL
 
@@ -34,6 +36,11 @@ EXPORT OBJECT menuItem
   commKey[2]:ARRAY OF CHAR
   type:CHAR
   menuBar:CHAR
+  check:CHAR
+  toggle:CHAR
+  checked:CHAR
+  disabled:CHAR
+  mutualGroup:INT
 ENDOBJECT
 
 EXPORT OBJECT menuObject OF reactionObject
@@ -186,6 +193,11 @@ PROC modifyItem(nself,gadget,id,code) OF menuSettingsForm
     
     menuItem.type:=Gets(self.gadgetList[ MENUGAD_ITEM_TYPE ],CHOOSER_SELECTED)
     menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.check:=IF Gets(self.gadgetList[ MENUGAD_ITEM_CHECK ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.toggle:=IF Gets(self.gadgetList[ MENUGAD_ITEM_TOGGLE ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.checked:=IF Gets(self.gadgetList[ MENUGAD_ITEM_CHECKED ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.disabled:=IF Gets(self.gadgetList[ MENUGAD_ITEM_DISABLED ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.mutualGroup:=Gets(self.gadgetList[ MENUGAD_ITEM_MUTUALGROUP ],INTEGER_NUMBER)  
 
     IF menuItem.type=MENU_TYPE_MENUSUB
       IF menuItem.menuBar THEN StrCopy(type,'Menu bar') ELSE StrCopy(type,'Sub item')
@@ -220,6 +232,11 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, '', TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, -1, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_CHECK],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TOGGLE],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_CHECKED],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_DISABLED],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MUTUALGROUP],0,0,[INTEGER_NUMBER,0,0])
   ELSE
     SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, FALSE, TAG_END])
@@ -231,6 +248,11 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, menuItem.type , TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, menuItem.menuBar , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_CHECK],win,0,[CHECKBOX_CHECKED, menuItem.check , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TOGGLE],win,0,[CHECKBOX_CHECKED, menuItem.toggle , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_CHECKED],win,0,[CHECKBOX_CHECKED, menuItem.checked , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_DISABLED],win,0,[CHECKBOX_CHECKED, menuItem.disabled , TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MUTUALGROUP],0,0,[INTEGER_NUMBER,menuItem.mutualGroup,0])
   ENDIF
   DoMethod(self.windowObj, WM_RETHINK)
 ENDPROC
@@ -257,6 +279,12 @@ PROC addItem(nself,gadget,id,code) OF menuSettingsForm
     
     menuItem.type:=Gets(self.gadgetList[ MENUGAD_ITEM_TYPE ],CHOOSER_SELECTED)
     menuItem.menuBar:=IF Gets(self.gadgetList[ MENUGAD_ITEM_MENUBAR ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.check:=IF Gets(self.gadgetList[ MENUGAD_ITEM_CHECK ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.toggle:=IF Gets(self.gadgetList[ MENUGAD_ITEM_TOGGLE ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.checked:=IF Gets(self.gadgetList[ MENUGAD_ITEM_CHECKED ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.disabled:=IF Gets(self.gadgetList[ MENUGAD_ITEM_DISABLED ],CHECKBOX_CHECKED) THEN TRUE ELSE FALSE
+    menuItem.mutualGroup:=Gets(self.gadgetList[ MENUGAD_ITEM_MUTUALGROUP ],INTEGER_NUMBER)
+
     self.tempMenuItems.add(menuItem)
     
     IF menuItem.type=MENU_TYPE_MENUSUB
@@ -368,7 +396,7 @@ PROC create() OF menuSettingsForm
 
         LAYOUT_ADDCHILD, LayoutObject,
           LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-          LAYOUT_FIXEDHORIZ, FALSE,
+          //LAYOUT_FIXEDHORIZ, FALSE,
 
           LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_NAME ]:=StringObject,
             GA_ID, MENUGAD_ITEM_NAME,
@@ -406,6 +434,12 @@ PROC create() OF menuSettingsForm
             LABEL_TEXT, 'Type',
           LabelEnd,
 
+        LayoutEnd,
+        CHILD_WEIGHTEDHEIGHT, 0,
+
+        LAYOUT_ADDCHILD, LayoutObject,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
           LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_MENUBAR ]:=CheckBoxObject,
             GA_ID, MENUGAD_ITEM_MENUBAR,
             GA_RELVERIFY, TRUE,
@@ -413,6 +447,50 @@ PROC create() OF menuSettingsForm
             GA_TEXT, 'Menu _Bar',
             CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
           CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_CHECK ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_CHECK,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Check',
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_TOGGLE ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_TOGGLE,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Toggle',
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_CHECKED ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_CHECKED,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Checked',
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ MENUGAD_ITEM_DISABLED ]:=CheckBoxObject,
+            GA_ID, MENUGAD_ITEM_DISABLED,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            GA_TEXT, 'Disabled',
+            CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+          CheckBoxEnd,
+
+          LAYOUT_ADDCHILD,  self.gadgetList[ MENUGAD_ITEM_MUTUALGROUP ]:=IntegerObject,
+            GA_ID, MENUGAD_ITEM_MUTUALGROUP,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            INTEGER_MAXCHARS, 4,
+            INTEGER_MINIMUM, 0,
+            INTEGER_MAXIMUM, 9999,
+          IntegerEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, 'Mutual Group',
+          LabelEnd,
 
         LayoutEnd,
         CHILD_WEIGHTEDHEIGHT, 0,
@@ -545,6 +623,11 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
     AstrCopy(menuItem.commKey,comp.menuItems.item(i)::menuItem.commKey,2)
     menuItem.type:=comp.menuItems.item(i)::menuItem.type
     menuItem.menuBar:=comp.menuItems.item(i)::menuItem.menuBar
+    menuItem.check:=comp.menuItems.item(i)::menuItem.check
+    menuItem.toggle:=comp.menuItems.item(i)::menuItem.toggle
+    menuItem.checked:=comp.menuItems.item(i)::menuItem.checked
+    menuItem.disabled:=comp.menuItems.item(i)::menuItem.disabled
+    menuItem.mutualGroup:=comp.menuItems.item(i)::menuItem.mutualGroup
    
     self.tempMenuItems.add(menuItem)
 
@@ -582,17 +665,45 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
       AstrCopy(menuItem.commKey,self.tempMenuItems.item(i)::menuItem.commKey,2)
       menuItem.type:=self.tempMenuItems.item(i)::menuItem.type
       menuItem.menuBar:=self.tempMenuItems.item(i)::menuItem.menuBar
+      menuItem.check:=self.tempMenuItems.item(i)::menuItem.check
+      menuItem.toggle:=self.tempMenuItems.item(i)::menuItem.toggle
+      menuItem.checked:=self.tempMenuItems.item(i)::menuItem.checked
+      menuItem.disabled:=self.tempMenuItems.item(i)::menuItem.disabled
+      menuItem.mutualGroup:=self.tempMenuItems.item(i)::menuItem.mutualGroup
       comp.menuItems.add(menuItem)
     ENDFOR
 
   ENDIF
 ENDPROC res=MR_OK
 
+PROC makeMutual(menu:PTR TO menuItem,index) OF menuObject
+  DEF i,cnt,res=0,group,menuItem:PTR TO menuItem,currMenu:PTR TO menuItem
+  
+  
+  group:=self.menuItems.item(index)::menuItem.mutualGroup
+  
+  FOR i:=0 TO self.menuItems.count()-1
+    menuItem:=self.menuItems.item(i)
+    IF menuItem.type=MENU_TYPE_MENU 
+      currMenu:=menuItem
+      cnt:=0
+    ELSE
+      IF (currMenu=menu) AND (i<>index) AND (cnt<32)
+        IF menuItem.mutualGroup=group
+          res:=res OR (1<<cnt)
+        ENDIF
+      ENDIF
+      cnt++
+    ENDIF
+  ENDFOR
+ENDPROC res
+
 EXPORT PROC createPreviewObject(scr) OF menuObject
   DEF newMenu:PTR TO newmenu
   DEF i,n
   DEF count
   DEF menuItem:PTR TO menuItem
+  DEF currMenu:PTR TO menuItem
 
   IF self.previewObject 
     FreeMenus(self.previewObject)
@@ -608,18 +719,32 @@ EXPORT PROC createPreviewObject(scr) OF menuObject
       FOR i:=0 TO count-2
         menuItem:=self.menuItems.item(i)
         IF menuItem.type=MENU_TYPE_MENUSUB
+          newMenu[i].mutualexclude:=self.makeMutual(currMenu,i)
+          newMenu[i].flags:=(IF menuItem.check THEN CHECKIT ELSE 0) OR
+                            (IF menuItem.toggle THEN MENUTOGGLE ELSE 0) OR
+                            (IF menuItem.checked THEN CHECKED ELSE 0) OR
+                            (IF menuItem.disabled THEN NM_ITEMDISABLED ELSE 0)
+
           newMenu[i].type:=NM_SUB
           IF menuItem.menuBar THEN newMenu[i].label:=NM_BARLABEL ELSE newMenu[i].label:=menuItem.itemName         
           IF StrLen(menuItem.commKey)
             newMenu[i].commkey:=menuItem.commKey
           ENDIF
         ELSEIF menuItem.type=MENU_TYPE_MENUITEM
+          newMenu[i].mutualexclude:=self.makeMutual(currMenu,i)
+          newMenu[i].flags:=(IF menuItem.check THEN CHECKIT ELSE 0) OR
+                            (IF menuItem.toggle THEN MENUTOGGLE ELSE 0) OR
+                            (IF menuItem.checked THEN CHECKED ELSE 0) OR
+                            (IF menuItem.disabled THEN NM_ITEMDISABLED ELSE 0)
+                            
           newMenu[i].type:=NM_ITEM
           IF menuItem.menuBar THEN newMenu[i].label:=NM_BARLABEL ELSE newMenu[i].label:=menuItem.itemName
           IF StrLen(menuItem.commKey)
             newMenu[i].commkey:=menuItem.commKey
           ENDIF
         ELSE
+          currMenu:=menuItem
+          newMenu[i].flags:=IF menuItem.disabled THEN NM_MENUDISABLED ELSE 0
           newMenu[i].type:=NM_TITLE
           newMenu[i].label:=menuItem.itemName
           IF StrLen(menuItem.commKey)
@@ -682,6 +807,16 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF menuObject
     fser.writeLine(tempStr)
     StringF(tempStr,'MENUBAR: \d',menuItem.menuBar)
     fser.writeLine(tempStr)
+    StringF(tempStr,'CHECK: \d',menuItem.check)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'TOGGLE: \d',menuItem.toggle)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'CHECKED: \d',menuItem.checked)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'DISABLED: \d',menuItem.disabled)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'MUTUALGROUP: \d',menuItem.mutualGroup)
+    fser.writeLine(tempStr)
   ENDFOR
   fser.writeLine('-')
   self.serialiseChildren(fser)
@@ -715,6 +850,16 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF menuObject
         menuItem.type:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MENUBAR: ',tempStr,STRLEN)
         menuItem.menuBar:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('CHECK: ',tempStr,STRLEN)
+        menuItem.check:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('TOGGLE: ',tempStr,STRLEN)
+        menuItem.toggle:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('CHECKED: ',tempStr,STRLEN)
+        menuItem.checked:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('DISABLED: ',tempStr,STRLEN)
+        menuItem.disabled:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('MUTUALGROUP: ',tempStr,STRLEN)
+        menuItem.mutualGroup:=Val(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE

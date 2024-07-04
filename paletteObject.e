@@ -305,6 +305,12 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF paletteObject
   IF self.numcols<>2 THEN srcGen.componentPropertyInt('PALETTE_NumColours',self.numcols)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF paletteObject
+  srcGen.componentAddChildLabel(self.name)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
+
 EXPORT PROC getTypeName() OF paletteObject
   RETURN 'Palette'
 ENDPROC
