@@ -676,7 +676,7 @@ PROC editSettings(comp:PTR TO menuObject) OF menuSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
-PROC makeMutual(menu:PTR TO menuItem,index) OF menuObject
+EXPORT PROC makeMutual(menu:PTR TO menuItem,index) OF menuObject
   DEF i,cnt,res=0,group,menuItem:PTR TO menuItem,currMenu:PTR TO menuItem
   
   

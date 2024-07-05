@@ -110,6 +110,8 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEBOTTOM=3
   CONST MENU_EDIT_MOVELPREV=4
   CONST MENU_EDIT_MOVELNEXT=5
+  CONST MENU_EDIT_MOVEINTOLAYOUT_VERT=6
+  CONST MENU_EDIT_MOVEINTOLAYOUT_HORIZ=7
 
   CONST FILE_FORMAT_VER=2
 
@@ -400,7 +402,7 @@ PROC updateSel(node)
   DEF dis,idx
   DEF check,i,j
   DEF dismoveup,dismovedown,disdel
-  DEF disprevgroup,disnextgroup
+  DEF disprevgroup,disnextgroup,dismoveinto
   DEF menuItem
   DEF type
   DEF allowchildren=FALSE
@@ -432,10 +434,12 @@ PROC updateSel(node)
         dismoveup:=idx=0
         dismovedown:=idx=(((objectList.count()-ROOT_WINDOW_ITEM)/3)-1)
         disdel:=(objectList.count()=(ROOT_WINDOW_ITEM+3))
+        dismoveinto:=TRUE
       ELSE
         dismoveup:=TRUE
         dismovedown:=TRUE
         disdel:=TRUE
+        dismoveinto:=TRUE
       ENDIF
       disprevgroup:=TRUE
       disnextgroup:=TRUE
@@ -443,6 +447,7 @@ PROC updateSel(node)
       dismoveup:=comp.getChildIndex()=0
       dismovedown:=comp.getChildIndex()=(comp.parent.children.count()-1)
       disdel:=(comp.parent=0)
+      dismoveinto:=FALSE
       IF comp.parent.parent=0
         disprevgroup:=TRUE
         disnextgroup:=TRUE
@@ -471,6 +476,8 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEBOTTOM,dismovedown)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELPREV,disprevgroup)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELNEXT,disnextgroup)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEINTOLAYOUT_VERT,0,dismoveinto)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVEINTOLAYOUT_HORIZ,0,dismoveinto)
     
     dis:=(comp.parent=0) AND (allowchildren=FALSE) AND (comp.type<>TYPE_SCREEN) AND (comp.type<>TYPE_WINDOW)
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,dis,TAG_END])
@@ -1098,6 +1105,32 @@ PROC moveNextLayout(comp:PTR TO reactionObject)
   makeList(comp)
   addMembers(mainRootLayout,window)
   rethinkPreviews()
+ENDPROC
+
+PROC moveIntoLayout(comp:PTR TO reactionObject,horiz)
+  DEF newComp:PTR TO reactionObject
+
+  DEF idx, mainRootLayout, window
+  DEF parent:PTR TO reactionObject
+  
+  parent:=comp.parent
+  IF parent.allowChildren()
+    newComp:=doAddLayoutQuick(comp,horiz)
+
+    changes:=TRUE
+    idx:=findWindowIndex(comp)
+    mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+    window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+    removeMembers(mainRootLayout,window)
+
+    parent.swapChildren(comp.getChildIndex(),newComp.getChildIndex())
+    parent.removeChild(comp)
+    newComp.addChild(comp)
+
+    makeList(comp)
+    addMembers(mainRootLayout,window)
+    rethinkPreviews()  
+  ENDIF
 ENDPROC
 
 PROC findWindowIndex(comp:PTR TO reactionObject)
@@ -1869,7 +1902,7 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
       addObject(comp,newObj)
     ENDIF
   ENDIF
-ENDPROC
+ENDPROC newObj
 
 PROC countObjectsOfType(objType,comp:PTR TO reactionObject)
   DEF count=0,i
@@ -2447,6 +2480,8 @@ PROC remakePreviewMenus()
   NM_SUB,'Layout Bottom',0,0,
   NM_SUB,'Prev Layout',0,0,
   NM_SUB,'Next Layout',0,0,
+  NM_SUB,'Into VLayout',0,0,
+  NM_SUB,'Into HLayout',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
   NM_ITEM,'Edit Lists',0,0,
   NM_ITEM,NM_BARLABEL,0,0,
@@ -2899,6 +2934,10 @@ PROC main() HANDLE
                           movePrevLayout(selectedComp)
                         CASE MENU_EDIT_MOVELNEXT
                           moveNextLayout(selectedComp)
+                        CASE MENU_EDIT_MOVEINTOLAYOUT_VERT
+                          moveIntoLayout(selectedComp,FALSE)
+                        CASE MENU_EDIT_MOVEINTOLAYOUT_HORIZ
+                          moveIntoLayout(selectedComp,TRUE)
                       ENDSELECT
                     CASE MENU_EDIT_LISTS
                       editLists()

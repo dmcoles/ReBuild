@@ -872,6 +872,8 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
+  DEF menuFlags[60]:STRING
+  DEF currMenu,mut
   DEF commKey[10]:STRING
   DEF directiveStr[20]:STRING
   DEF listObjects:PTR TO stdlist
@@ -906,10 +908,38 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
         IF StrLen(menuItem.commKey) THEN StringF(commKey,'\q\s\q',menuItem.commKey)
       ELSE
+        currMenu:=menuItem
+        mut:=0
         itemType:='NM_TITLE'
         StringF(itemName,'\q\s\q',menuItem.itemName)      
       ENDIF
-      StringF(tempStr,'    { \s, \s,\s,0,0,NULL },',itemType,itemName,commKey)
+
+      StrCopy(menuFlags,'')
+      IF menuItem.type<>MENU_TYPE_MENU
+        mut:=menuObject.makeMutual(currMenu,i)
+        IF menuItem.check
+          StrAdd(menuFlags,'CHECKIT')
+        ENDIF
+        IF menuItem.toggle
+          IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' | ')
+          StrAdd(menuFlags,'MENUTOGGLE')
+        ENDIF
+        IF menuItem.checked
+          IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' | ')
+          StrAdd(menuFlags,'CHECKED')
+        ENDIF
+      ENDIF
+      IF menuItem.disabled
+        IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' | ')
+        IF menuItem.type=MENU_TYPE_MENU
+          StrAdd(menuFlags,'NM_MENUDISABLED')
+        ELSE
+          StrAdd(menuFlags,'NM_ITEMDISABLED')
+        ENDIF
+      ENDIF
+      IF EstrLen(menuFlags)=0 THEN StrCopy(menuFlags,'0')
+
+      StringF(tempStr,'    { \s, \s, \s, \s, \d, NULL },',itemType,itemName,commKey,menuFlags,mut)
       self.writeLine(tempStr)
     ENDFOR
     self.writeLine('    { NM_END, NULL, 0, 0, 0, (APTR)0 }')
