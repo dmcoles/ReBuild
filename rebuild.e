@@ -2891,6 +2891,8 @@ PROC main() HANDLE
                       saveFile()
                     CASE MENU_PROJECT_SAVEAS ->Save As
                       saveFileAs()
+                    CASE MENU_PROJECT_REOPEN  ->Reopen file
+                      doLoad(recentFiles.item(subitem))
                     CASE MENU_PROJECT_GENCODE ->Generate Code
                       genCode()
                     CASE MENU_PROJECT_SHOWLIBS

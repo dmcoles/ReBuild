@@ -851,16 +851,16 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
           StrAdd(menuFlags,'CHECKIT')
         ENDIF
         IF menuItem.toggle
-          IF StrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
+          IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
           StrAdd(menuFlags,'MENUTOGGLE')
         ENDIF
         IF menuItem.checked
-          IF StrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
+          IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
           StrAdd(menuFlags,'CHECKED')
         ENDIF
       ENDIF
       IF menuItem.disabled
-        IF StrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
+        IF EstrLen(menuFlags) THEN StrAdd(menuFlags,' OR ')
         IF menuItem.type=MENU_TYPE_MENU
           StrAdd(menuFlags,'NM_MENUDISABLED')
         ELSE
@@ -870,7 +870,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
             
       StringF(tempStr,'  menuData[\d].type:=\s',i,itemType)
       self.writeLine(tempStr)
-      IF StrLen(menuFlags)
+      IF EstrLen(menuFlags)
         StringF(tempStr,'  menuData[\d].flags:=\s',i,menuFlags)
         self.writeLine(tempStr)
       ENDIF
