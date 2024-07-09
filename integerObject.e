@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM INTGAD_IDENT, INTGAD_NAME, INTGAD_MAXCHARS, INTGAD_VALUE,INTGAD_MINVISIBLE,
+EXPORT ENUM INTGAD_IDENT, INTGAD_NAME,INTGAD_HINT, INTGAD_MAXCHARS, INTGAD_VALUE,INTGAD_MINVISIBLE,
       INTGAD_MINIMUM, INTGAD_MAXIMUM,
       INTGAD_DISABLED, INTGAD_TABCYCLE, INTGAD_ARROWS,
       INTGAD_OK, INTGAD_CHILD, INTGAD_CANCEL
@@ -77,15 +77,25 @@ PROC create() OF integerSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_IDENT ]:=StringObject,
-        GA_ID, INTGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_IDENT ]:=StringObject,
+          GA_ID, INTGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ INTGAD_HINT ]:=ButtonObject,
+          GA_ID, INTGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,          
+        
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -223,6 +233,7 @@ PROC create() OF integerSettingsForm
   WindowEnd
 
   self.gadgetActions[INTGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[INTGAD_HINT]:={editHint}  
   self.gadgetActions[INTGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[INTGAD_OK]:=MR_OK
 ENDPROC
@@ -248,11 +259,20 @@ EXPORT PROC canClose(modalRes) OF integerSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF integerSettingsForm
+  self:=nself
+  self.setBusy()
+  self.integerObject.editHint()
+  self.clearBusy()
+  self.updateHint(INTGAD_HINT, self.integerObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   DEF res
   
   self.integerObject:=comp
-  
+
+  self.updateHint(INTGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ INTGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ INTGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ INTGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,comp.maxChars,0])

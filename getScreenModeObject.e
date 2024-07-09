@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM GETSCREENGAD_IDENT, GETSCREENGAD_NAME, GETSCREENGAD_TITLE,
+EXPORT ENUM GETSCREENGAD_IDENT, GETSCREENGAD_NAME, GETSCREENGAD_HINT, GETSCREENGAD_TITLE,
             GETSCREENGAD_LEFT, GETSCREENGAD_TOP, GETSCREENGAD_WIDTH, GETSCREENGAD_HEIGHT, 
             GETSCREENGAD_MINWIDTH, GETSCREENGAD_MAXWIDTH, GETSCREENGAD_MINHEIGHT, GETSCREENGAD_MAXHEIGHT, 
             GETSCREENGAD_MINDEPTH, GETSCREENGAD_MAXDEPTH, GETSCREENGAD_INFOLEFT, GETSCREENGAD_INFOTOP, 
@@ -132,16 +132,24 @@ PROC create() OF getScreenModeSettingsForm
           LABEL_TEXT, '_Label',
         LabelEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_TITLE ]:=StringObject,
-          GA_ID, GETSCREENGAD_TITLE,
+        LAYOUT_ADDCHILD,  self.gadgetList[ GETSCREENGAD_HINT ]:=ButtonObject,
+          GA_ID, GETSCREENGAD_HINT,
+          GA_TEXT, 'Hint',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          STRINGA_MAXCHARS, 80,
-        StringEnd,
-        CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Title',
-        LabelEnd,
+        ButtonEnd,       
+        CHILD_WEIGHTEDWIDTH,50,            
       LayoutEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ GETSCREENGAD_TITLE ]:=StringObject,
+        GA_ID, GETSCREENGAD_TITLE,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_Title',
+      LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -471,6 +479,7 @@ PROC create() OF getScreenModeSettingsForm
   WindowEnd
 
   self.gadgetActions[GETSCREENGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[GETSCREENGAD_HINT]:={editHint}
   self.gadgetActions[GETSCREENGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[GETSCREENGAD_OK]:=MR_OK
 ENDPROC
@@ -498,6 +507,14 @@ EXPORT PROC canClose(modalRes) OF getScreenModeSettingsForm
     RETURN FALSE
   ENDIF
 ENDPROC TRUE
+
+PROC editHint(nself,gadget,id,code) OF getScreenModeSettingsForm
+  self:=nself
+  self.setBusy()
+  self.getScreenModeObject.editHint()
+  self.clearBusy()
+  self.updateHint(GETSCREENGAD_HINT, self.getScreenModeObject.hintText)
+ENDPROC
 
 PROC editSettings(comp:PTR TO getScreenModeObject) OF getScreenModeSettingsForm
   DEF res

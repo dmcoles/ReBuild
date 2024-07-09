@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM STRGAD_IDENT, STRGAD_NAME, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE, STRGAD_JUSTIFY,
+EXPORT ENUM STRGAD_IDENT, STRGAD_NAME, STRGAD_HINT, STRGAD_MAXCHARS, STRGAD_VALUE,STRGAD_MINVISIBLE, STRGAD_JUSTIFY,
       STRGAD_DISABLED, STRGAD_READONLY, STRGAD_TABCYCLE, STRGAD_REPLACEMODE,
       STRGAD_OK, STRGAD_CHILD, STRGAD_CANCEL
       
@@ -100,6 +100,15 @@ PROC create() OF stringSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ STRGAD_HINT ]:=ButtonObject,
+          GA_ID, STRGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+        
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -217,6 +226,7 @@ PROC create() OF stringSettingsForm
   WindowEnd
 
   self.gadgetActions[STRGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[STRGAD_HINT]:={editHint}  
   self.gadgetActions[STRGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[STRGAD_OK]:=MR_OK
 ENDPROC
@@ -243,11 +253,20 @@ EXPORT PROC canClose(modalRes) OF stringSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF stringSettingsForm
+  self:=nself
+  self.setBusy()
+  self.stringObject.editHint()
+  self.clearBusy()
+  self.updateHint(STRGAD_HINT, self.stringObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO stringObject) OF stringSettingsForm
   DEF res
 
   self.stringObject:=comp
 
+  self.updateHint(STRGAD_HINT, comp.hintText)  
   SetGadgetAttrsA(self.gadgetList[ STRGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ STRGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,comp.maxChars,0])

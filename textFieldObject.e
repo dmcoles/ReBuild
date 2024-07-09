@@ -22,7 +22,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
+EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
       TEXTFIELDGAD_BLINKRATE, TEXTFIELDGAD_MAXSIZE, TEXTFIELDGAD_SPACING, TEXTFIELDGAD_TABSPACES,
       TEXTFIELDGAD_DISABLED, TEXTFIELDGAD_TABCYCLE, TEXTFIELDGAD_BLOCK, TEXTFIELDGAD_MAXSIZEBEEP, TEXTFIELDGAD_PARTIAL,
       TEXTFIELDGAD_NOGHOST, TEXTFIELDGAD_READONLY, TEXTFIELDGAD_NONPRINTCHARS, TEXTFIELDGAD_INVERTED, TEXTFIELDGAD_VCENTER,
@@ -175,17 +175,28 @@ PROC create() OF textFieldSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_IDENT ]:=StringObject,
-        GA_ID, TEXTFIELDGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_IDENT ]:=StringObject,
+          GA_ID, TEXTFIELDGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_HINT ]:=ButtonObject,
+          GA_ID, TEXTFIELDGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -477,6 +488,7 @@ PROC create() OF textFieldSettingsForm
   self.gadgetActions[TEXTFIELDGAD_INKPEN]:={selectPen}
   self.gadgetActions[TEXTFIELDGAD_LINEPEN]:={selectPen}
   self.gadgetActions[TEXTFIELDGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[TEXTFIELDGAD_HINT]:={editHint}  
   self.gadgetActions[TEXTFIELDGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[TEXTFIELDGAD_OK]:=MR_OK
 ENDPROC
@@ -530,6 +542,14 @@ EXPORT PROC canClose(modalRes) OF textFieldSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF textFieldSettingsForm
+  self:=nself
+  self.setBusy()
+  self.textFieldObject.editHint()
+  self.clearBusy()
+  self.updateHint(TEXTFIELDGAD_HINT, self.textFieldObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   DEF res
 
@@ -539,6 +559,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   self.tempInkPen:=comp.inkPen
   self.tempLinePen:=comp.linePen
     
+  self.updateHint(TEXTFIELDGAD_HINT, comp.hintText)     
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_DELIM ],0,0,[STRINGA_TEXTVAL,comp.delimiters,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_ACCEPT ],0,0,[STRINGA_TEXTVAL,comp.acceptChars,0])

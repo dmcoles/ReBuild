@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM FGAUGEGAD_IDENT, FGAUGEGAD_NAME, FGAUGEGAD_MIN, FGAUGEGAD_MAX, FGAUGEGAD_LEVEL, FGAUGEGAD_TICKSIZE,
+EXPORT ENUM FGAUGEGAD_IDENT, FGAUGEGAD_NAME, FGAUGEGAD_HINT, FGAUGEGAD_MIN, FGAUGEGAD_MAX, FGAUGEGAD_LEVEL, FGAUGEGAD_TICKSIZE,
       FGAUGEGAD_TICKS, FGAUGEGAD_ORIENTATION, FGAUGEGAD_JUSTIFICATION, FGAUGEGAD_SHORTTICKS,
       FGAUGEGAD_PERCENT, FGAUGEGAD_TICKPEN, FGAUGEGAD_PERCENTPEN, FGAUGEGAD_EMPTYPEN,
       FGAUGEGAD_FILLPEN,
@@ -113,6 +113,13 @@ PROC create() OF fuelGaugeSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ FGAUGEGAD_HINT ]:=ButtonObject,
+          GA_ID, FGAUGEGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,     
       LayoutEnd,
 
 
@@ -316,8 +323,17 @@ PROC create() OF fuelGaugeSettingsForm
   WindowEnd
 
   self.gadgetActions[FGAUGEGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[FGAUGEGAD_HINT]:={editHint}
   self.gadgetActions[FGAUGEGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[FGAUGEGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF fuelGaugeSettingsForm
+  self:=nself
+  self.setBusy()
+  self.fuelGaugeObject.editHint()
+  self.clearBusy()
+  self.updateHint(FGAUGEGAD_HINT, self.fuelGaugeObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF fuelGaugeSettingsForm
@@ -350,7 +366,8 @@ PROC editSettings(comp:PTR TO fuelGaugeObject) OF fuelGaugeSettingsForm
   DEF res
 
   self.fuelGaugeObject:=comp
-    
+  self.updateHint(FGAUGEGAD_HINT, comp.hintText)
+
   SetGadgetAttrsA(self.gadgetList[ FGAUGEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ FGAUGEGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ FGAUGEGAD_MIN ],0,0,[INTEGER_NUMBER,comp.min,0]) 

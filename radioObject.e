@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM RADIOGAD_IDENT, RADIOGAD_LISTSELECT, RADIOGAD_LABELPLACE,
+EXPORT ENUM RADIOGAD_IDENT, RADIOGAD_HINT, RADIOGAD_LISTSELECT, RADIOGAD_LABELPLACE,
       RADIOGAD_SPACING, RADIOGAD_SELECTED,
       RADIOGAD_OK, RADIOGAD_CHILD, RADIOGAD_CANCEL
       
@@ -88,6 +88,14 @@ PROC create() OF radioSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
         
+        LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_HINT ]:=ButtonObject,
+          GA_ID, RADIOGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,  
+        CHILD_WEIGHTEDWIDTH,50,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ RADIOGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, RADIOGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
@@ -163,6 +171,7 @@ PROC create() OF radioSettingsForm
 
   self.gadgetActions[RADIOGAD_LISTSELECT]:={selectList}
   self.gadgetActions[RADIOGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[RADIOGAD_HINT]:={editHint}  
   self.gadgetActions[RADIOGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[RADIOGAD_OK]:=MR_OK
 ENDPROC
@@ -204,12 +213,21 @@ EXPORT PROC canClose(modalRes) OF radioSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF radioSettingsForm
+  self:=nself
+  self.setBusy()
+  self.radioObject.editHint()
+  self.clearBusy()
+  self.updateHint(RADIOGAD_HINT, self.radioObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO radioObject) OF radioSettingsForm
   DEF res
 
   self.radioObject:=comp
   self.selectedListId:=comp.listObjectId
 
+  self.updateHint(RADIOGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_LABELPLACE ],0,0,[CHOOSER_SELECTED,comp.labelPlace,0])
   SetGadgetAttrsA(self.gadgetList[ RADIOGAD_SPACING ],0,0,[INTEGER_NUMBER,comp.spacing,0])

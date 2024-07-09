@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM TAPEGAD_IDENT, TAPEGAD_ANIM,TAPEGAD_MODE,TAPEGAD_FRAMES,TAPEGAD_CURRFRAME,
+EXPORT ENUM TAPEGAD_IDENT, TAPEGAD_HINT, TAPEGAD_ANIM,TAPEGAD_MODE,TAPEGAD_FRAMES,TAPEGAD_CURRFRAME,
       TAPEGAD_OK, TAPEGAD_CHILD, TAPEGAD_CANCEL
       
 EXPORT DEF tapedeckbase
@@ -76,16 +76,28 @@ PROC create() OF tapeDeckSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ TAPEGAD_IDENT ]:=StringObject,
-        GA_ID, TAPEGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_ADDCHILD, self.gadgetList[ TAPEGAD_IDENT ]:=StringObject,
+          GA_ID, TAPEGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ TAPEGAD_HINT ]:=ButtonObject,
+          GA_ID, TAPEGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+        
+      LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -176,6 +188,7 @@ PROC create() OF tapeDeckSettingsForm
 
   self.gadgetActions[TAPEGAD_CHILD]:={editChildSettings}
   self.gadgetActions[TAPEGAD_CANCEL]:=MR_CANCEL
+  self.gadgetActions[TAPEGAD_HINT]:={editHint}  
   self.gadgetActions[TAPEGAD_OK]:=MR_OK
 ENDPROC
 
@@ -201,11 +214,20 @@ EXPORT PROC canClose(modalRes) OF tapeDeckSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF tapeDeckSettingsForm
+  self:=nself
+  self.setBusy()
+  self.tapeDeckObject.editHint()
+  self.clearBusy()
+  self.updateHint(TAPEGAD_HINT, self.tapeDeckObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO tapeDeckObject) OF tapeDeckSettingsForm
   DEF res
 
   self.tapeDeckObject:=comp
 
+  self.updateHint(TAPEGAD_HINT, comp.hintText)  
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])   
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_ANIM ],0,0,[CHOOSER_SELECTED,comp.anim,0]) 
   SetGadgetAttrsA(self.gadgetList[ TAPEGAD_MODE ],0,0,[CHOOSER_SELECTED,comp.mode,0]) 

@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*stringlist','*listPicker','*reactionListObject','*reactionLists','*validator'
 
-EXPORT ENUM TABSGAD_IDENT, TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
+EXPORT ENUM TABSGAD_IDENT, TABSGAD_HINT, TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
       TABSGAD_OK, TABSGAD_CHILD, TABSGAD_CANCEL
 
 EXPORT DEF tabsbase
@@ -90,6 +90,14 @@ PROC create() OF tabsSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
+        LAYOUT_ADDCHILD,  self.gadgetList[ TABSGAD_HINT ]:=ButtonObject,
+          GA_ID, TABSGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ TABSGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, TABSGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
@@ -157,6 +165,7 @@ PROC create() OF tabsSettingsForm
 
   self.gadgetActions[TABSGAD_LISTSELECT]:={selectList}
   self.gadgetActions[TABSGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[TABSGAD_HINT]:={editHint}  
   self.gadgetActions[TABSGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[TABSGAD_OK]:=MR_OK
 ENDPROC
@@ -199,11 +208,20 @@ EXPORT PROC canClose(modalRes) OF tabsSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF tabsSettingsForm
+  self:=nself
+  self.setBusy()
+  self.tabsObject.editHint()
+  self.clearBusy()
+  self.updateHint(TABSGAD_HINT, self.tabsObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO tabsObject) OF tabsSettingsForm
   DEF res
 
   self.tabsObject:=comp
   self.selectedListId:=comp.listObjectId    
+  self.updateHint(TABSGAD_HINT, comp.hintText)  
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_CHILDMAXWIDTH ],0,0,[CHECKBOX_CHECKED,comp.childMaxWidth,0]) 

@@ -23,7 +23,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM LVIEWGAD_IDENT, LVIEWGAD_LISTSELECT, LVIEWGAD_MULTISELECT,
+EXPORT ENUM LVIEWGAD_IDENT, LVIEWGAD_HINT, LVIEWGAD_LISTSELECT, LVIEWGAD_MULTISELECT,
       LVIEWGAD_OK, LVIEWGAD_CHILD, LVIEWGAD_CANCEL
       
 
@@ -88,21 +88,32 @@ PROC create() OF listViewSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
+        LAYOUT_ADDCHILD,  self.gadgetList[ LVIEWGAD_HINT ]:=ButtonObject,
+          GA_ID, LVIEWGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,          
+      LayoutEnd,
+      
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ LVIEWGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, LVIEWGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ LVIEWGAD_MULTISELECT ]:=CheckBoxObject,
+          GA_ID, LVIEWGAD_MULTISELECT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Multi-select',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,     
       LayoutEnd,
-      
-     LAYOUT_ADDCHILD, self.gadgetList[ LVIEWGAD_MULTISELECT ]:=CheckBoxObject,
-        GA_ID, LVIEWGAD_MULTISELECT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_TEXT, 'Multi-select',
-        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-      CheckBoxEnd,     
       
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -134,6 +145,7 @@ PROC create() OF listViewSettingsForm
 
   self.gadgetActions[LVIEWGAD_LISTSELECT]:={selectList}
   self.gadgetActions[LVIEWGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[LVIEWGAD_HINT]:={editHint}  
   self.gadgetActions[LVIEWGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[LVIEWGAD_OK]:=MR_OK
 ENDPROC
@@ -174,12 +186,21 @@ EXPORT PROC canClose(modalRes) OF listViewSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF listViewSettingsForm
+  self:=nself
+  self.setBusy()
+  self.listViewObject.editHint()
+  self.clearBusy()
+  self.updateHint(LVIEWGAD_HINT, self.listViewObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO listViewObject) OF listViewSettingsForm
   DEF res
 
   self.listViewObject:=comp
   self.selectedListId:=comp.listObjectId
-  
+
+  self.updateHint(LVIEWGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ LVIEWGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LVIEWGAD_MULTISELECT ],0,0,[LVIEWGAD_MULTISELECT,comp.multiSelect,0]) 
 

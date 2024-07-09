@@ -26,7 +26,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*stringlist','*validator'
 
-EXPORT ENUM SBARGAD_IDENT,SBARGAD_NAME, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
+EXPORT ENUM SBARGAD_IDENT,SBARGAD_NAME, SBARGAD_HINT, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
             SBARGAD_STRUMBAR, SBARGAD_BEVELSTYLE,
       SBARGAD_OK, SBARGAD_CHILD, SBARGAD_CANCEL
       
@@ -189,6 +189,14 @@ PROC create() OF speedBarSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
+        LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_HINT ]:=ButtonObject,
+          GA_ID, SBARGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_BGPEN ]:=ButtonObject,
           GA_ID, SBARGAD_BGPEN,
           GA_TEXT, 'Back_groundPen',
@@ -321,6 +329,7 @@ PROC create() OF speedBarSettingsForm
   self.gadgetActions[SBARGAD_BTNLIST]:={selectItem}
   self.gadgetActions[SBARGAD_BGPEN]:={selectPen}
   self.gadgetActions[SBARGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[SBARGAD_HINT]:={editHint}  
   self.gadgetActions[SBARGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[SBARGAD_BUTTON_ADD]:={addItem}
   self.gadgetActions[SBARGAD_BUTTON_DEL]:={deleteItem}
@@ -375,6 +384,14 @@ EXPORT PROC canClose(modalRes) OF speedBarSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF speedBarSettingsForm
+  self:=nself
+  self.setBusy()
+  self.speedBarObject.editHint()
+  self.clearBusy()
+  self.updateHint(SBARGAD_HINT, self.speedBarObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   DEF res,i,n
   DEF typeStr[10]:STRING
@@ -383,7 +400,8 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   self.speedBarObject:=comp
     
   self.tempBgPen:=comp.bgPen
-  
+
+  self.updateHint(SBARGAD_HINT, comp.hintText)  
   SetGadgetAttrsA(self.gadgetList[SBARGAD_BTNLIST],0,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
   FOR i:=0 TO comp.buttonList.count()-1
     self.tempItems.add(comp.buttonList.item(i))

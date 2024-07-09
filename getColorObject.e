@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM GETCOLGAD_IDENT, GETCOLGAD_NAME, GETCOLGAD_TITLE,GETCOLGAD_COLORWHEEL,GETCOLGAD_RGBSLIDERS,GETCOLGAD_HSBSLIDERS,
+EXPORT ENUM GETCOLGAD_IDENT, GETCOLGAD_NAME, GETCOLGAD_HINT, GETCOLGAD_TITLE,GETCOLGAD_COLORWHEEL,GETCOLGAD_RGBSLIDERS,GETCOLGAD_HSBSLIDERS,
       GETCOLGAD_SWITCHMODE, GETCOLGAD_INITIAL, GETCOLGAD_SHOWRGB, GETCOLGAD_SHOWHSB,GETCOLGAD_DISABLED,  
       GETCOLGAD_OK, GETCOLGAD_CHILD, GETCOLGAD_CANCEL
 
@@ -102,6 +102,13 @@ PROC create() OF getColorSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+       LAYOUT_ADDCHILD,  self.gadgetList[ GETCOLGAD_HINT ]:=ButtonObject,
+          GA_ID, GETCOLGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,          
       LayoutEnd,
 
       LAYOUT_ADDCHILD, self.gadgetList[ GETCOLGAD_TITLE ]:=StringObject,
@@ -235,8 +242,17 @@ PROC create() OF getColorSettingsForm
   WindowEnd
 
   self.gadgetActions[GETCOLGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[GETCOLGAD_HINT]:={editHint}
   self.gadgetActions[GETCOLGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[GETCOLGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF getColorSettingsForm
+  self:=nself
+  self.setBusy()
+  self.getColorObject.editHint()
+  self.clearBusy()
+  self.updateHint(GETCOLGAD_HINT, self.getColorObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF getColorSettingsForm
@@ -265,6 +281,7 @@ PROC editSettings(comp:PTR TO getColorObject) OF getColorSettingsForm
   DEF res
 
   self.getColorObject:=comp
+  self.updateHint(GETCOLGAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ GETCOLGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GETCOLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])

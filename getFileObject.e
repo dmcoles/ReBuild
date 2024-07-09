@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM GETFILEGAD_IDENT, GETFILEGAD_NAME, GETFILEGAD_FILEGADNAME, GETFILEGAD_DRAWERGADNAME, GETFILEGAD_FULLFILENAME,
+EXPORT ENUM GETFILEGAD_IDENT, GETFILEGAD_NAME, GETFILEGAD_HINT, GETFILEGAD_FILEGADNAME, GETFILEGAD_DRAWERGADNAME, GETFILEGAD_FULLFILENAME,
             GETFILEGAD_PATTERN, GETFILEGAD_REJECTPATTERN, GETFILEGAD_ACCEPTPATTERN,
             GETFILEGAD_LEFT, GETFILEGAD_TOP, GETFILEGAD_WIDTH, GETFILEGAD_HEIGHT, 
             GETFILEGAD_FULLEXPAND, GETFILEGAD_DOSAVEMODE, GETFILEGAD_DOMULTISELECT, GETFILEGAD_DOPATTERNS, 
@@ -118,6 +118,14 @@ PROC create() OF getFileSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+       LAYOUT_ADDCHILD,  self.gadgetList[ GETFILEGAD_HINT ]:=ButtonObject,
+          GA_ID, GETFILEGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,         
+        CHILD_WEIGHTEDWIDTH,50,            
       LayoutEnd,
 
       LAYOUT_ADDCHILD, self.gadgetList[ GETFILEGAD_FILEGADNAME ]:=StringObject,
@@ -342,8 +350,17 @@ PROC create() OF getFileSettingsForm
   WindowEnd
 
   self.gadgetActions[GETFILEGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[GETFILEGAD_HINT]:={editHint}
   self.gadgetActions[GETFILEGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[GETFILEGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF getFileSettingsForm
+  self:=nself
+  self.setBusy()
+  self.getFileObject.editHint()
+  self.clearBusy()
+  self.updateHint(GETFILEGAD_HINT, self.getFileObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF getFileSettingsForm
@@ -371,6 +388,7 @@ PROC editSettings(comp:PTR TO getFileObject) OF getFileSettingsForm
   DEF res
 
   self.getFileObject:=comp
+  self.updateHint(GETFILEGAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GETFILEGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])

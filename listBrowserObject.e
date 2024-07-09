@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM LISTBGAD_IDENT, LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
+EXPORT ENUM LISTBGAD_IDENT, LISTBGAD_HINT, LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
       LISTBGAD_TOP, LISTBGAD_MAKEVISIBLE,
       LISTBGAD_POSITION, LISTBGAD_VIRTUALWIDTH, LISTBGAD_NUMCOLS,
       LISTBGAD_LEFT, LISTBGAD_SPACING, LISTBGAD_SELECTED,
@@ -130,13 +130,22 @@ PROC create() OF listBrowserSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
         LabelEnd,
-
+       
+        LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_HINT ]:=ButtonObject,
+          GA_ID, LISTBGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,    
+        CHILD_WEIGHTEDWIDTH,50,
+        
         LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_LISTSELECT ]:=ButtonObject,
           GA_ID, LISTBGAD_LISTSELECT,
           GA_TEXT, '_Pick a List',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,50,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_COLUMNSBUTTON ]:=ButtonObject,
           GA_ID, LISTBGAD_COLUMNSBUTTON,
@@ -144,6 +153,7 @@ PROC create() OF listBrowserSettingsForm
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,50,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -405,6 +415,7 @@ PROC create() OF listBrowserSettingsForm
   self.gadgetActions[LISTBGAD_CHILD]:={editChildSettings}
   self.gadgetActions[LISTBGAD_COLUMNTITLES]:={colTitles}
   self.gadgetActions[LISTBGAD_COLUMNSBUTTON]:={editColumns}
+  self.gadgetActions[LISTBGAD_HINT]:={editHint}  
   self.gadgetActions[LISTBGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[LISTBGAD_OK]:=MR_OK
 ENDPROC
@@ -466,6 +477,16 @@ EXPORT PROC canClose(modalRes) OF listBrowserSettingsForm
   ENDIF
 ENDPROC TRUE
 
+
+
+PROC editHint(nself,gadget,id,code) OF listBrowserSettingsForm
+  self:=nself
+  self.setBusy()
+  self.listBrowserObject.editHint()
+  self.clearBusy()
+  self.updateHint(LISTBGAD_HINT, self.listBrowserObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
   DEF res
 
@@ -474,6 +495,7 @@ PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
   self.colTitles:=comp.colTitles
   self.colWidths:=comp.colWidths
 
+  self.updateHint(LISTBGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_MAKEVISIBLE ],0,0,[INTEGER_NUMBER,comp.makeVisible,0])

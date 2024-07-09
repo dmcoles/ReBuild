@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM DATEGAD_IDENT, DATEGAD_MULTISELECT,DATEGAD_SHOWTITLE,DATEGAD_READONLY,DATEGAD_DISABLED,
+EXPORT ENUM DATEGAD_IDENT, DATEGAD_HINT, DATEGAD_MULTISELECT,DATEGAD_SHOWTITLE,DATEGAD_READONLY,DATEGAD_DISABLED,
       DATEGAD_OK, DATEGAD_CHILD, DATEGAD_CANCEL
       
 
@@ -70,16 +70,28 @@ PROC create() OF dateBrowserSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ DATEGAD_IDENT ]:=StringObject,
-        GA_ID, DATEGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
-        
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_SPACEINNER, FALSE,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ DATEGAD_IDENT ]:=StringObject,
+          GA_ID, DATEGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ DATEGAD_HINT ]:=ButtonObject,
+          GA_ID, DATEGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,      
+      LayoutEnd,
+       
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_SPACEINNER, FALSE,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -150,8 +162,17 @@ PROC create() OF dateBrowserSettingsForm
   WindowEnd
 
   self.gadgetActions[DATEGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[DATEGAD_HINT]:={editHint}
   self.gadgetActions[DATEGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[DATEGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF dateBrowserSettingsForm
+  self:=nself
+  self.setBusy()
+  self.dateBrowserObject.editHint()
+  self.clearBusy()
+  self.updateHint(DATEGAD_HINT, self.dateBrowserObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF dateBrowserSettingsForm
@@ -162,7 +183,6 @@ PROC editChildSettings(nself,gadget,id,code) OF dateBrowserSettingsForm
 ENDPROC
 
 PROC end() OF dateBrowserSettingsForm
-
   END self.gadgetList[NUM_DATE_GADS]
   END self.gadgetActions[NUM_DATE_GADS]
 ENDPROC
@@ -181,6 +201,7 @@ PROC editSettings(comp:PTR TO dateBrowserObject) OF dateBrowserSettingsForm
 
   self.dateBrowserObject:=comp
   
+  self.updateHint(DATEGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_MULTISELECT ],0,0,[CHECKBOX_CHECKED,comp.multiSelect,0]) 
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_SHOWTITLE ],0,0,[CHECKBOX_CHECKED,comp.showTitle,0]) 
@@ -260,7 +281,6 @@ EXPORT PROC serialiseData() OF dateBrowserObject IS
   makeProp(showTitle,FIELDTYPE_CHAR),
   makeProp(readOnly,FIELDTYPE_CHAR),
   makeProp(disabled,FIELDTYPE_CHAR)
-
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF dateBrowserObject

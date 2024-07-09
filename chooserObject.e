@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM CHOOSER_GAD_IDENT, CHOOSER_GAD_NAME, CHOOSER_GAD_LISTSELECT,
+EXPORT ENUM CHOOSER_GAD_IDENT, CHOOSER_GAD_NAME, CHOOSER_GAD_HINT, CHOOSER_GAD_LISTSELECT,
       CHOOSER_GAD_MAXLABELS, CHOOSER_GAD_ACTIVE, CHOOSER_GAD_WIDTH,
       CHOOSER_GAD_READONLY, CHOOSER_GAD_DISABLED, CHOOSER_GAD_AUTOFIT, 
       CHOOSER_GAD_POPUP, CHOOSER_GAD_DROPDOWN, 
@@ -102,6 +102,14 @@ PROC create() OF chooserSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHOOSER_GAD_HINT ]:=ButtonObject,
+          GA_ID, CHOOSER_GAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,50,            
         
         LAYOUT_ADDCHILD,  self.gadgetList[ CHOOSER_GAD_LISTSELECT ]:=ButtonObject,
           GA_ID, CHOOSER_GAD_LISTSELECT,
@@ -223,6 +231,7 @@ PROC create() OF chooserSettingsForm
 
   self.gadgetActions[CHOOSER_GAD_LISTSELECT]:={selectList}
   self.gadgetActions[CHOOSER_GAD_CHILD]:={editChildSettings}
+  self.gadgetActions[CHOOSER_GAD_HINT]:={editHint}
   self.gadgetActions[CHOOSER_GAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[CHOOSER_GAD_OK]:=MR_OK
 ENDPROC
@@ -240,6 +249,14 @@ PROC selectList(nself,gadget,id,code) OF chooserSettingsForm
   ENDIF
   END frmListPicker
   self.clearBusy()
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF chooserSettingsForm
+  self:=nself
+  self.setBusy()
+  self.chooserObject.editHint()
+  self.clearBusy()
+  self.updateHint(CHOOSER_GAD_HINT, self.chooserObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF chooserSettingsForm
@@ -268,6 +285,8 @@ PROC editSettings(comp:PTR TO chooserObject) OF chooserSettingsForm
 
   self.chooserObject:=comp
   self.selectedListId:=comp.listObjectId
+
+  self.updateHint(CHOOSER_GAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ CHOOSER_GAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ CHOOSER_GAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])

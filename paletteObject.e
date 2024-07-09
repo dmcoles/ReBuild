@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM PALGAD_IDENT, PALGAD_NAME, PALGAD_DISABLED,
+EXPORT ENUM PALGAD_IDENT, PALGAD_NAME, PALGAD_HINT, PALGAD_DISABLED,
       PALGAD_INITIAL, PALGAD_OFFSET, PALGAD_NUMCOLS,
       PALGAD_OK, PALGAD_CHILD, PALGAD_CANCEL
       
@@ -94,13 +94,12 @@ PROC create() OF paletteSettingsForm
           LABEL_TEXT, '_Label',
         LabelEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_DISABLED ]:=CheckBoxObject,
-          GA_ID, PALGAD_DISABLED,
+        LAYOUT_ADDCHILD,  self.gadgetList[ PALGAD_HINT ]:=ButtonObject,
+          GA_ID, PALGAD_HINT,
+          GA_TEXT, 'Hint',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          GA_TEXT, '_Disabled',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
+        ButtonEnd,          
       LayoutEnd,
       
       LAYOUT_ADDCHILD, LayoutObject,
@@ -115,7 +114,7 @@ PROC create() OF paletteSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Initial Colour',
         LabelEnd,
-
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
         LAYOUT_ADDCHILD,  self.gadgetList[ PALGAD_OFFSET ]:=IntegerObject,
           GA_ID, PALGAD_OFFSET,
           GA_RELVERIFY, TRUE,
@@ -125,7 +124,9 @@ PROC create() OF paletteSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Colour _Offset',
         LabelEnd,
+      LayoutEnd,
 
+      LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ADDCHILD,  self.gadgetList[ PALGAD_NUMCOLS ]:=IntegerObject,
           GA_ID, PALGAD_NUMCOLS,
           GA_RELVERIFY, TRUE,
@@ -136,7 +137,16 @@ PROC create() OF paletteSettingsForm
           LABEL_TEXT, 'NumColours',
         LabelEnd,
 
+        LAYOUT_ADDCHILD, self.gadgetList[ PALGAD_DISABLED ]:=CheckBoxObject,
+          GA_ID, PALGAD_DISABLED,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, '_Disabled',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+
       LayoutEnd,
+
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -166,6 +176,7 @@ PROC create() OF paletteSettingsForm
   WindowEnd
 
   self.gadgetActions[PALGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[PALGAD_HINT]:={editHint}  
   self.gadgetActions[PALGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[PALGAD_OK]:=MR_OK
 ENDPROC
@@ -190,6 +201,14 @@ EXPORT PROC canClose(modalRes) OF paletteSettingsForm
     RETURN FALSE
   ENDIF
 ENDPROC TRUE
+
+PROC editHint(nself,gadget,id,code) OF paletteSettingsForm
+  self:=nself
+  self.setBusy()
+  self.paletteObject.editHint()
+  self.clearBusy()
+  self.updateHint(PALGAD_HINT, self.paletteObject.hintText)
+ENDPROC
 
 PROC editSettings(comp:PTR TO paletteObject) OF paletteSettingsForm
   DEF res

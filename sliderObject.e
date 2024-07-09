@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM SLDGAD_IDENT, SLDGAD_NAME, SLDGAD_MIN, SLDGAD_MAX, SLDGAD_LEVEL, SLDGAD_TICKS,SLDGAD_TICKSIZE,
+EXPORT ENUM SLDGAD_IDENT, SLDGAD_NAME, SLDGAD_HINT, SLDGAD_MIN, SLDGAD_MAX, SLDGAD_LEVEL, SLDGAD_TICKS,SLDGAD_TICKSIZE,
       SLDGAD_MAXLEN, SLDGAD_SHORTTICKS,
       SLDGAD_INVERT, SLDGAD_ORIENTATION, SLDGAD_LEVELPLACE, SLDGAD_LEVELJUSTIFY, SLDGAD_DISABLED,
 
@@ -110,6 +110,14 @@ PROC create() OF sliderSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ SLDGAD_HINT ]:=ButtonObject,
+          GA_ID, SLDGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -291,6 +299,7 @@ PROC create() OF sliderSettingsForm
   WindowEnd
 
   self.gadgetActions[SLDGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[SLDGAD_HINT]:={editHint}  
   self.gadgetActions[SLDGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[SLDGAD_OK]:=MR_OK
 ENDPROC
@@ -319,11 +328,20 @@ EXPORT PROC canClose(modalRes) OF sliderSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF sliderSettingsForm
+  self:=nself
+  self.setBusy()
+  self.sliderObject.editHint()
+  self.clearBusy()
+  self.updateHint(SLDGAD_HINT, self.sliderObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO sliderObject) OF sliderSettingsForm
   DEF res
 
   self.sliderObject:=comp
   
+  self.updateHint(SLDGAD_HINT, comp.hintText) 
   SetGadgetAttrsA(self.gadgetList[ SLDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ SLDGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ SLDGAD_MIN ],0,0,[INTEGER_NUMBER,comp.min,0])

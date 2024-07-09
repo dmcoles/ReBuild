@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM TEXTEDGAD_IDENT, TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
+EXPORT ENUM TEXTEDGAD_IDENT, TEXTEDGAD_HINT, TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
       TEXTEDGAD_INDENTWIDTH,TEXTEDGAD_LINEENDING,TEXTEDGAD_LINENUMBERS,TEXTEDGAD_SPACESPERTAB,TEXTEDGAD_TABTYPE,TEXTEDGAD_READONLY,
       TEXTEDGAD_OK, TEXTEDGAD_CHILD, TEXTEDGAD_CANCEL
      
@@ -86,17 +86,29 @@ PROC create() OF textEditorSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_IDENT ]:=StringObject,
-        GA_ID, TEXTEDGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_IDENT ]:=StringObject,
+          GA_ID, TEXTEDGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
 
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
 
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_HINT ]:=ButtonObject,
+          GA_ID, TEXTEDGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,           
+        CHILD_WEIGHTEDWIDTH,50,
+        
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_EXPORTWRAP ]:=CheckBoxObject,
           GA_ID, TEXTEDGAD_EXPORTWRAP,
@@ -248,6 +260,7 @@ PROC create() OF textEditorSettingsForm
   WindowEnd
 
   self.gadgetActions[TEXTEDGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[TEXTEDGAD_HINT]:={editHint}  
   self.gadgetActions[TEXTEDGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[TEXTEDGAD_OK]:=MR_OK
 ENDPROC
@@ -277,11 +290,20 @@ EXPORT PROC canClose(modalRes) OF textEditorSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF textEditorSettingsForm
+  self:=nself
+  self.setBusy()
+  self.textEditorObject.editHint()
+  self.clearBusy()
+  self.updateHint(TEXTEDGAD_HINT, self.textEditorObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
   DEF res
 
   self.textEditorObject:=comp
-    
+
+  self.updateHint(TEXTEDGAD_HINT, comp.hintText)     
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])   
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_EXPORTWRAP ],0,0,[CHECKBOX_CHECKED,comp.exportWrap,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_FIXEDFONT ],0,0,[CHECKBOX_CHECKED,comp.fixedFont,0]) 

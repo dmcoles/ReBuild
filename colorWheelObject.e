@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM CWHEELGAD_IDENT, CWHEELGAD_BEVELBOX,
+EXPORT ENUM CWHEELGAD_IDENT, CWHEELGAD_HINT, CWHEELGAD_BEVELBOX,
       CWHEELGAD_OK, CWHEELGAD_CHILD, CWHEELGAD_CANCEL
       
 
@@ -80,14 +80,21 @@ PROC create() OF colorWheelSettingsForm
           LABEL_TEXT, '_Identifier',
         LabelEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ CWHEELGAD_BEVELBOX ]:=CheckBoxObject,
-          GA_ID, CWHEELGAD_BEVELBOX,
+        LAYOUT_ADDCHILD,  self.gadgetList[ CWHEELGAD_HINT ]:=ButtonObject,
+          GA_ID, CWHEELGAD_HINT,
+          GA_TEXT, 'Hint',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          GA_TEXT, 'Bevel Box',
-          ->CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
+        ButtonEnd,      
       LayoutEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ CWHEELGAD_BEVELBOX ]:=CheckBoxObject,
+        GA_ID, CWHEELGAD_BEVELBOX,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_TEXT, 'Bevel Box',
+        ->CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+      CheckBoxEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -118,8 +125,17 @@ PROC create() OF colorWheelSettingsForm
   WindowEnd
 
   self.gadgetActions[CWHEELGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[CWHEELGAD_HINT]:={editHint}
   self.gadgetActions[CWHEELGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[CWHEELGAD_OK]:=MR_OK
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF colorWheelSettingsForm
+  self:=nself
+  self.setBusy()
+  self.colorWheelObject.editHint()
+  self.clearBusy()
+  self.updateHint(CWHEELGAD_HINT, self.colorWheelObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF colorWheelSettingsForm

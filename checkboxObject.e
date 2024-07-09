@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*validator'
 
-EXPORT ENUM CHKGAD_IDENT, CHKGAD_NAME, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
+EXPORT ENUM CHKGAD_IDENT, CHKGAD_NAME, CHKGAD_HINT, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
       CHKGAD_DISABLED, CHKGAD_SELECTED, CHKGAD_LABELPLACE,
       CHKGAD_OK, CHKGAD_CHILD, CHKGAD_CANCEL
       
@@ -101,6 +101,14 @@ PROC create() OF checkboxSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ CHKGAD_HINT ]:=ButtonObject,
+          GA_ID, CHKGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+        CHILD_WEIGHTEDWIDTH,50,      
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -198,6 +206,7 @@ PROC create() OF checkboxSettingsForm
   self.gadgetActions[CHKGAD_BGPEN]:={selectPen}
   self.gadgetActions[CHKGAD_FILLTEXTPEN]:={selectPen}
   self.gadgetActions[CHKGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[CHKGAD_HINT]:={editHint}
   self.gadgetActions[CHKGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[CHKGAD_OK]:=MR_OK
 ENDPROC
@@ -207,6 +216,14 @@ PROC editChildSettings(nself,gadget,id,code) OF checkboxSettingsForm
   self.setBusy()
   self.checkboxObject.editChildSettings()
   self.clearBusy()
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF checkboxSettingsForm
+  self:=nself
+  self.setBusy()
+  self.checkboxObject.editHint()
+  self.clearBusy()
+  self.updateHint(CHKGAD_HINT, self.checkboxObject.hintText)
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF checkboxSettingsForm
@@ -258,6 +275,9 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   self.tempTextPen:=comp.textPen
   self.tempBgPen:=comp.bgPen
   self.tempFillTextPen:=comp.fillTextPen
+
+  self.updateHint(CHKGAD_HINT, comp.hintText)
+
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 

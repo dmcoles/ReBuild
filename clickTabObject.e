@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM CLICKTAB_GAD_IDENT,CLICKTAB_GAD_LISTSELECT,
+EXPORT ENUM CLICKTAB_GAD_IDENT,CLICKTAB_GAD_HINT, CLICKTAB_GAD_LISTSELECT,
       CLICKTAB_GAD_TOP, CLICKTAB_GAD_LEFT, CLICKTAB_GAD_HEIGHT,
       CLICKTAB_GAD_CURRENT, CLICKTAB_GAD_DISABLED, 
       CLICKTAB_GAD_OK, CLICKTAB_GAD_CHILD, CLICKTAB_GAD_CANCEL
@@ -94,6 +94,13 @@ PROC create() OF clickTabSettingsForm
             LABEL_TEXT, 'Identifier',
           LabelEnd,
 
+          LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_HINT ]:=ButtonObject,
+            GA_ID, CLICKTAB_GAD_HINT,
+            GA_TEXT, 'Hint',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+          ButtonEnd,
+          
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_LISTSELECT ]:=ButtonObject,
             GA_ID, CLICKTAB_GAD_LISTSELECT,
             GA_TEXT, '_Pick a List',
@@ -187,6 +194,7 @@ PROC create() OF clickTabSettingsForm
 
   self.gadgetActions[CLICKTAB_GAD_LISTSELECT]:={selectList}
   self.gadgetActions[CLICKTAB_GAD_CHILD]:={editChildSettings}
+  self.gadgetActions[CLICKTAB_GAD_HINT]:={editHint}
   self.gadgetActions[CLICKTAB_GAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[CLICKTAB_GAD_OK]:=MR_OK
 ENDPROC
@@ -204,6 +212,14 @@ PROC selectList(nself,gadget,id,code) OF clickTabSettingsForm
   ENDIF
   END frmListPicker
   self.clearBusy()
+ENDPROC
+
+PROC editHint(nself,gadget,id,code) OF clickTabSettingsForm
+  self:=nself
+  self.setBusy()
+  self.clickTabObject.editHint()
+  self.clearBusy()
+  self.updateHint(CLICKTAB_GAD_HINT, self.clickTabObject.hintText)
 ENDPROC
 
 PROC editChildSettings(nself,gadget,id,code) OF clickTabSettingsForm
@@ -232,6 +248,8 @@ PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
 
   self.clickTabObject:=comp
   self.selectedListId:=comp.listObjectId
+
+  self.updateHint(CLICKTAB_GAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])

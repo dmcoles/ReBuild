@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM GRADSLDGAD_IDENT, GRADSLDGAD_NAME, GRADSLDGAD_MAXVAL,GRADSLDGAD_CURRVAL,GRADSLDGAD_SKIPVAL,GRADSLDGAD_KNOBPIXELS,GRADSLDGAD_ORIENTATION,
+EXPORT ENUM GRADSLDGAD_IDENT, GRADSLDGAD_NAME, GRADSLDGAD_HINT, GRADSLDGAD_MAXVAL,GRADSLDGAD_CURRVAL,GRADSLDGAD_SKIPVAL,GRADSLDGAD_KNOBPIXELS,GRADSLDGAD_ORIENTATION,
       GRADSLDGAD_OK, GRADSLDGAD_CHILD, GRADSLDGAD_CANCEL
       
 EXPORT DEF gradientsliderbase
@@ -99,6 +99,15 @@ PROC create() OF gradSliderSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Label',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ GRADSLDGAD_HINT ]:=ButtonObject,
+          GA_ID, GRADSLDGAD_HINT,
+          GA_TEXT, 'Hint',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,          
+        CHILD_WEIGHTEDWIDTH,50,            
+        
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -200,6 +209,7 @@ PROC create() OF gradSliderSettingsForm
   WindowEnd
 
   self.gadgetActions[GRADSLDGAD_CHILD]:={editChildSettings}
+  self.gadgetActions[GRADSLDGAD_HINT]:={editHint}  
   self.gadgetActions[GRADSLDGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[GRADSLDGAD_OK]:=MR_OK
 ENDPROC
@@ -226,11 +236,20 @@ EXPORT PROC canClose(modalRes) OF gradSliderSettingsForm
   ENDIF
 ENDPROC TRUE
 
+PROC editHint(nself,gadget,id,code) OF gradSliderSettingsForm
+  self:=nself
+  self.setBusy()
+  self.gradSliderObject.editHint()
+  self.clearBusy()
+  self.updateHint(GRADSLDGAD_HINT, self.gradSliderObject.hintText)
+ENDPROC
+
 PROC editSettings(comp:PTR TO gradSliderObject) OF gradSliderSettingsForm
   DEF res
 
   self.gradSliderObject:=comp
 
+  self.updateHint(GRADSLDGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ GRADSLDGAD_MAXVAL ],0,0,[INTEGER_NUMBER,comp.maxVal,0])

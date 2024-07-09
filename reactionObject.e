@@ -8,6 +8,7 @@ OPT MODULE,OSVERSION=37
         'images/bevel',
         'gadgets/integer','integer',
         'gadgets/checkbox','checkbox',
+        'gadgets/textEditor','texteditor',
         'images/label','label',
         'amigalib/boopsi',
         'gadtools',
@@ -19,6 +20,8 @@ OPT MODULE,OSVERSION=37
         'intuition/gadgetclass'
 
   MODULE '*stringlist','*reactionForm','*fileStreamer','*sourceGen'
+
+EXPORT DEF texteditorbase
 
 EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU, 
             TYPE_BUTTON, TYPE_BITMAP, TYPE_CHECKBOX, TYPE_CHOOSER, 
@@ -42,9 +45,13 @@ EXPORT ENUM CHIGAD_MINWIDTH, CHIGAD_MINHEIGHT, CHIGAD_MAXWIDTH, CHIGAD_MAXHEIGHT
       CHIGAD_NOMINALSIZE, CHIGAD_WEIGHTMINIMUM, CHIGAD_CACHEDOMAIN, CHIGAD_NODISPOSE, CHIGAD_WEIGHTBAR,
       CHIGAD_OK, CHIGAD_CANCEL
 
+EXPORT ENUM HINTGAD_TEXT, HINTGAD_OK, HINTGAD_CANCEL
+
 EXPORT ENUM FIELDTYPE_CHAR=1, FIELDTYPE_INT=2, FIELDTYPE_LONG=3, FIELDTYPE_STR=4, FIELDTYPE_STRLIST=5, FIELDTYPE_INTLIST=6
 
 CONST NUM_CHI_GADS=CHIGAD_CANCEL+1
+CONST NUM_HINT_GADS=HINTGAD_CANCEL+1
+
 
 DEF objCount
 EXPORT DEF errorState
@@ -54,6 +61,7 @@ EXPORT DEF imageData:PTR TO CHAR
 EXPORT OBJECT reactionObject
   ident[80]:ARRAY OF CHAR
   name[80]:ARRAY OF CHAR
+  hintText:PTR TO CHAR
   parent:PTR TO reactionObject
   children:PTR TO stdlist
   libsused:PTR TO LONG
@@ -87,6 +95,9 @@ ENDOBJECT
 
 OBJECT childSettingsForm OF reactionForm
   childObject:PTR TO reactionObject
+ENDOBJECT
+
+OBJECT hintEditForm OF reactionForm
 ENDOBJECT
 
 PROC create() OF childSettingsForm
@@ -349,6 +360,101 @@ PROC editSettings(comp:PTR TO reactionObject) OF childSettingsForm
   ENDIF
 ENDPROC res=MR_OK
 
+PROC create() OF hintEditForm
+  DEF gads:PTR TO LONG
+  DEF tempbase
+
+  NEW gads[NUM_HINT_GADS]
+  self.gadgetList:=gads
+  NEW gads[NUM_HINT_GADS]
+
+  tempbase:=textfieldbase
+  textfieldbase:=texteditorbase
+
+  self.gadgetActions:=gads
+    self.windowObj:=WindowObject,
+    WA_TITLE, 'Hint Text Editor',
+    WA_LEFT, 0,
+    WA_TOP, 0,
+    WA_HEIGHT, 80,
+    WA_WIDTH, 150,
+    WA_MINWIDTH, 150,
+    WA_MAXWIDTH, 8192,
+    WA_MINHEIGHT, 80,
+    WA_MAXHEIGHT, 8192,
+    WA_ACTIVATE, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    WA_PUBSCREEN, 0,
+    ->WA_CustomScreen, gScreen,
+    ->WINDOW_AppPort, gApp_port,
+    WA_CLOSEGADGET, TRUE,
+    WA_DEPTHGADGET, TRUE,
+    WA_SIZEGADGET, TRUE,
+    WA_DRAGBAR, TRUE,
+    WA_NOCAREREFRESH, TRUE,
+    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR 0,
+
+    WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_SPACEOUTER, TRUE,
+    LAYOUT_DEFERLAYOUT, TRUE,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ HINTGAD_TEXT ]:=NewObjectA( TextEditor_GetClass(), NIL,[
+        GA_ID, HINTGAD_TEXT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_READONLY, FALSE,
+      TAG_END]),
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ HINTGAD_OK ]:=ButtonObject,
+          GA_ID, HINTGAD_OK,
+          GA_TEXT, '_OK',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ HINTGAD_CANCEL ]:=ButtonObject,
+          GA_ID, HINTGAD_CANCEL,
+          GA_TEXT, '_Cancel',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd
+
+  textfieldbase:=tempbase
+
+  self.gadgetActions[HINTGAD_CANCEL]:=MR_CANCEL
+  self.gadgetActions[HINTGAD_OK]:=MR_OK
+ENDPROC
+
+PROC end() OF hintEditForm
+  END self.gadgetList[NUM_HINT_GADS]
+  END self.gadgetActions[NUM_HINT_GADS]
+ENDPROC
+
+PROC editHint(comp:PTR TO reactionObject) OF hintEditForm
+  DEF res,newval
+
+  SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,IF comp.hintText THEN comp.hintText ELSE '',0])
+
+  res:=self.showModal()
+  IF res=MR_OK
+    DisposeLink(comp.hintText)
+    
+    newval:=DoMethod(self.gadgetList[ HINTGAD_TEXT ], GM_TEXTEDITOR_EXPORTTEXT);
+    IF StrLen(newval)
+      comp.hintText:=AstrClone(newval)
+    ELSE
+      comp.hintText:=0
+    ENDIF
+    FreeVec(newval)
+  ENDIF
+ENDPROC res=MR_OK
+
 EXPORT PROC create(parent) OF reactionObject
   DEF stdlist:PTR TO stdlist
   DEF name[80]:STRING
@@ -360,6 +466,8 @@ EXPORT PROC create(parent) OF reactionObject
   StringF(name,'\s_\d',self.getTypeName(),self.id)
   AstrCopy(self.name,name)
   AstrCopy(self.ident,name)
+  
+  self.hintText:=0
 
   NEW stdlist.stdlist(20)
   self.children:=stdlist
@@ -457,17 +565,27 @@ EXPORT PROC editChildSettings() OF reactionObject
   END editForm
 ENDPROC res
 
+EXPORT PROC editHint() OF reactionObject
+  DEF editForm:PTR TO hintEditForm
+  DEF res
+  
+  NEW editForm.create()
+  res:=editForm.editHint(self)
+  END editForm
+ENDPROC
+
 EXPORT PROC serialiseData() OF reactionObject IS []
 
 EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   DEF tempStr[200]:STRING
   DEF tempStr2[200]:STRING
+  DEF encoded:PTR TO CHAR
   DEF list:PTR TO LONG,i,j,count
   DEF strlist:PTR TO stringlist
   DEF intlist:PTR TO stdlist
   DEF fieldname,fieldtype,fieldptr
   DEF childcomp:PTR TO reactionObject
-
+  DEF hex:PTR TO CHAR
 
   StringF(tempStr,'TYPE: \d',self.type)  
   fser.writeLine(tempStr)
@@ -484,6 +602,16 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'IDENT: \s',self.ident)
   fser.writeLine(tempStr)
+  IF self.hintText
+    encoded:=String(StrLen(self.hintText)*2+6)
+    StrCopy(encoded,'HINT: ')
+    FOR i:=0 TO StrLen(self.hintText)
+      StrAddChar(encoded,65+Shr(self.hintText[i] AND $F0,4))
+      StrAddChar(encoded,65+(self.hintText[i] AND $F))
+    ENDFOR
+    fser.writeLine(encoded)
+    DisposeLink(encoded)
+  ENDIF
   StringF(tempStr,'MINWIDTH: \d',self.minWidth)
   fser.writeLine(tempStr)
   StringF(tempStr,'MINHEIGHT: \d',self.minHeight)
@@ -580,6 +708,11 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
         ELSE
           self.tempParentId:=Val(tempStr+STRLEN)
         ENDIF
+      ELSEIF StrCmp('HINT: ',tempStr,STRLEN)
+        self.hintText:=String(StrLen(tempStr+STRLEN)/2)
+        FOR i:=0 TO StrLen(tempStr+STRLEN)-1 STEP 2
+          StrAddChar(self.hintText,Shl(Char(tempStr+STRLEN+i)-65,4)+(Char(tempStr+STRLEN+i+1)-65))
+        ENDFOR
       ELSEIF StrCmp('NAME: ',tempStr,STRLEN)
         AstrCopy(self.name,tempStr+STRLEN,80)
       ELSEIF StrCmp('IDENT: ',tempStr,STRLEN)
