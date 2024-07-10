@@ -961,7 +961,7 @@ PROC create() OF windowSettingsForm
             GA_ID, WINGAD_GADGETHELP,
             GA_RELVERIFY, TRUE,
             GA_TABCYCLE, TRUE,
-            GA_TEXT, 'Lock Gadget Help',
+            GA_TEXT, 'Gadget Help',
             CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
           CheckBoxEnd,
 
@@ -1108,15 +1108,6 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF windowObject
-/*  self.windowPos:=0
-  self.lockWidth:=0
-  self.lockHeight:=0
-  self.sharedPort:=0
-  self.iconifyGadget:=0
-  self.gadgetHelp:=0
-  self.refreshType:=0
-  self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR
-  self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW*/
   IF self.previewObject THEN DisposeObject(self.previewObject)
   
   self.previewObject:=WindowObject,
@@ -1135,7 +1126,7 @@ EXPORT PROC createPreviewObject(scr) OF windowObject
     WA_NEWLOOKMENUS, TRUE,
     WINDOW_APPPORT, self.appPort,
     WINDOW_HINTINFO,self.previewHintInfo,
-    WINDOW_GADGETHELP,TRUE,
+    WINDOW_GADGETHELP,self.gadgetHelp,
     WINDOW_ICONIFYGADGET, IF self.iconifyGadget THEN TRUE ELSE FALSE,
     IF self.windowPos THEN WINDOW_POSITION ELSE TAG_IGNORE, ListItem([WPOS_TOPLEFT,WPOS_CENTERSCREEN,WPOS_CENTERMOUSE,WPOS_TOPLEFT,WPOS_CENTERWINDOW,WPOS_FULLSCREEN,0],self.windowPos),
     WA_CLOSEGADGET,IF self.flags AND WFLG_CLOSEGADGET THEN TRUE ELSE FALSE,
@@ -1178,7 +1169,7 @@ EXPORT PROC create(parent) OF windowObject
   self.lockHeight:=0
   self.sharedPort:=0
   self.iconifyGadget:=0
-  self.gadgetHelp:=0
+  self.gadgetHelp:=TRUE
   self.refreshType:=0
   self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW
@@ -1267,7 +1258,10 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF windowObject
   IF self.lockWidth THEN srcGen.componentProperty('WINDOW_LockWidth','TRUE',FALSE)
   IF self.lockHeight THEN srcGen.componentProperty('WINDOW_LockHeight','TRUE',FALSE)
   IF self.iconifyGadget THEN srcGen.componentProperty('WINDOW_IconifyGadget','TRUE',FALSE)
-  IF self.gadgetHelp THEN srcGen.componentProperty('WINDOW_GadgetHelp','TRUE',FALSE)
+  IF self.gadgetHelp 
+    srcGen.componentProperty('WINDOW_HintInfo','hintInfo',FALSE)
+    srcGen.componentProperty('WINDOW_GadgetHelp','TRUE',FALSE)
+  ENDIF
   IF self.sharedPort
     srcGen.componentProperty('WINDOW_SharedPort','gSharedPort',FALSE)
   ENDIF

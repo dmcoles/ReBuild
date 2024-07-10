@@ -647,6 +647,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   IF menuObject.menuItems.count()>0
     self.writeLine('  DEF menuStrip=0,menuData=0:PTR TO newmenu')
   ENDIF
+  IF windowObject.gadgetHelp
+    self.writeLine('  DEF hintInfo:PTR TO hintinfo')
+  ENDIF
   
   NEW listObjects.stdlist(20)
   layoutObject.findObjectsByType(listObjects,TYPE_CHOOSER)
@@ -894,6 +897,38 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine(tempStr)
     self.writeLine('  menuData:=0')
     self.writeLine('')  
+  ENDIF
+  IF windowObject.gadgetHelp
+
+    NEW listObjects.stdlist(20)
+    layoutObject.findObjectsByType(listObjects,-1)
+    j:=0
+    FOR i:=0 TO listObjects.count()-1
+      reactionObject:=listObjects.item(i)
+      IF reactionObject.hintText
+        IF self.useIds
+          StringF(itemName,'\s_id',reactionObject.ident)
+        ELSE
+          StringF(itemName,'\s',reactionObject.ident)
+        ENDIF
+        UpperStr(itemName)
+
+        IF j=0
+          StringF(tempStr,'  hintInfo:=[\s,-1,\a\s\a,0,',itemName,reactionObject.hintText)
+        ELSE
+          StringF(tempStr,'             \s,-1,\a\s\a,0,',itemName,reactionObject.hintText)
+        ENDIF         
+        self.writeLine(tempStr)
+        j++
+      ENDIF
+    ENDFOR
+    IF j=0
+      self.writeLine('  hintInfo:=[0,-1,-1,0]:hintinfo')  
+    ELSE
+      self.writeLine('             0,-1,-1,0]:hintinfo')  
+    ENDIF
+    self.writeLine('')  
+    END listObjects
   ENDIF
   self.indent:=2
 ENDPROC

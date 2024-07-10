@@ -952,6 +952,32 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   self.writeLine('  Object *window_object = NULL;')
 
   NEW listObjects.stdlist(20)
+  IF windowObject.gadgetHelp
+    layoutObject.findObjectsByType(listObjects,-1)
+    self.writeLine('  struct HintInfo hintInfo[] =')
+    self.writeLine('  {')
+
+    FOR i:=0 TO listObjects.count()-1
+      reactionObject:=listObjects.item(i)
+      IF reactionObject.hintText
+        IF self.useIds
+          StringF(itemName,'\s_id',reactionObject.ident)
+        ELSE
+          StringF(itemName,'\s',reactionObject.ident)
+        ENDIF
+        LowerStr(itemName)
+
+        StringF(tempStr,'    {\s,-1,\q\s\q,0},',itemName,reactionObject.hintText)
+        self.writeLine(tempStr)
+      ENDIF
+    ENDFOR
+    self.writeLine('    {-1,-1,NULL,0}')
+
+    self.writeLine('  };')
+    
+    listObjects.clear()
+  ENDIF
+
   layoutObject.findObjectsByType(listObjects,TYPE_CHOOSER)
   layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
   layoutObject.findObjectsByType(listObjects,TYPE_CLICKTAB)
