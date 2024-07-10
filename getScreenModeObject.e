@@ -592,6 +592,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF getScreenModeObject
   self.previewObject:=GetScreenModeObject,
+    GA_ID, self.id,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,
   TAG_DONE])

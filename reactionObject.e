@@ -579,7 +579,6 @@ EXPORT PROC serialiseData() OF reactionObject IS []
 EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   DEF tempStr[200]:STRING
   DEF tempStr2[200]:STRING
-  DEF encoded:PTR TO CHAR
   DEF list:PTR TO LONG,i,j,count
   DEF strlist:PTR TO stringlist
   DEF intlist:PTR TO stdlist
@@ -603,14 +602,9 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   StringF(tempStr,'IDENT: \s',self.ident)
   fser.writeLine(tempStr)
   IF self.hintText
-    encoded:=String(StrLen(self.hintText)*2+6)
-    StrCopy(encoded,'HINT: ')
-    FOR i:=0 TO StrLen(self.hintText)
-      StrAddChar(encoded,65+Shr(self.hintText[i] AND $F0,4))
-      StrAddChar(encoded,65+(self.hintText[i] AND $F))
-    ENDFOR
-    fser.writeLine(encoded)
-    DisposeLink(encoded)
+    StringF(tempStr,'HINT: \r\z\h[8]',StrLen(self.hintText))
+    fser.writeLine(tempStr)
+    fser.writeLine(self.hintText)
   ENDIF
   StringF(tempStr,'MINWIDTH: \d',self.minWidth)
   fser.writeLine(tempStr)
@@ -709,10 +703,12 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
           self.tempParentId:=Val(tempStr+STRLEN)
         ENDIF
       ELSEIF StrCmp('HINT: ',tempStr,STRLEN)
-        self.hintText:=String(StrLen(tempStr+STRLEN)/2)
-        FOR i:=0 TO StrLen(tempStr+STRLEN)-1 STEP 2
-          StrAddChar(self.hintText,Shl(Char(tempStr+STRLEN+i)-65,4)+(Char(tempStr+STRLEN+i+1)-65))
-        ENDFOR
+        count:=STRLEN
+        StringF(tempStr2,'$\s',tempStr+count)
+        count:=Val(tempStr2)
+        self.hintText:=String(count+1)
+        fser.read(self.hintText,count+1)
+        SetStr(self.hintText,count)
       ELSEIF StrCmp('NAME: ',tempStr,STRLEN)
         AstrCopy(self.name,tempStr+STRLEN,80)
       ELSEIF StrCmp('IDENT: ',tempStr,STRLEN)

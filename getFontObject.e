@@ -403,6 +403,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF getFontObject
   self.previewObject:=GetFontObject,
+    GA_ID, self.id,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,
   TAG_DONE])

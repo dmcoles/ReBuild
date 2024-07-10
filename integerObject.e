@@ -301,6 +301,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF integerObject
   self.previewObject:=IntegerObject,
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, self.tabCycle,
       GA_DISABLED, self.disabled,

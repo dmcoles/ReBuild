@@ -316,6 +316,7 @@ EXPORT PROC createPreviewObject(scr) OF getColorObject
   self.previewObject:=0
   IF (getcolorbase)
     self.previewObject:=NewObjectA(GetColor_GetClass(), NIL,[TAG_IGNORE,0,
+        GA_ID, self.id,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
         GA_DISABLED, self.disabled,

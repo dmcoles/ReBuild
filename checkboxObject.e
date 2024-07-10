@@ -299,6 +299,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF checkboxObject
   self.previewObject:=CheckBoxObject,
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_TEXT, self.name,

@@ -631,6 +631,7 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
   self.previewObject:=0
   IF (textfieldbase)
     self.previewObject:=NewObjectA(TextField_GetClass(), NIL,[
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,
       GA_TABCYCLE, self.tabCycle,

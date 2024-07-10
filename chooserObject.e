@@ -351,6 +351,7 @@ EXPORT PROC createPreviewObject(scr) OF chooserObject
   IF self.labels1 THEN freeChooserLabels( self.labels1 )
 
   self.previewObject:=ChooserObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_READONLY, self.readOnly,

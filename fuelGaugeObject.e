@@ -414,6 +414,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF fuelGaugeObject
   self.previewObject:=FuelGaugeObject,
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_TEXT, self.name,

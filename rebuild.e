@@ -148,7 +148,7 @@ OPT OSVERSION=37,LARGE
   
   DEF startupfilename[256]:STRING
   DEF iconFileName[256]:STRING
-  
+
   DEF tabsbase=0
   DEF gradientsliderbase=0
   DEF progressbase=0
@@ -1868,6 +1868,7 @@ PROC doAddWindow()
       makeList()
       SetGadgetAttrsA(gMain_Gadgets[GAD_COMPONENTLIST],win,0,[LISTBROWSER_SELECTEDNODE, newwin.node, TAG_END])
       updateSel(newwin.node)
+      makePreviewHints(newwin)
       RA_OpenWindow(newwin.previewObject)
       remakePreviewMenus()
       changes:=TRUE
@@ -2535,19 +2536,64 @@ PROC remakePreviewMenus()
   ENDIF
 ENDPROC
 
+PROC makeHintList(comp:PTR TO reactionObject, hintGadIds:PTR TO stdlist, hintTexts:PTR TO stdlist)
+  DEF i
+
+  IF comp.hintText
+    hintTexts.add(comp.hintText)
+    hintGadIds.add(comp.id)
+  ENDIF
+  
+  IF comp.allowChildren()
+    FOR i:=0 TO comp.children.count()-1
+      makeHintList(comp.children.item(i),hintGadIds, hintTexts)
+    ENDFOR
+  ENDIF
+ENDPROC
+
+PROC makePreviewHints(window:PTR TO windowObject)
+  DEF previewHintInfo:PTR TO hintinfo
+  DEF hintTexts:PTR TO stdlist
+  DEF hintGadIds:PTR TO stdlist
+  DEF i,count
+
+  NEW hintTexts.stdlist(10) 
+  NEW hintGadIds.stdlist(10) 
+  makeHintList(objectList.item(findWindowIndex(window)*3+ROOT_LAYOUT_ITEM),hintGadIds,hintTexts)
+  count:=hintTexts.count()
+  
+  previewHintInfo:=window.previewHintInfo
+  IF previewHintInfo THEN Dispose(previewHintInfo)
+  previewHintInfo:=New(SIZEOF hintinfo*(count+1))
+  window.previewHintInfo:=previewHintInfo
+  FOR i:=0 TO count-1
+    previewHintInfo[i].code:=-1
+    previewHintInfo[i].gadgetid:=hintGadIds.item(i)
+    previewHintInfo[i].text:=hintTexts.item(i)
+  ENDFOR
+  previewHintInfo[count].gadgetid:=-1
+  previewHintInfo[count].code:=-1
+  END hintTexts
+  END hintGadIds
+
+  Sets(window.previewObject,WINDOW_HINTINFO,previewHintInfo)
+  Sets(window.previewObject,WINDOW_GADGETHELP,TRUE)
+ENDPROC
 
 PROC rethinkPreviews()
   DEF pwin,previewWin,previewRootLayout,i
   DEF menu
   
   i:=ROOT_WINDOW_ITEM
-  WHILE (i<objectList.count())
+  WHILE (i<objectList.count())  
     previewWin:=objectList.item(i)::windowObject.previewObject
     menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
     previewRootLayout:=objectList.item(i)::windowObject.previewRootLayout
     IF previewWin
+      makePreviewHints(objectList.item(i))
+      
       pwin:=Gets(previewWin,WINDOW_WINDOW)
-      IF pwin
+      IF pwin     
         RethinkLayout(previewRootLayout, pwin, 0, TRUE )
         DoMethod(previewWin, WM_RETHINK)
         IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)

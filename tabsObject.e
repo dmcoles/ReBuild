@@ -290,6 +290,7 @@ EXPORT PROC createPreviewObject(scr) OF tabsObject
   
   IF tabsbase  
     self.previewObject:=NewObjectA(0,'tabs.gadget',[
+        GA_ID, self.id,
         GA_DISABLED, self.disabled,
         TABS_LABELS, self.tabLabels:=self.makeTabsList(self.listObjectId),
         LAYOUTA_CHILDMAXWIDTH, self.childMaxWidth,

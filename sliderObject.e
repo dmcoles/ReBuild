@@ -383,6 +383,7 @@ ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF sliderObject
   self.previewObject:=SliderObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,
       SLIDER_MIN, self.min,

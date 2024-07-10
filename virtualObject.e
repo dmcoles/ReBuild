@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM VIRTGAD_IDENT, VIRTGAD_HINT, VIRTGAD_SCROLLER,
+EXPORT ENUM VIRTGAD_IDENT, VIRTGAD_SCROLLER,
       VIRTGAD_OK, VIRTGAD_CHILD, VIRTGAD_CANCEL
       
 
@@ -81,22 +81,14 @@ PROC create() OF virtualSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ VIRTGAD_HINT ]:=ButtonObject,
-          GA_ID, VIRTGAD_HINT,
-          GA_TEXT, 'Hint',
+        LAYOUT_ADDCHILD, self.gadgetList[ VIRTGAD_SCROLLER ]:=CheckBoxObject,
+          GA_ID, VIRTGAD_SCROLLER,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-        ButtonEnd,           
-        CHILD_WEIGHTEDWIDTH,50,
+          GA_TEXT, 'Scroller',
+          ->CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
       LayoutEnd,
-
-      LAYOUT_ADDCHILD, self.gadgetList[ VIRTGAD_SCROLLER ]:=CheckBoxObject,
-        GA_ID, VIRTGAD_SCROLLER,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_TEXT, 'Scroller',
-        ->CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-      CheckBoxEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -127,7 +119,6 @@ PROC create() OF virtualSettingsForm
   WindowEnd
 
   self.gadgetActions[VIRTGAD_CHILD]:={editChildSettings}
-  self.gadgetActions[VIRTGAD_HINT]:={editHint}  
   self.gadgetActions[VIRTGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[VIRTGAD_OK]:=MR_OK
 ENDPROC
@@ -154,20 +145,11 @@ EXPORT PROC canClose(modalRes) OF virtualSettingsForm
   ENDIF
 ENDPROC TRUE
 
-PROC editHint(nself,gadget,id,code) OF virtualSettingsForm
-  self:=nself
-  self.setBusy()
-  self.virtualObject.editHint()
-  self.clearBusy()
-  self.updateHint(VIRTGAD_HINT, self.virtualObject.hintText)
-ENDPROC
-
 PROC editSettings(comp:PTR TO virtualObject) OF virtualSettingsForm
   DEF res
 
   self.virtualObject:=comp
 
-  self.updateHint(VIRTGAD_HINT, comp.hintText)     
   SetGadgetAttrsA(self.gadgetList[ VIRTGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])  
   SetGadgetAttrsA(self.gadgetList[ VIRTGAD_SCROLLER ],0,0,[CHECKBOX_CHECKED,comp.scroller,0]) 
 

@@ -179,6 +179,7 @@ EXPORT PROC createPreviewObject(scr) OF colorWheelObject
   self.previewObject:=0
   IF (colorwheelbase)
     self.previewObject:=ColorWheelObject,
+        GA_ID, self.id,
         WHEEL_SCREEN, scr,
         WHEEL_BEVELBOX, self.bevelBox,
       ColorWheelEnd

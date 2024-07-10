@@ -40,3 +40,8 @@ PROC readLine(outStr:PTR TO CHAR) OF fileStreamer
     IF (l>0) AND (outStr[l-1]="\n") THEN outStr[l-1]:=0
   ENDIF
 ENDPROC r
+
+PROC read(outStr:PTR TO CHAR, len) OF fileStreamer
+  DEF r
+  r:=Fread(self.fh,outStr,1,len)
+ENDPROC r

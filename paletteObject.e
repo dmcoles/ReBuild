@@ -235,6 +235,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF paletteObject
   self.previewObject:=PaletteObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       PALETTE_COLOUR, self.initial,

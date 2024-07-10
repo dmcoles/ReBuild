@@ -407,6 +407,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF buttonObject
   self.previewObject:=ButtonObject,
+      GA_ID, self.id,
       GA_TEXT,self.name,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,

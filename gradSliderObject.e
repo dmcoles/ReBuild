@@ -274,6 +274,7 @@ EXPORT PROC createPreviewObject(scr) OF gradSliderObject
   self.previewObject:=0
   IF (gradientsliderbase)
     self.previewObject:=GradientObject,
+      GA_ID, self.id,
       GRAD_MAXVAL, self.maxVal,
       GRAD_CURVAL, self.currVal,
       GRAD_SKIPVAL, self.skipVal,

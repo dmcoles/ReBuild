@@ -340,6 +340,7 @@ EXPORT PROC createPreviewObject(scr) OF textEditorObject
     textfieldbase:=texteditorbase
     
     self.previewObject:=NewObjectA( TextEditor_GetClass(), NIL,[TAG_IGNORE,0,
+      GA_ID, self.id,
       GA_READONLY, self.readOnly,
       GA_TEXTEDITOR_EXPORTWRAP, self.exportWrap,
       GA_TEXTEDITOR_FIXEDFONT, self.fixedFont,

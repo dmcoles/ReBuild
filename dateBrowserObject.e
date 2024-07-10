@@ -222,6 +222,7 @@ EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
   self.previewObject:=0
   IF (datebrowserbase)
     self.previewObject:=NewObjectA(DateBrowser_GetClass(), NIL,[TAG_IGNORE,0,
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_DISABLED, self.disabled,

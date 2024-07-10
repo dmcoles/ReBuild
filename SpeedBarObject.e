@@ -504,6 +504,7 @@ EXPORT PROC createPreviewObject(scr) OF speedBarObject
   self.previewObject:=0
   IF (speedbarbase)
     self.previewObject:=SpeedBarObject,
+        GA_ID, self.id,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
         GA_TEXT, self.name,

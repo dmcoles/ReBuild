@@ -447,6 +447,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF getFileObject
   self.previewObject:=GetFileObject,
+    GA_ID, self.id,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, TRUE,
     GETFILE_READONLY, self.readOnly,

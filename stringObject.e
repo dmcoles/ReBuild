@@ -296,6 +296,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF stringObject
   self.previewObject:=StringObject,
+    GA_ID, self.id,
     GA_RELVERIFY, TRUE,
     GA_TABCYCLE, self.tabCycle,
     STRINGA_TEXTVAL, self.value,

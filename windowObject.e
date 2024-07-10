@@ -77,6 +77,7 @@ EXPORT OBJECT windowObject OF reactionObject
   previewRootLayout:LONG
   previewLeft:INT
   previewTop:INT
+  previewHintInfo:PTR TO hintinfo
 ENDOBJECT
 
 OBJECT windowSettingsForm OF reactionForm
@@ -1133,6 +1134,8 @@ EXPORT PROC createPreviewObject(scr) OF windowObject
     WA_ACTIVATE, FALSE,
     WA_NEWLOOKMENUS, TRUE,
     WINDOW_APPPORT, self.appPort,
+    WINDOW_HINTINFO,self.previewHintInfo,
+    WINDOW_GADGETHELP,TRUE,
     WINDOW_ICONIFYGADGET, IF self.iconifyGadget THEN TRUE ELSE FALSE,
     IF self.windowPos THEN WINDOW_POSITION ELSE TAG_IGNORE, ListItem([WPOS_TOPLEFT,WPOS_CENTERSCREEN,WPOS_CENTERMOUSE,WPOS_TOPLEFT,WPOS_CENTERWINDOW,WPOS_FULLSCREEN,0],self.windowPos),
     WA_CLOSEGADGET,IF self.flags AND WFLG_CLOSEGADGET THEN TRUE ELSE FALSE,
@@ -1179,6 +1182,10 @@ EXPORT PROC create(parent) OF windowObject
   self.refreshType:=0
   self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR
   self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW
+
+  self.previewHintInfo:=New(SIZEOF hintinfo) 
+  self.previewHintInfo.gadgetid:=-1
+  self.previewHintInfo.code:=-1
   
   self.appPort:=CreateMsgPort()
   self.previewObject:=0
@@ -1191,6 +1198,7 @@ ENDPROC
 
 PROC end() OF windowObject
   IF self.appPort THEN DeleteMsgPort(self.appPort)
+  IF self.previewHintInfo THEN Dispose(self.previewHintInfo)
   SUPER self.end()
 ENDPROC
 

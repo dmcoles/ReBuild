@@ -187,8 +187,8 @@ PROC create() OF tapeDeckSettingsForm
   WindowEnd
 
   self.gadgetActions[TAPEGAD_CHILD]:={editChildSettings}
-  self.gadgetActions[TAPEGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[TAPEGAD_HINT]:={editHint}  
+  self.gadgetActions[TAPEGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[TAPEGAD_OK]:=MR_OK
 ENDPROC
 
@@ -248,6 +248,7 @@ EXPORT PROC createPreviewObject(scr) OF tapeDeckObject
     self.previewObject:=0
   IF (tapedeckbase)
     self.previewObject:=NewObjectA( NIL, 'tapedeck.gadget',[TAG_IGNORE,0,
+      GA_ID, self.id,
       TDECK_TAPE, ListItem([TRUE,FALSE],self.anim),
       TDECK_MODE, ListItem([BUT_REWIND,BUT_PLAY, BUT_FORWARD, BUT_STOP, BUT_PAUSE],self.mode),
       TDECK_FRAMES, self.frames,

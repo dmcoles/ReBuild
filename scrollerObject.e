@@ -275,6 +275,7 @@ ENDPROC res
 
 EXPORT PROC createPreviewObject(scr) OF scrollerObject
   self.previewObject:=ScrollerObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       SCROLLER_TOP, self.top,

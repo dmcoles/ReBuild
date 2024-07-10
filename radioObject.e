@@ -274,6 +274,7 @@ ENDPROC res
 EXPORT PROC createPreviewObject(scr) OF radioObject
   IF self.labels1 THEN freeRadioButtons( self.labels1 )
   self.previewObject:=RadioButtonObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       RADIOBUTTON_LABELS, self.labels1:=self.makeRadioList(self.listObjectId),

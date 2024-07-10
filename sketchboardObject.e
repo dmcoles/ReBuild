@@ -324,6 +324,7 @@ EXPORT PROC createPreviewObject(scr) OF sketchboardObject
   self.previewObject:=0
   IF (sketchboardbase)
     self.previewObject:=NewObjectA( SketchBoard_GetClass(), NIL,[TAG_IGNORE,0,
+        GA_ID, self.id,
         GA_READONLY, self.readOnly,
         GA_DISABLED, self.disabled,
         SGA_WIDTH, self.width,

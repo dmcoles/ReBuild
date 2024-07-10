@@ -217,6 +217,7 @@ EXPORT PROC createPreviewObject(scr) OF listViewObject
   IF (listviewbase)
     IF self.labels1 THEN self.freeListViewLabels( self.labels1 )
     self.previewObject:=NewObjectA( ListView_GetClass(), NIL,[TAG_IGNORE,0,
+        GA_ID, self.id,
         LISTVIEW_LABELS, self.labels1:=self.makeListViewList(self.listObjectId),
         LISTVIEW_MULTISELECT, self.multiSelect,
       TAG_END])

@@ -843,6 +843,7 @@ EXPORT PROC createPreviewObject(scr) OF listBrowserObject
   IF self.browsernodes THEN freeBrowserNodes( self.browsernodes )
 
   self.previewObject:=ListBrowserObject, 
+      GA_ID, self.id,
       GA_RELVERIFY, TRUE,
       GA_TABCYCLE, TRUE,
       GA_DISABLED, self.disabled,
