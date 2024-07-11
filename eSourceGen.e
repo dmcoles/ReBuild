@@ -617,6 +617,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
+  DEF hintText:PTR TO CHAR
   DEF menuFlags[60]:STRING
   DEF currMenu,mut
   DEF commKey[10]:STRING
@@ -913,19 +914,22 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         ENDIF
         UpperStr(itemName)
 
+        hintText:=self.strReplace(reactionObject.hintText,'\n','\\n')
+
         IF j=0
-          StringF(tempStr,'  hintInfo:=[\s,-1,\a\s\a,0,',itemName,reactionObject.hintText)
+          StringF(tempStr,'  hintInfo:=[\s,-1,\a\s\a,0,',itemName,hintText)
         ELSE
-          StringF(tempStr,'             \s,-1,\a\s\a,0,',itemName,reactionObject.hintText)
+          StringF(tempStr,'             \s,-1,\a\s\a,0,',itemName,hintText)
         ENDIF         
+        Dispose(hintText)
         self.writeLine(tempStr)
         j++
       ENDIF
     ENDFOR
     IF j=0
-      self.writeLine('  hintInfo:=[0,-1,-1,0]:hintinfo')  
+      self.writeLine('  hintInfo:=[-1,-1,0,0]:hintinfo')  
     ELSE
-      self.writeLine('             0,-1,-1,0]:hintinfo')  
+      self.writeLine('             -1,-1,0,0]:hintinfo')  
     ENDIF
     self.writeLine('')  
     END listObjects

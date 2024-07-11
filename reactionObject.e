@@ -535,6 +535,11 @@ EXPORT PROC addChild(child:PTR TO reactionObject) OF reactionObject
   child.parent:=self
 ENDPROC
 
+EXPORT PROC addChildAt(child:PTR TO reactionObject,index) OF reactionObject
+  self.children.insert(index,child)
+  child.parent:=self
+ENDPROC
+
 EXPORT PROC removeChild(child:PTR TO reactionObject) OF reactionObject
   DEF i
   i:=self.children.count()-1

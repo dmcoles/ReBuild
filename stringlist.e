@@ -194,6 +194,19 @@ EXPORT PROC expand() OF stdlist
   DisposeLink(old)
 ENDPROC len
 
+EXPORT PROC insert(pos,v:LONG) OF stdlist
+  DEF s,c,i
+  
+  c:=ListLen(self.items)
+  IF c=ListMax(self.items) THEN self.expand()
+  ListAdd(self.items,[NIL])
+  
+  FOR i:=ListLen(self.items)-1 TO (pos+1) STEP -1
+    self.items[i]:=self.items[i-1]
+  ENDFOR
+  self.items[pos]:=v
+ENDPROC
+
 EXPORT PROC add(v:LONG) OF stdlist
   DEF c
   

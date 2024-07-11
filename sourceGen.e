@@ -252,6 +252,27 @@ PROC addTerminator() OF srcGen
   ENDIF
 ENDPROC
 
+EXPORT PROC strReplace(sourceText:PTR TO CHAR, searchText:PTR TO CHAR, replaceText:PTR TO CHAR) OF srcGen
+  DEF count=0
+  DEF len,result,pos=0,n
+  
+  WHILE (n:=InStr(sourceText+pos,searchText))>=0
+    pos:=pos+n+StrLen(searchText)
+    count++
+  ENDWHILE
+  len:=StrLen(sourceText)-(count*StrLen(searchText))+(count*StrLen(replaceText))
+  result:=String(len)
+
+  pos:=0
+  WHILE (n:=InStr(sourceText+pos,searchText))>=0
+    StrAdd(result,sourceText+pos,n)
+    StrAdd(result,replaceText)
+    pos:=pos+n+StrLen(searchText)
+  ENDWHILE
+  StrAdd(result,sourceText+pos)
+  
+ENDPROC result
+
 PROC genHeader(screenObject,rexxObject, windowItems, windowLayouts, sharedport) OF srcGen IS -1
 PROC genFooter(windowObject,rexxObject) OF srcGen IS -1
 PROC genWindowHeader(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1

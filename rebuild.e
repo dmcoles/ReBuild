@@ -875,7 +875,7 @@ PROC createForm()
   
 ENDPROC
 
-PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
+PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject, index=-1)
   DEF idx, mainRootLayout
   DEF window
   
@@ -884,7 +884,11 @@ PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
     window:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
     removeMembers(mainRootLayout,window)
-    parent.addChild(newobj)
+    IF index<>-1
+      parent.addChildAt(newobj,index)
+    ELSE
+      parent.addChild(newobj)
+    ENDIF
     makeList(newobj)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
@@ -1115,7 +1119,7 @@ PROC moveIntoLayout(comp:PTR TO reactionObject,horiz)
   
   parent:=comp.parent
   IF parent.allowChildren()
-    newComp:=doAddLayoutQuick(comp,horiz)
+    newComp:=doAddLayoutQuick(parent,horiz)
 
     changes:=TRUE
     idx:=findWindowIndex(comp)
@@ -1900,7 +1904,8 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
         AstrCopy(newObj.ident,tempStr,80)
       ENDIF
       changes:=TRUE
-      addObject(comp,newObj)
+      
+      addObject(comp,newObj,IF comp=selectedComp THEN -1 ELSE selectedComp.getChildIndex()+1)
     ENDIF
   ENDIF
 ENDPROC newObj
@@ -1969,7 +1974,8 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
           comp:=layoutObj
         ENDIF
         changes:=TRUE
-        addObject(comp,newObj)
+        
+        addObject(comp,newObj,IF comp=selectedComp THEN -1 ELSE selectedComp.getChildIndex()+1)
       ENDIF
       clearBusy()
     ENDIF

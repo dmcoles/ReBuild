@@ -872,6 +872,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
   DEF menuItem:PTR TO menuItem
   DEF itemType
   DEF itemName[200]:STRING
+  DEF hintText:PTR TO CHAR
   DEF menuFlags[60]:STRING
   DEF currMenu,mut
   DEF commKey[10]:STRING
@@ -967,7 +968,9 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         ENDIF
         LowerStr(itemName)
 
-        StringF(tempStr,'    {\s,-1,\q\s\q,0},',itemName,reactionObject.hintText)
+        hintText:=self.strReplace(reactionObject.hintText,'\n','\\n')
+        StringF(tempStr,'    {\s,-1,\q\s\q,0},',itemName,hintText)
+        Dispose(hintText)
         self.writeLine(tempStr)
       ENDIF
     ENDFOR
