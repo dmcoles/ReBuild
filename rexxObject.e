@@ -385,6 +385,7 @@ EXPORT PROC create(parent) OF rexxObject
   self.type:=TYPE_REXX
   SUPER self.create(parent)
   AstrCopy(self.name,'')
+  AstrCopy(self.ident,'')
   AstrCopy(self.hostName,'')
   AstrCopy(self.extension,'rexx')
   self.noSlot:=FALSE

@@ -339,6 +339,7 @@ EXPORT PROC create(parent) OF screenObject
   self.type:=TYPE_SCREEN
   SUPER self.create(parent)
   AstrCopy(self.name,'')
+  AstrCopy(self.ident,'')
   
   self.public:=FALSE
   self.custom:=FALSE
