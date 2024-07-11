@@ -110,8 +110,8 @@ OPT OSVERSION=37,LARGE
   CONST MENU_EDIT_MOVEBOTTOM=3
   CONST MENU_EDIT_MOVELPREV=4
   CONST MENU_EDIT_MOVELNEXT=5
-  CONST MENU_EDIT_MOVEINTOLAYOUT_VERT=6
-  CONST MENU_EDIT_MOVEINTOLAYOUT_HORIZ=7
+  CONST MENU_EDIT_MOVEINTOLAYOUT_HORIZ=6
+  CONST MENU_EDIT_MOVEINTOLAYOUT_VERT=7
 
   CONST FILE_FORMAT_VER=2
 
@@ -528,6 +528,12 @@ PROC updateSel(node)
     menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEDOWN,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_VLAYOUT,0,TRUE)
     menuDisable(win,MENU_EDIT,MENU_EDIT_ADD_HLAYOUT,0,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVETOP,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEBOTTOM,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELPREV,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVELNEXT,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEINTOLAYOUT_VERT,TRUE)
+    menuDisable(win,MENU_EDIT,MENU_EDIT_MOVE,MENU_EDIT_MOVEINTOLAYOUT_HORIZ,TRUE)
 
     menuDisable(win,MENU_PROJECT,MENU_PROJECT_REOPEN,0,recentFiles.count()=0)
 
@@ -2414,92 +2420,92 @@ PROC remakePreviewMenus()
   IF menus THEN FreeMenus(menus)
   
   menuSetup:=[
-  NM_TITLE,'Project',0,0,
-  NM_ITEM,'New',0,0,
-  NM_ITEM,'Open',0,0,
-  NM_ITEM,'Save',0,0,
-  NM_ITEM,'Save As',0,0,
-  NM_ITEM,'Reopen',0,0,
-  NM_SUB,IF recentFiles.count()>0 THEN recentFiles.item(0) ELSE 0,0,0,
-  NM_SUB,IF recentFiles.count()>1 THEN recentFiles.item(1) ELSE 0,0,0,
-  NM_SUB,IF recentFiles.count()>2 THEN recentFiles.item(2) ELSE 0,0,0,
-  NM_SUB,IF recentFiles.count()>3 THEN recentFiles.item(3) ELSE 0,0,0,
-  NM_SUB,IF recentFiles.count()>4 THEN recentFiles.item(4) ELSE 0,0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Generate Code',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Show Libraries',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'About',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Quit',0,0,
-  NM_TITLE,'Edit',0,0,
-  NM_ITEM,'Add Gadget',-1,0,
-  NM_SUB,'Button',TYPE_BUTTON,0,
-  NM_SUB,'CheckBox',TYPE_CHECKBOX,0,
-  NM_SUB,'Chooser',TYPE_CHOOSER,0,
-  NM_SUB,'ClickTab',TYPE_CLICKTAB,0,
-  NM_SUB,'ColorWheel',TYPE_COLORWHEEL,0,
-  NM_SUB,'DateBrowser',TYPE_DATEBROWSER,0,
-  NM_SUB,'FuelGauge',TYPE_FUELGAUGE,0,
-  NM_SUB,'GetColor',TYPE_GETCOLOR,0,
-  NM_SUB,'GetFile',TYPE_GETFILE,0,
-  NM_SUB,'GetFont',TYPE_GETFONT,0,
-  NM_SUB,'GetScreenMode',TYPE_GETSCREENMODE,0,
-  NM_SUB,'GradientSlider',TYPE_GRADSLIDER,0,
-  NM_SUB,'Integer',TYPE_INTEGER,0,
-  NM_SUB,'Layout',TYPE_LAYOUT,0,
-  NM_SUB,'ListBrowser',TYPE_LISTBROWSER,0,
-  NM_SUB,'ListView',TYPE_LISTVIEW,0,
-  NM_SUB,'Palette',TYPE_PALETTE,0,
-  NM_SUB,'RadioButton',TYPE_RADIO,0,
-  NM_SUB,'Scroller',TYPE_SCROLLER,0,
-  NM_SUB,'SketchBoard',TYPE_SKETCH,0,
-  NM_SUB,'Slider',TYPE_SLIDER,0,
-  NM_SUB,'Space',TYPE_SPACE,0,
-  NM_SUB,'SpeedBar',TYPE_SPEEDBAR,0,
-  NM_SUB,'String',TYPE_STRING,0,
-  NM_SUB,'Tabs',TYPE_TABS,0,
-  NM_SUB,'TapeDeck',TYPE_TAPEDECK,0,
-  NM_SUB,'TextEditor',TYPE_TEXTEDITOR,0,
-  NM_SUB,'TextField',TYPE_TEXTFIELD,0,
-  NM_SUB,'Virtual',TYPE_VIRTUAL,0,
-  NM_ITEM,'Add Image',-1,0,
-  NM_SUB,'Bevel',TYPE_BEVEL,0,
-  NM_SUB,'BitMap',TYPE_BITMAP,0,
-  NM_SUB,'BoingBall',TYPE_BOINGBALL,0,
-  NM_SUB,'DrawList',TYPE_DRAWLIST,0,
-  NM_SUB,'Glyph',TYPE_GLYPH,0,
-  NM_SUB,'Label',TYPE_LABEL,0,
-  NM_SUB,'LED',TYPE_LED,0,
-  NM_SUB,'PenMap',TYPE_PENMAP,0,
-  NM_ITEM,'Add Window',-1,0,
-  NM_ITEM,'Add HLayout (quick)',-1,0,
-  NM_ITEM,'Add VLayout (quick)',-1,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Edit',0,0,
-  NM_ITEM,'Delete',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Move',0,0,
-  NM_SUB,'Up',0,0,
-  NM_SUB,'Down',0,0,
-  NM_SUB,'Layout Top',0,0,
-  NM_SUB,'Layout Bottom',0,0,
-  NM_SUB,'Prev Layout',0,0,
-  NM_SUB,'Next Layout',0,0,
-  NM_SUB,'Into VLayout',0,0,
-  NM_SUB,'Into HLayout',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Edit Lists',0,0,
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Show Buffer',0,(CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF systemOptions.showSettingsOnAdd THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,'Warn On Delete',0,(CHECKIT OR (IF systemOptions.warnOnDelete THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,'Save Project Icons',0,(CHECKIT OR (IF systemOptions.saveProjectIcons THEN CHECKED ELSE 0 ) OR MENUTOGGLE),
-  NM_ITEM,NM_BARLABEL,0,0,
-  NM_ITEM,'Preview Windows',0,0
+  NM_TITLE,'Project',0,0,0,
+  NM_ITEM,'New',0,0,'N',
+  NM_ITEM,'Open',0,0,'O',
+  NM_ITEM,'Save',0,0,'S',
+  NM_ITEM,'Save As',0,MIF_SHIFTCOMMSEQ,'S',
+  NM_ITEM,'Reopen',0,0,0,
+  NM_SUB,IF recentFiles.count()>0 THEN recentFiles.item(0) ELSE 0,0,0,0,
+  NM_SUB,IF recentFiles.count()>1 THEN recentFiles.item(1) ELSE 0,0,0,0,
+  NM_SUB,IF recentFiles.count()>2 THEN recentFiles.item(2) ELSE 0,0,0,0,
+  NM_SUB,IF recentFiles.count()>3 THEN recentFiles.item(3) ELSE 0,0,0,0,
+  NM_SUB,IF recentFiles.count()>4 THEN recentFiles.item(4) ELSE 0,0,0,0,
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Generate Code',0,0,'C',
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Show Libraries',0,0,0,
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'About',0,0,0,
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Quit',0,0,'Q',
+  NM_TITLE,'Edit',0,0,0,
+  NM_ITEM,'Add Gadget',-1,0,0,
+  NM_SUB,'Button',TYPE_BUTTON,0,0,
+  NM_SUB,'CheckBox',TYPE_CHECKBOX,0,0,
+  NM_SUB,'Chooser',TYPE_CHOOSER,0,0,
+  NM_SUB,'ClickTab',TYPE_CLICKTAB,0,0,
+  NM_SUB,'ColorWheel',TYPE_COLORWHEEL,0,0,
+  NM_SUB,'DateBrowser',TYPE_DATEBROWSER,0,0,
+  NM_SUB,'FuelGauge',TYPE_FUELGAUGE,0,0,
+  NM_SUB,'GetColor',TYPE_GETCOLOR,0,0,
+  NM_SUB,'GetFile',TYPE_GETFILE,0,0,
+  NM_SUB,'GetFont',TYPE_GETFONT,0,0,
+  NM_SUB,'GetScreenMode',TYPE_GETSCREENMODE,0,0,
+  NM_SUB,'GradientSlider',TYPE_GRADSLIDER,0,0,
+  NM_SUB,'Integer',TYPE_INTEGER,0,0,
+  NM_SUB,'Layout',TYPE_LAYOUT,0,0,
+  NM_SUB,'ListBrowser',TYPE_LISTBROWSER,0,0,
+  NM_SUB,'ListView',TYPE_LISTVIEW,0,0,
+  NM_SUB,'Palette',TYPE_PALETTE,0,0,
+  NM_SUB,'RadioButton',TYPE_RADIO,0,0,
+  NM_SUB,'Scroller',TYPE_SCROLLER,0,0,
+  NM_SUB,'SketchBoard',TYPE_SKETCH,0,0,
+  NM_SUB,'Slider',TYPE_SLIDER,0,0,
+  NM_SUB,'Space',TYPE_SPACE,0,0,
+  NM_SUB,'SpeedBar',TYPE_SPEEDBAR,0,0,
+  NM_SUB,'String',TYPE_STRING,0,0,
+  NM_SUB,'Tabs',TYPE_TABS,0,0,
+  NM_SUB,'TapeDeck',TYPE_TAPEDECK,0,0,
+  NM_SUB,'TextEditor',TYPE_TEXTEDITOR,0,0,
+  NM_SUB,'TextField',TYPE_TEXTFIELD,0,0,
+  NM_SUB,'Virtual',TYPE_VIRTUAL,0,0,
+  NM_ITEM,'Add Image',-1,0,0,
+  NM_SUB,'Bevel',TYPE_BEVEL,0,0,
+  NM_SUB,'BitMap',TYPE_BITMAP,0,0,
+  NM_SUB,'BoingBall',TYPE_BOINGBALL,0,0,
+  NM_SUB,'DrawList',TYPE_DRAWLIST,0,0,
+  NM_SUB,'Glyph',TYPE_GLYPH,0,0,
+  NM_SUB,'Label',TYPE_LABEL,0,0,
+  NM_SUB,'LED',TYPE_LED,0,0,
+  NM_SUB,'PenMap',TYPE_PENMAP,0,0,
+  NM_ITEM,'Add Window',-1,0,'W',
+  NM_ITEM,'Add HLayout (quick)',-1,0,'H',
+  NM_ITEM,'Add VLayout (quick)',-1,0,'V',
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Edit',0,0,'E',
+  NM_ITEM,'Delete',0,0,'D',
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Move',0,0,0,
+  NM_SUB,'Up',0,0,'U',
+  NM_SUB,'Down',0,0,'D',
+  NM_SUB,'Layout Top',0,0,'T',
+  NM_SUB,'Layout Bottom',0,0,'B',
+  NM_SUB,'Prev Layout',0,MIF_SHIFTCOMMSEQ,'U',
+  NM_SUB,'Next Layout',0,MIF_SHIFTCOMMSEQ,'D',
+  NM_SUB,'Into HLayout',0,MIF_SHIFTCOMMSEQ,'H',
+  NM_SUB,'Into VLayout',0,MIF_SHIFTCOMMSEQ,'V',
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Edit Lists',0,0,'L',
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Show Buffer',0,(CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
+  NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF systemOptions.showSettingsOnAdd THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
+  NM_ITEM,'Warn On Delete',0,(CHECKIT OR (IF systemOptions.warnOnDelete THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
+  NM_ITEM,'Save Project Icons',0,(CHECKIT OR (IF systemOptions.saveProjectIcons THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
+  NM_ITEM,NM_BARLABEL,0,0,0,
+  NM_ITEM,'Preview Windows',0,0,0
   ]
-  count:=count+Shr(ListLen(menuSetup),2)
+  count:=count+Div(ListLen(menuSetup),5)
   NEW menuData[count]
   
   n:=0
@@ -2510,9 +2516,10 @@ PROC remakePreviewMenus()
       menuData[n].label:=menuSetup[i++]
       menuData[n].userdata:=menuSetup[i++]
       menuData[n].flags:=menuSetup[i++]
+      menuData[n].commkey:=menuSetup[i++]
       n++
     ELSE
-      i+=4
+      i+=5
     ENDIF
   ENDWHILE
 
