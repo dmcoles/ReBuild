@@ -48,8 +48,8 @@ ENDOBJECT
 
 OBJECT requesterItemSettingsForm OF reactionForm
 PRIVATE
-  labels6
-  labels9
+  typeLabels
+  imageLabels
   requesterItem:PTR TO requesterItem
 ENDOBJECT
 
@@ -88,8 +88,8 @@ PROC create() OF requesterItemSettingsForm
   tempbase:=textfieldbase
   textfieldbase:=texteditorbase
 
-  self.labels6:=chooserLabelsA(['Info','Integer','String',0])
-  self.labels9:=chooserLabelsA(['Default','Info','Warning','Error','Question','Insert Disk',0])
+  self.typeLabels:=chooserLabelsA(['Info','Integer','String',0])
+  self.imageLabels:=chooserLabelsA(['Default','Info','Warning','Error','Question','Insert Disk',0])
 
   self.windowObj:=WindowObject,
     WA_TITLE, 'Requester Attribute Setting',
@@ -122,7 +122,7 @@ PROC create() OF requesterItemSettingsForm
         GA_TABCYCLE, TRUE,
         CHOOSER_POPUP, TRUE,
         CHOOSER_SELECTED, 0,
-        CHOOSER_LABELS, self.labels6,
+        CHOOSER_LABELS, self.typeLabels,
       ChooserEnd,
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Type',
@@ -151,7 +151,7 @@ PROC create() OF requesterItemSettingsForm
         GA_TABCYCLE, TRUE,
         CHOOSER_POPUP, TRUE,
         CHOOSER_SELECTED, 0,
-        CHOOSER_LABELS, self.labels9,
+        CHOOSER_LABELS, self.imageLabels,
       ChooserEnd,
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Image',
@@ -230,8 +230,8 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
 ENDPROC
 
 PROC end() OF requesterItemSettingsForm
-  IF self.labels6 THEN freeChooserLabels(self.labels6)
-  IF self.labels9 THEN freeChooserLabels(self.labels9)
+  IF self.typeLabels THEN freeChooserLabels(self.typeLabels)
+  IF self.imageLabels THEN freeChooserLabels(self.imageLabels)
   END self.gadgetList[NUM_REQITEM_GADS]
   END self.gadgetActions[NUM_REQITEM_GADS]
 ENDPROC
@@ -517,9 +517,6 @@ PROC end() OF requesterSettingsForm
   END self.gadgetActions[NUM_REQ_GADS]
 ENDPROC
 
-EXPORT PROC createPreviewObject(scr) OF requesterObject
-ENDPROC
-
 EXPORT PROC create(parent) OF requesterObject
   DEF strlist:PTR TO stringlist
   DEF itemList:PTR TO stdlist
@@ -613,8 +610,6 @@ EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF requesterObject
   UNTIL done  
 ENDPROC
 
-EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF requesterObject
-ENDPROC
 
 EXPORT PROC createRequesterObject(parent)
   DEF requester:PTR TO requesterObject

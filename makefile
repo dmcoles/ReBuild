@@ -75,10 +75,10 @@ getColorObject.m:			getColorObject.e reactionObject.m reactionForm.m sourceGen.m
 dateBrowserObject.m:			dateBrowserObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
 							$(compiler) dateBrowserObject $(options)
 
-eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m rexxObject.m speedBarObject.m listViewObject.m tabsObject.m windowObject.m
+eSourceGen.m:			eSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m rexxObject.m speedBarObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m rexxObject.m screenObject.m listViewObject.m tabsObject.m windowObject.m
+cSourceGen.m:			cSourceGen.e fileStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m rexxObject.m screenObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e fileStreamer.m stringlist.m

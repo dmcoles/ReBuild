@@ -1277,6 +1277,7 @@ PROC genCode()
   DEF menuComp:PTR TO reactionObject
   DEF windowComp:PTR TO reactionObject
   DEF layoutComp:PTR TO reactionObject
+  DEF requesterComp:PTR TO reactionObject
   DEF screenComp:PTR TO screenObject
   DEF rexxComp:PTR TO rexxObject
   DEF libsused[TYPE_MAX]:ARRAY OF CHAR
@@ -1373,7 +1374,8 @@ PROC genCode()
   windowComp:=objectList.item(ROOT_WINDOW_ITEM)
   screenComp:=objectList.item(ROOT_SCREEN_ITEM)
   rexxComp:=objectList.item(ROOT_REXX_ITEM)
-  srcGen.genHeader(screenComp,rexxComp, windowItems,windowLayouts, sharedport)
+  requesterComp:=objectList.item(ROOT_REQUESTER_ITEM)
+  srcGen.genHeader(screenComp,rexxComp,requesterComp,windowItems,windowLayouts, sharedport)
   END windowItems
   END windowLayouts
   WHILE (i+ROOT_WINDOW_ITEM)<objectList.count()

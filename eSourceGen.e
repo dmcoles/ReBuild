@@ -4,7 +4,7 @@ OPT MODULE,LARGE
   MODULE 'images/drawlist','gadgets/tabs'
   MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*rexxObject','*tabsObject',
-         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject'
+         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject','*requesterObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -56,12 +56,15 @@ PROC createEnum(enumName:PTR TO CHAR, listObjects:PTR TO stdlist, enumType) OF e
   self.writeLine('')
 ENDPROC
 
-PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, windowItems:PTR TO stdlist, windowLayouts:PTR TO stdlist, sharedPort) OF eSrcGen
+PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, requesterObject:PTR TO requesterObject,
+                windowItems:PTR TO stdlist, windowLayouts:PTR TO stdlist, sharedPort) OF eSrcGen
   DEF tempStr[200]:STRING
   DEF hasarexx,i
   DEF windowObject:PTR TO reactionObject
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
+  DEF reqItem:PTR TO requesterItem
+  DEF bodyText
   
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
   
@@ -130,6 +133,9 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
     IF rexxObject.replyHook
       self.writeLine('      \autility/hooks\a,\atools/installhook\a,')
     ENDIF
+  ENDIF
+  IF requesterObject.requesterItems.count()>0
+    self.writeLine('      \arequester\a,\aclasses/requester\a,')
   ENDIF
   
   self.writeLine('      \aintuition/gadgetclass\a')
@@ -317,6 +323,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF (sketchboardbase:=OpenLibrary(\agadgets/sketchboard.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qskch\q)')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF (tabsbase:=OpenLibrary(\agadgets/tabs.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtabs\q)')
+  IF requesterObject.requesterItems.count()>0 THEN self.writeLine('  IF (requesterbase:=OpenLibrary(\aclasses/requester.class\a,0))=NIL THEN Throw(\qLIB\q,\qreqs\q)')
 
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
@@ -389,6 +396,8 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF virtualbase THEN CloseLibrary(virtualbase)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF sketchboardbase THEN CloseLibrary(sketchboardbase)')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF tabsbase THEN CloseLibrary(tabsbase)')
+  IF requesterObject.requesterItems.count()>0 THEN self.writeLine('  IF requesterbase THEN CloseLibrary(requesterbase)')
+
   self.writeLine('ENDPROC')
   self.writeLine('')
 
@@ -608,6 +617,37 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, wi
   self.writeLine('  RA_CloseWindow(windowObject)')
   self.writeLine('ENDPROC')
   self.writeLine('')
+  FOR i:=0 TO requesterObject.requesterItems.count()-1
+    reqItem:=requesterObject.requesterItems.item(i)
+    StringF(tempStr,'PROC requester\d(reactionWindow)\n',i)
+    self.writeLine(tempStr)
+    self.writeLine('  DEF reqmsg:PTR TO orrequest')
+    self.writeLine('  DEF reqobj,win,res=0')
+
+    self.writeLine('  SUBA.L #$100,A7')
+    self.writeLine('  NEW reqmsg')
+    self.writeLine('  win:=Gets(reactionWindow,WINDOW_WINDOW)')
+    self.writeLine('  reqmsg.methodid:=RM_OPENREQ')
+    self.writeLine('  reqmsg.window:=win')
+    bodyText:=reqItem.bodyText.makeTextString('\\n')
+    StringF(tempStr,'  reqmsg.attrs:=[REQ_TYPE, \s, REQ_IMAGE, \s, REQ_TITLETEXT,\a\s\a,REQ_BODYTEXT,\a\s\a,REQ_GADGETTEXT,\a\s\a,TAG_END]',
+                            ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
+                            ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image),
+                            reqItem.titleText,
+                            bodyText,
+                            reqItem.gadgetsText)
+    Dispose(bodyText)
+    self.writeLine(tempStr)
+    self.writeLine('  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])')
+    self.writeLine('  IF reqobj')
+    self.writeLine('    res:=DoMethodA(reqobj, reqmsg)')
+    self.writeLine('    DisposeObject(reqobj)')
+    self.writeLine('  ENDIF')
+    self.writeLine('  END reqmsg')
+    self.writeLine('  ADD.L #$100,A7')   
+    self.writeLine('ENDPROC res')
+    self.writeLine('')
+  ENDFOR
 ENDPROC
 
 PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO menuObject, layoutObject:PTR TO reactionObject, reactionLists:PTR TO stdlist) OF eSrcGen
