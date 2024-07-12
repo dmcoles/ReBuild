@@ -51,7 +51,7 @@ OPT OSVERSION=37,LARGE
          '*stringObject','*integerObject','*stringlist','*reactionObject','*reactionForm','*boingBallObject',
          '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject','*colorWheelObject','*dateBrowserObject',
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
-         '*virtualObject','*sketchboardObject','*tabsObject'
+         '*virtualObject','*sketchboardObject','*tabsObject','*requesterObject'
 
 #define vernum '1.2.0-dev'
 #date verstring '$VER:Rebuild 1.2.0-%Y%m%d%h%n%s'
@@ -62,10 +62,11 @@ OPT OSVERSION=37,LARGE
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
-  CONST ROOT_SCREEN_ITEM=2
-  CONST ROOT_WINDOW_ITEM=3
-  CONST ROOT_MENU_ITEM=4
-  CONST ROOT_LAYOUT_ITEM=5
+  CONST ROOT_REQUESTER_ITEM=2
+  CONST ROOT_SCREEN_ITEM=3
+  CONST ROOT_WINDOW_ITEM=4
+  CONST ROOT_MENU_ITEM=5
+  CONST ROOT_LAYOUT_ITEM=6
 
   ENUM GAD_COMPONENTLIST,GAD_TEMP_COPYTO, GAD_TEMP_COPYFROM, GAD_TEMP_MOVETO, GAD_TEMP_MOVEFROM, GAD_TEMP_REMOVE, GAD_TEMPLIST, GAD_ADD, GAD_GENMINUS, GAD_GENPLUS, GAD_DELETE, GAD_MOVEUP, GAD_MOVEDOWN, 
        GAD_LISTS, GAD_CODE, GAD_LOAD, GAD_SAVE, GAD_NEW
@@ -267,8 +268,13 @@ PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newn
   DEF typeStr[15]:STRING
  
   StringF(idStr,'\d',comp.id)
-  StringF(typeStr,'\s',comp.getTypeName())
-  IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,LBNA_USERDATA, comp, LBNA_GENERATION, generation, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, comp.ident, LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+  StrCopy(typeStr,comp.getTypeName())
+  IF (n:=AllocListBrowserNodeA(3,
+    [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,
+     LBNA_USERDATA, comp, LBNA_GENERATION, generation,
+     LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, IF StrLen(comp.ident) THEN comp.ident ELSE typeStr,
+     LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,
+     LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, idStr,TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
   comp.node:=n
   
   IF comp=selcomp THEN newnode[]:=n
@@ -335,6 +341,8 @@ PROC makeList(selcomp=0)
           IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 1, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Application Begin', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_REXX_ITEM
           IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Rexx', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
+        CASE ROOT_REQUESTER_ITEM
+          IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Requesters', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_SCREEN_ITEM
           IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 2, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Screen', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
         CASE ROOT_WINDOW_ITEM
@@ -343,9 +351,7 @@ PROC makeList(selcomp=0)
           IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 4, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Menu', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
       ENDSELECT
     ELSE
-      IF i=ROOT_REXX_ITEM
-        depth:=2
-      ELSEIF i=ROOT_SCREEN_ITEM
+      IF i==[ROOT_REXX_ITEM,ROOT_REQUESTER_ITEM, ROOT_SCREEN_ITEM]
         depth:=2
       ELSE
         SELECT Mod(i-ROOT_WINDOW_ITEM,3)
@@ -1594,6 +1600,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
 
   objectList.add(0)  ->Application begin
   objectList.add(0)  ->Rexx
+  objectList.add(0)  ->Requester
   objectList.add(0)  ->Screen
   objectList.add(0)  ->Window
   objectList.add(0)  ->Menu
@@ -1610,6 +1617,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
       IF type=TYPE_REACTIONLIST THEN reactionLists.add(newObj)
       IF type=TYPE_SCREEN THEN objectList.setItem(ROOT_SCREEN_ITEM,newObj)
       IF type=TYPE_REXX THEN objectList.setItem(ROOT_REXX_ITEM,newObj)
+      IF type=TYPE_REQUESTER THEN objectList.setItem(ROOT_REQUESTER_ITEM,newObj)
       IF type=TYPE_WINDOW
         IF objectList.item(ROOT_WINDOW_ITEM)=0
           objectList.setItem(ROOT_WINDOW_ITEM,newObj)
@@ -1626,6 +1634,13 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
       loadObjectList.add(newObj)
     ENDIF
   ENDWHILE
+
+  //original v1 files did not include requester
+  IF objectList.item(ROOT_REQUESTER_ITEM)=0
+    newObj:=createRequesterObject(0)
+    newObj.id:=newid++
+    objectList.setItem(ROOT_REQUESTER_ITEM,newObj)
+  ENDIF
 
   FOR i:=0 TO loadObjectList.count()-1
     newObj:=loadObjectList.item(i)
@@ -2286,6 +2301,7 @@ PROC newProject()
   
   objectList.add(0)  ->Application begin
   objectList.add(createRexxObject(0))  ->Rexx
+  objectList.add(createRequesterObject(0))  ->Requester
   objectList.add(createScreenObject(0))  ->Screen
   objectList.add(createWindowObject(0))  ->Window
   objectList.add(createMenuObject(0))  ->Menu
@@ -2550,10 +2566,12 @@ PROC remakePreviewMenus()
 ENDPROC
 
 PROC makeHintList(comp:PTR TO reactionObject, hintGadIds:PTR TO stdlist, hintTexts:PTR TO stdlist)
-  DEF i
+  DEF i,tempText
 
-  IF comp.hintText
-    hintTexts.add(comp.hintText)
+  IF comp.hintText.count()
+    tempText:=comp.hintText.makeTextString()
+    hintTexts.add(tempText)
+    Dispose(tempText)
     hintGadIds.add(comp.id)
   ENDIF
   
@@ -2776,6 +2794,8 @@ PROC createObjectByType(objType,comp)
       newObj:=createSketchboardObject(comp)
     CASE TYPE_TABS
       newObj:=createTabsObject(comp)
+    CASE TYPE_REQUESTER
+      newObj:=createRequesterObject(comp)
     DEFAULT
       Raise("OBJ")
   ENDSELECT

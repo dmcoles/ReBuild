@@ -7,6 +7,8 @@ OPT MODULE, OSVERSION=37
         'gadgets/button',
         'amigalib/boopsi',
         'intuition/intuition'
+ 
+  MODULE '*stringlist'
         
 EXPORT ENUM MR_NONE, MR_OK, MR_CANCEL
 
@@ -15,6 +17,7 @@ EXPORT OBJECT reactionForm
   modalResult:LONG
   gadgetList:PTR TO LONG
   gadgetActions:PTR TO LONG
+  hintText:PTR TO CHAR
   hintInfo:PTR TO hintinfo
 ENDOBJECT
 
@@ -42,7 +45,7 @@ EXPORT PROC canClose(modalRes) OF reactionForm IS TRUE
 EXPORT PROC ticker() OF reactionForm IS 0
 EXPORT PROC menuPick(menu,menuitem,subItem) OF reactionForm IS 0
 
-PROC updateHint(gadid,hintText:PTR TO CHAR) OF reactionForm
+PROC updateHint(gadid,hintText:PTR TO stringlist) OF reactionForm
   DEF win
   win:=Gets(self.windowObj,WINDOW_WINDOW)
 
@@ -54,8 +57,11 @@ PROC updateHint(gadid,hintText:PTR TO CHAR) OF reactionForm
   ENDIF
   self.hintInfo.gadgetid:=gadid
 
-  SetGadgetAttrsA(self.gadgetList[ gadid ],win,0,[BUTTON_TEXTPEN,IF hintText THEN 2 ELSE 1,0])
-  self.hintInfo.text:=hintText
+  SetGadgetAttrsA(self.gadgetList[ gadid ],win,0,[BUTTON_TEXTPEN,IF hintText.count() THEN 2 ELSE 1,0])
+
+  IF self.hintText THEN Dispose(self.hintText)  
+  self.hintText:=hintText.makeTextString()
+  self.hintInfo.text:=self.hintText
   Sets(self.windowObj,WINDOW_HINTINFO,self.hintInfo)
   Sets(self.windowObj,WINDOW_GADGETHELP,TRUE)
 ENDPROC
@@ -94,6 +100,7 @@ EXPORT PROC showModal() OF reactionForm HANDLE
     Raise("WIN")
   ENDIF
   
+  IF self.hintText THEN Dispose(self.hintText)
   IF self.hintInfo THEN Dispose(self.hintInfo)
   
 EXCEPT DO

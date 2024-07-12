@@ -112,6 +112,35 @@ EXPORT PROC setSize(n) OF stringlist
   SetList(self.items,n)
 ENDPROC
 
+EXPORT PROC makeTextString(sep=0:PTR TO CHAR) OF stringlist
+  DEF res,i,len=0
+
+  FOR i:=0 TO ListLen(self.items)-1
+    len:=len+StrLen(self.items[i])
+    IF i THEN len:=len+2
+  ENDFOR
+  
+  res:=String(len)
+  FOR i:=0 TO ListLen(self.items)-1
+    IF i THEN StrAdd(res,IF sep THEN sep ELSE '\n')
+    StrAdd(res,self.items[i])
+  ENDFOR
+ENDPROC res
+
+EXPORT PROC setFromTextString(newText:PTR TO CHAR) OF stringlist
+  DEF pos,n,str
+
+  self.clear()
+  pos:=0
+  WHILE (n:=InStr(newText+pos,'\n'))>=0
+    str:=AstrClone(newText+pos,n)
+    self.add(str)
+    Dispose(str)
+    pos:=pos+n+1
+  ENDWHILE
+  IF StrLen(newText+pos) THEN self.add(newText+pos)
+ENDPROC
+
 EXPORT PROC count() OF stringlist IS ListLen(self.items)
 
 EXPORT PROC maxSize() OF stringlist IS ListMax(self.items)

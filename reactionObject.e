@@ -23,6 +23,7 @@ OPT MODULE,OSVERSION=37
 
 EXPORT DEF texteditorbase
 
+// These are not yet all implemented but included here to define the ids            
 EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU, 
             TYPE_BUTTON, TYPE_BITMAP, TYPE_CHECKBOX, TYPE_CHOOSER, 
             TYPE_CLICKTAB, TYPE_FUELGAUGE, TYPE_GETFILE, TYPE_GETFONT,
@@ -32,11 +33,10 @@ EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU,
             TYPE_SPACE, TYPE_TEXTFIELD, TYPE_BEVEL, TYPE_DRAWLIST,
             TYPE_GLYPH, TYPE_LABEL,
 
-// These are not yet all implemented but included here to define the ids            
             TYPE_COLORWHEEL, TYPE_DATEBROWSER, TYPE_GETCOLOR, TYPE_GRADSLIDER,
             TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,TYPE_TAPEDECK,
             TYPE_TEXTEDITOR, TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_BOINGBALL, TYPE_LED,
-            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR, TYPE_TABS,
+            TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR, TYPE_TABS, TYPE_REQUESTER,
             
             TYPE_MAX
             
@@ -61,7 +61,7 @@ EXPORT DEF imageData:PTR TO CHAR
 EXPORT OBJECT reactionObject
   ident[80]:ARRAY OF CHAR
   name[80]:ARRAY OF CHAR
-  hintText:PTR TO CHAR
+  hintText:PTR TO stringlist
   parent:PTR TO reactionObject
   children:PTR TO stdlist
   libsused:PTR TO LONG
@@ -439,18 +439,14 @@ ENDPROC
 PROC editHint(comp:PTR TO reactionObject) OF hintEditForm
   DEF res,newval
 
-  SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,IF comp.hintText THEN comp.hintText ELSE '',0])
+  newval:=comp.hintText.makeTextString()
+  SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,newval,0])
+  Dispose(newval)
 
   res:=self.showModal()
   IF res=MR_OK
-    DisposeLink(comp.hintText)
-    
     newval:=DoMethod(self.gadgetList[ HINTGAD_TEXT ], GM_TEXTEDITOR_EXPORTTEXT);
-    IF StrLen(newval)
-      comp.hintText:=AstrClone(newval)
-    ELSE
-      comp.hintText:=0
-    ENDIF
+    comp.hintText.setFromTextString(newval)
     FreeVec(newval)
   ENDIF
 ENDPROC res=MR_OK
@@ -458,6 +454,7 @@ ENDPROC res=MR_OK
 EXPORT PROC create(parent) OF reactionObject
   DEF stdlist:PTR TO stdlist
   DEF name[80]:STRING
+  DEF strlist:PTR TO stringlist
   DEF scr
   self.parent:=parent
   self.id:=objCount
@@ -467,7 +464,8 @@ EXPORT PROC create(parent) OF reactionObject
   AstrCopy(self.name,name)
   AstrCopy(self.ident,name)
   
-  self.hintText:=0
+  NEW strlist.stringlist(10)
+  self.hintText:=strlist
 
   NEW stdlist.stdlist(20)
   self.children:=stdlist
@@ -511,8 +509,8 @@ EXPORT PROC end() OF reactionObject
     UnlockPubScreen(NIL,scr)
   ENDIF
   IF self.visInfo THEN FreeVisualInfo(self.visInfo)
-    
-ENDPROC
+  END self.hintText
+    ENDPROC
 
 EXPORT PROC createPreviewObject(scr) OF reactionObject IS -1
 
@@ -606,11 +604,10 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'IDENT: \s',self.ident)
   fser.writeLine(tempStr)
-  IF self.hintText
-    StringF(tempStr,'HINT: \r\z\h[8]',StrLen(self.hintText))
+  FOR i:=0 TO self.hintText.count()-1
+    StringF(tempStr,'HINT: \s',self.hintText.item(i))
     fser.writeLine(tempStr)
-    fser.writeLine(self.hintText)
-  ENDIF
+  ENDFOR
   StringF(tempStr,'MINWIDTH: \d',self.minWidth)
   fser.writeLine(tempStr)
   StringF(tempStr,'MINHEIGHT: \d',self.minHeight)
@@ -708,12 +705,7 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
           self.tempParentId:=Val(tempStr+STRLEN)
         ENDIF
       ELSEIF StrCmp('HINT: ',tempStr,STRLEN)
-        count:=STRLEN
-        StringF(tempStr2,'$\s',tempStr+count)
-        count:=Val(tempStr2)
-        self.hintText:=String(count+1)
-        fser.read(self.hintText,count+1)
-        SetStr(self.hintText,count)
+        self.hintText.add(tempStr+STRLEN)
       ELSEIF StrCmp('NAME: ',tempStr,STRLEN)
         AstrCopy(self.name,tempStr+STRLEN,80)
       ELSEIF StrCmp('IDENT: ',tempStr,STRLEN)

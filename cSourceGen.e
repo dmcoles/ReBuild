@@ -968,7 +968,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         ENDIF
         LowerStr(itemName)
 
-        hintText:=self.strReplace(reactionObject.hintText,'\n','\\n')
+        hintText:=reactionObject.hintText.makeTextString('\\n')
         StringF(tempStr,'    {\s,-1,\q\s\q,0},',itemName,hintText)
         Dispose(hintText)
         self.writeLine(tempStr)

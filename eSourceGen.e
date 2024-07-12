@@ -906,7 +906,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     j:=0
     FOR i:=0 TO listObjects.count()-1
       reactionObject:=listObjects.item(i)
-      IF reactionObject.hintText
+      IF reactionObject.hintText.count()
         IF self.useIds
           StringF(itemName,'\s_id',reactionObject.ident)
         ELSE
@@ -914,8 +914,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         ENDIF
         UpperStr(itemName)
 
-        hintText:=self.strReplace(reactionObject.hintText,'\n','\\n')
-
+        hintText:=reactionObject.hintText.makeTextString('\\n')
         IF j=0
           StringF(tempStr,'  hintInfo:=[\s,-1,\a\s\a,0,',itemName,hintText)
         ELSE
