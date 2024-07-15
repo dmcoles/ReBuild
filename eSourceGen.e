@@ -2,7 +2,7 @@ OPT MODULE,LARGE
 OPT MODULE,LARGE
 
   MODULE 'images/drawlist','gadgets/tabs'
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
+  MODULE '*baseStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*rexxObject','*tabsObject',
          '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject','*requesterObject'
 
@@ -11,7 +11,7 @@ ENDOBJECT
 
 ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
 
-PROC create(fser:PTR TO fileStreamer,libsused,definitionOnly,useIds,useMacros) OF eSrcGen
+PROC create(fser:PTR TO baseStreamer,libsused,definitionOnly,useIds,useMacros) OF eSrcGen
   SUPER self.create(fser,libsused,definitionOnly,useIds,useMacros)
   self.type:=ESOURCE_GEN
   self.stringDelimiter:=39

@@ -42,7 +42,7 @@ OPT OSVERSION=37,LARGE
         'listbrowser','gadgets/listbrowser',
         'intuition/intuition','intuition/imageclass','intuition/gadgetclass','intuition/classusr'
 
-  MODULE '*fileStreamer','*objectPicker','*cSourceGen', '*eSourceGen',
+  MODULE '*fileStreamer','*stringStreamer','*baseStreamer','*objectPicker','*cSourceGen', '*eSourceGen',
          '*sourceGen','*codeGenForm','*listManagerForm','*reactionLists','*dialogs','*libraryVersions',
          '*getScreenModeObject','*getFontObject','*getFileObject','*textFieldObject','*drawListObject','*fuelGaugeObject',
          '*bevelObject','*listBrowserObject','*clickTabObject','*chooserObject','*radioObject','*menuObject',
@@ -59,6 +59,8 @@ OPT OSVERSION=37,LARGE
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
 #endif
+
+  CONST MAX_UNDO_COUNT=20
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
@@ -90,20 +92,23 @@ OPT OSVERSION=37,LARGE
   CONST MENU_PROJECT_ABOUT=10
   CONST MENU_PROJECT_QUIT=12
 
-  CONST MENU_EDIT_ADD_GADGET=0
-  CONST MENU_EDIT_ADD_IMAGE=1
-  CONST MENU_EDIT_ADD_WINDOW=2
-  CONST MENU_EDIT_ADD_HLAYOUT=3
-  CONST MENU_EDIT_ADD_VLAYOUT=4
-  CONST MENU_EDIT_EDIT=6
-  CONST MENU_EDIT_DELETE=7
-  CONST MENU_EDIT_MOVE=9
-  CONST MENU_EDIT_LISTS=11
-  CONST MENU_EDIT_BUFFER=13
-  CONST MENU_EDIT_SHOW_ADD_SETTINGS=14
-  CONST MENU_EDIT_WARN_ON_DEL=15
-  CONST MENU_EDIT_SAVE_ICONS=16
-  CONST MENU_EDIT_PREVIEW=18
+  CONST MENU_EDIT_UNDO=0
+  CONST MENU_EDIT_REDO=1
+
+  CONST MENU_EDIT_ADD_GADGET=3
+  CONST MENU_EDIT_ADD_IMAGE=4
+  CONST MENU_EDIT_ADD_WINDOW=5
+  CONST MENU_EDIT_ADD_HLAYOUT=6
+  CONST MENU_EDIT_ADD_VLAYOUT=7
+  CONST MENU_EDIT_EDIT=9
+  CONST MENU_EDIT_DELETE=10
+  CONST MENU_EDIT_MOVE=12
+  CONST MENU_EDIT_LISTS=14
+  CONST MENU_EDIT_BUFFER=16
+  CONST MENU_EDIT_SHOW_ADD_SETTINGS=17
+  CONST MENU_EDIT_WARN_ON_DEL=18
+  CONST MENU_EDIT_SAVE_ICONS=19
+  CONST MENU_EDIT_PREVIEW=21
   
   CONST MENU_EDIT_MOVEUP=0
   CONST MENU_EDIT_MOVEDOWN=1
@@ -163,6 +168,8 @@ OPT OSVERSION=37,LARGE
   DEF codeOptions: codeOptions
   DEF systemOptions: systemOptions
   DEF recentFiles:PTR TO stringlist
+  DEF undoData:PTR TO stdlist
+  DEF undoPos=-1
 
 PROC openClasses()
   IF (requesterbase:=OpenLibrary('requester.class',0))=NIL THEN Throw("LIB","reqr")
@@ -270,7 +277,7 @@ PROC makeComponentList(comp:PTR TO reactionObject,generation,list, selcomp, newn
   StringF(idStr,'\d',comp.id)
   StrCopy(typeStr,comp.getTypeName())
   IF (n:=AllocListBrowserNodeA(3,
-    [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN ELSE 0,
+    [LBNA_FLAGS, IF (comp.parent=0) OR (comp.allowChildren()) THEN LBFLG_HASCHILDREN OR (IF comp.expanded THEN LBFLG_SHOWCHILDREN ELSE 0) ELSE 0,
      LBNA_USERDATA, comp, LBNA_GENERATION, generation,
      LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, IF StrLen(comp.ident) THEN comp.ident ELSE typeStr,
      LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, typeStr,
@@ -404,6 +411,7 @@ ENDPROC
 
 PROC updateSel(node)
   DEF comp=0:PTR TO reactionObject
+  DEF flags
   DEF child:PTR TO reactionObject
   DEF dis,idx
   DEF check,i,j
@@ -413,8 +421,12 @@ PROC updateSel(node)
   DEF type
   DEF allowchildren=FALSE
   
-  IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},TAG_END])
+  menuDisable(win,MENU_EDIT,MENU_EDIT_UNDO,0,undoPos=0)
+  menuDisable(win,MENU_EDIT,MENU_EDIT_REDO,0,undoPos>=(undoData.count()-1))
+  
+  IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},LBNA_FLAGS,{flags},TAG_END])
   IF comp
+    IF flags AND LBFLG_SHOWCHILDREN THEN comp.expanded ELSE comp.expanded:=FALSE
     allowchildren:=(comp.allowChildren()=TRUE) ORELSE ((comp.allowChildren()>0) ANDALSO (comp.children.count()<comp.allowChildren()))
     selectedComp:=comp
     FOR i:=0 TO 31
@@ -957,6 +969,7 @@ PROC doGenUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
   DEF idx, mainRootLayout, window
 
   IF (parent.allowChildren()) AND (parent.parent<>0)
+    updateUndo()
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -968,6 +981,7 @@ PROC doGenUp(parent:PTR TO reactionObject,child:PTR TO reactionObject)
     makeList(child)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
+    addUndo()
   ENDIF
 ENDPROC
 
@@ -975,6 +989,7 @@ PROC doGenDown(parent:PTR TO reactionObject, child:PTR TO reactionObject)
   DEF idx, mainRootLayout, window
   DEF newparent: PTR TO reactionObject
 
+  updateUndo()
   changes:=TRUE
   idx:=findWindowIndex(selectedComp)
   mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -987,6 +1002,7 @@ PROC doGenDown(parent:PTR TO reactionObject, child:PTR TO reactionObject)
   makeList(child)
   addMembers(mainRootLayout,window)
   rethinkPreviews()
+  addUndo()
 ENDPROC
 
 PROC swapWindows(idx1,idx2)
@@ -1030,6 +1046,7 @@ PROC moveUp(child:PTR TO reactionObject,count=1)
   ENDIF
 
   IF parent.allowChildren()
+    updateUndo()
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -1042,6 +1059,7 @@ PROC moveUp(child:PTR TO reactionObject,count=1)
     makeList(child)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
+    addUndo()
   ENDIF
 ENDPROC
 
@@ -1066,6 +1084,7 @@ PROC moveDown(child:PTR TO reactionObject,count=1)
   ENDIF
 
   IF parent.allowChildren()
+    updateUndo()
     changes:=TRUE
     idx:=findWindowIndex(selectedComp)
     mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -1078,6 +1097,7 @@ PROC moveDown(child:PTR TO reactionObject,count=1)
     makeList(child)
     addMembers(mainRootLayout,window)
     rethinkPreviews()
+    addUndo()
   ENDIF
 ENDPROC
 
@@ -1090,6 +1110,7 @@ PROC movePrevLayout(comp:PTR TO reactionObject)
   WHILE comp.parent.parent.children.item(i)::reactionObject.type<>TYPE_LAYOUT DO i--
   newLayout:=comp.parent.parent.children.item(i)
 
+  updateUndo()
   changes:=TRUE
   idx:=findWindowIndex(comp)
   mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -1100,6 +1121,7 @@ PROC movePrevLayout(comp:PTR TO reactionObject)
   makeList(comp)
   addMembers(mainRootLayout,window)
   rethinkPreviews()
+  addUndo()
 ENDPROC
 
 PROC moveNextLayout(comp:PTR TO reactionObject)
@@ -1111,6 +1133,7 @@ PROC moveNextLayout(comp:PTR TO reactionObject)
   WHILE comp.parent.parent.children.item(i)::reactionObject.type<>TYPE_LAYOUT DO i++
   newLayout:=comp.parent.parent.children.item(i)
 
+  updateUndo()
   changes:=TRUE
   idx:=findWindowIndex(comp)
   mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
@@ -1121,6 +1144,7 @@ PROC moveNextLayout(comp:PTR TO reactionObject)
   makeList(comp)
   addMembers(mainRootLayout,window)
   rethinkPreviews()
+  addUndo()
 ENDPROC
 
 PROC moveIntoLayout(comp:PTR TO reactionObject,horiz)
@@ -1131,6 +1155,7 @@ PROC moveIntoLayout(comp:PTR TO reactionObject,horiz)
   
   parent:=comp.parent
   IF parent.allowChildren()
+    updateUndo()
     newComp:=doAddLayoutQuick(parent,horiz)
 
     changes:=TRUE
@@ -1146,6 +1171,7 @@ PROC moveIntoLayout(comp:PTR TO reactionObject,horiz)
     makeList(comp)
     addMembers(mainRootLayout,window)
     rethinkPreviews()  
+    addUndo()
   ENDIF
 ENDPROC
 
@@ -1472,8 +1498,7 @@ PROC addRecent(filename:PTR TO CHAR)
   recentFiles.insert(0,filename)
 ENDPROC
 
-PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
-  DEF fs=0:PTR TO fileStreamer
+PROC loadStream(fs:PTR TO baseStreamer) HANDLE
   DEF newObj:PTR TO reactionObject
   DEF tmpObj:PTR TO reactionObject
   DEF tempStr[300]:STRING
@@ -1482,51 +1507,11 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
   DEF type,i
   DEF a=0:PTR TO menuitem
 
-  DEF ver,newid,v
+  DEF ver,newid,v,selid=0,selcomp=0
 
-  DEF tags
-  DEF fr:PTR TO filerequester
-  DEF fname[255]:STRING
-
-  errorState:=FALSE
-  IF loadfilename=NIL
-    aslbase:=OpenLibrary('asl.library',37)
-    IF aslbase=NIL THEN Throw("LIB","ASL")
-    tags:=NEW [ASL_HAIL,'Select a file to load',
-       ASL_WINDOW, win,
-       ASLFR_INITIALDRAWER, systemOptions.savePath,
-       TAG_DONE]
-    fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
-    IF(AslRequest(fr,0))=FALSE
-      IF tags THEN FastDisposeList(tags)
-      IF aslbase THEN CloseLibrary(aslbase)
-      RETURN
-    ENDIF
-
-    StrCopy(fname,fr.drawer)
-    AstrCopy(systemOptions.savePath,fr.drawer)
-    AddPart(fname,fr.file,100)
-    SetStr(fname)
-    IF fr THEN FreeAslRequest(fr)
-    IF tags THEN FastDisposeList(tags)
-    IF aslbase THEN CloseLibrary(aslbase)
-  ELSE
-    StrCopy(fname,loadfilename)
-  ENDIF
-  StrCopy(filename,fname)
-
-  NEW fs.create(fname,MODE_OLDFILE)
-  IF fs.isOpen()=FALSE
-    errorRequest(mainWindow,'Error','This file could not be opened.')
-    END fs
-    RETURN
-  ENDIF
-  
   fs.readLine(tempStr)
   IF StrCmp(tempStr,'-REBUILD-')=FALSE
-    errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
-    END fs
-    RETURN
+    Raise("INVF")
   ENDIF
 
   fs.readLine(tempStr)
@@ -1534,21 +1519,20 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
     IF StrCmp(tempStr,'VER=',STRLEN)
       ver:=Val(tempStr+STRLEN)
       IF (ver<1)
-        errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
-        END fs
-        RETURN
+        Raise("INVF")
       ENDIF
       IF (ver>FILE_FORMAT_VER)
-        errorRequest(mainWindow,'Error','This file is too new for this version of ReBuild.')
-        END fs
-        RETURN
+        Raise("VERS")
       ENDIF
     ELSEIF StrCmp(tempStr,'NEXTID=',STRLEN)
       newid:=Val(tempStr+STRLEN)
       IF newid<1
-        errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
-        END fs
-        RETURN
+        Raise("INVF")
+      ENDIF
+    ELSEIF StrCmp(tempStr,'SELECTEDID=',STRLEN)
+      selid:=Val(tempStr+STRLEN)
+      IF selid<1
+        Raise("INVF")
       ENDIF
     ELSEIF StrCmp(tempStr,'VIEWTMP=',STRLEN)
       v:=Val(tempStr+STRLEN)
@@ -1586,9 +1570,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
     ENDIF
 
     IF fs.readLine(tempStr)=FALSE
-      errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
-      END fs
-      RETURN
+      Raise("INVF")
     ENDIF
   ENDWHILE
   
@@ -1633,6 +1615,8 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
       IF (type=TYPE_LAYOUT) AND (objectList.item(objectList.count()-1)=0) THEN objectList.setItem(objectList.count()-1,newObj)
 
       IF newObj THEN newObj.deserialise(fs)
+      IF newObj.id=selid THEN selcomp:=newObj
+      
       loadObjectList.add(newObj)
     ENDIF
   ENDWHILE
@@ -1656,7 +1640,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
     processObjects(objectList.item(i),loadObjectList)
     i+=3
   ENDWHILE
-  makeList()
+  makeList(selcomp)
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
@@ -1667,48 +1651,88 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
     addMembers(objectList.item(i+ROOT_LAYOUT_ITEM-ROOT_WINDOW_ITEM),objectList.item(i))
     i+=3
   ENDWHILE
-  addRecent(filename)
   remakePreviewMenus()
- 
-  changes:=FALSE
-  
   objectInitialise(newid)
 EXCEPT DO
-  END loadObjectList
-  END fs
+  END loadObjectList 
+  ReThrow()
 ENDPROC
 
-PROC saveFile() HANDLE
+PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
   DEF fs=0:PTR TO fileStreamer
-  DEF i,j
-  DEF comp:PTR TO reactionObject
-  DEF tempStr[300]:STRING
-  DEF reactionLists:PTR TO stdlist
-  DEF oldtool
-  DEF dobj:PTR TO diskobject
-  DEF lock
 
-  IF EstrLen(filename)=0 
-    RETURN saveFileAs()
+  DEF tags
+  DEF fr:PTR TO filerequester
+  DEF fname[255]:STRING
+
+  errorState:=FALSE
+  IF loadfilename=NIL
+    aslbase:=OpenLibrary('asl.library',37)
+    IF aslbase=NIL THEN Throw("LIB","ASL")
+    tags:=NEW [ASL_HAIL,'Select a file to load',
+       ASL_WINDOW, win,
+       ASLFR_INITIALDRAWER, systemOptions.savePath,
+       TAG_DONE]
+    fr:=AllocAslRequest(ASL_FILEREQUEST,tags)
+    IF(AslRequest(fr,0))=FALSE
+      IF tags THEN FastDisposeList(tags)
+      IF aslbase THEN CloseLibrary(aslbase)
+      RETURN
+    ENDIF
+
+    StrCopy(fname,fr.drawer)
+    AstrCopy(systemOptions.savePath,fr.drawer)
+    AddPart(fname,fr.file,100)
+    SetStr(fname)
+    IF fr THEN FreeAslRequest(fr)
+    IF tags THEN FastDisposeList(tags)
+    IF aslbase THEN CloseLibrary(aslbase)
+  ELSE
+    StrCopy(fname,loadfilename)
   ENDIF
+  StrCopy(filename,fname)
 
-  NEW fs.create(filename,MODE_NEWFILE)
+  NEW fs.create(fname,MODE_OLDFILE)
   IF fs.isOpen()=FALSE
     errorRequest(mainWindow,'Error','This file could not be opened.')
     END fs
     RETURN
   ENDIF
+  
+  loadStream(fs)
 
-  setBusy()
+  changes:=FALSE
+  addRecent(filename)
+  clearUndo()
+  addUndo()
+EXCEPT DO
+  SELECT exceptioninfo
+    CASE "INVF"
+      errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
+    CASE "VERS"
+      errorRequest(mainWindow,'Error','This file is too new for this version of ReBuild.')     
+  ENDSELECT
 
+  END fs
+ENDPROC
+
+PROC saveStream(fs:PTR TO baseStreamer)
+  DEF i,j,flags
+  DEF comp:PTR TO reactionObject
+  DEF tempStr[300]:STRING
+  DEF reactionLists:PTR TO stdlist
   fs.writeLine('-REBUILD-')
   StringF(tempStr,'VER=\d',FILE_FORMAT_VER)
   fs.writeLine(tempStr)
   StringF(tempStr,'NEXTID=\d',getObjId())
   fs.writeLine(tempStr)
+  IF selectedComp
+    StringF(tempStr,'SELECTEDID=\d',selectedComp.id)
+    fs.writeLine(tempStr)
+  ENDIF
   StringF(tempStr,'VIEWTMP=\d',IF bufferLayout THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
-  StringF(tempStr,'ADDSETT=\d',IF systemOptions.showSettingsOnAdd AND CHECKED THEN TRUE ELSE FALSE)
+  StringF(tempStr,'ADDSETT=\d',IF systemOptions.showSettingsOnAdd THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
   StringF(tempStr,'LANGID=\d',codeOptions.langid)
   fs.writeLine(tempStr)
@@ -1734,6 +1758,29 @@ PROC saveFile() HANDLE
       comp.serialise(fs)
     ENDIF
   ENDFOR
+ENDPROC
+
+PROC saveFile() HANDLE
+  DEF fs=0:PTR TO fileStreamer
+  DEF oldtool
+  DEF tempStr[300]:STRING
+  DEF dobj:PTR TO diskobject
+  DEF lock
+
+  IF EstrLen(filename)=0 
+    RETURN saveFileAs()
+  ENDIF
+
+  NEW fs.create(filename,MODE_NEWFILE)
+  IF fs.isOpen()=FALSE
+    errorRequest(mainWindow,'Error','This file could not be opened.')
+    END fs
+    RETURN
+  ENDIF
+
+  setBusy()
+
+  saveStream(fs)
   
   IF systemOptions.saveProjectIcons
     dobj:=GetDefDiskObject(WBPROJECT)
@@ -1879,6 +1926,7 @@ ENDPROC
 PROC doAddWindow()
   DEF newwin:PTR TO windowObject
 
+  updateUndo()
   newwin:=createWindowObject(0)
   IF newwin
     setBusy()
@@ -1899,6 +1947,7 @@ PROC doAddWindow()
       RA_OpenWindow(newwin.previewObject)
       remakePreviewMenus()
       changes:=TRUE
+      addUndo()
     ENDIF
     clearBusy()
   ENDIF
@@ -1918,6 +1967,7 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
     IF comp THEN allowchildren:=((comp.allowChildren()=TRUE) OR ((comp.allowChildren()>0) AND (comp.children.count()<comp.allowChildren())))
   ENDWHILE
   IF comp AND allowchildren
+    updateUndo()
     newObj:=createLayoutObject(comp)
     IF newObj 
       IF horiz
@@ -1930,6 +1980,7 @@ PROC doAddLayoutQuick(comp:PTR TO reactionObject, horiz)
       
       addObject(comp,newObj,IF comp=selectedComp THEN -1 ELSE selectedComp.getChildIndex()+1)
     ENDIF
+    addUndo()
   ENDIF
 ENDPROC newObj
 
@@ -1991,6 +2042,7 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
         ENDIF
       ENDIF
       IF newObj
+        updateUndo()
         IF (comp.type=TYPE_VIRTUAL) AND (newObj.isImage())
           layoutObj:=createLayoutObject(comp)
           addObject(comp,layoutObj)
@@ -1999,6 +2051,7 @@ PROC doAddComp(comp:PTR TO reactionObject, objType)
         changes:=TRUE
         
         addObject(comp,newObj,IF comp=selectedComp THEN -1 ELSE selectedComp.getChildIndex()+1)
+        addUndo()
       ENDIF
       clearBusy()
     ENDIF
@@ -2031,6 +2084,7 @@ PROC doEdit()
   DEF pwin
   IF selectedComp
     setBusy()
+    updateUndo()
     IF selectedComp.editSettings()
       changes:=TRUE
       idx:=findWindowIndex(selectedComp)
@@ -2052,6 +2106,7 @@ PROC doEdit()
           selectedComp.createPreviewObject(win.wscreen)
         ENDIF
         rethinkPreviews()
+        addUndo()
       ENDIF
     ENDIF
     clearBusy()
@@ -2062,19 +2117,25 @@ ENDPROC
 PROC doDelete()
   IF selectedComp.type=TYPE_WINDOW
     IF warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this whole window?',TRUE)=1
+      updateUndo()
       changes:=TRUE
       removeWindow(selectedComp)
+      addUndo()
     ENDIF
   ELSE
     IF selectedComp.children.count()>0
       IF (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item and all of its children?',TRUE)=1)
+        updateUndo()
         changes:=TRUE
         removeObject(selectedComp)
+        addUndo()
       ENDIF
     ELSE
       IF (systemOptions.warnOnDelete=FALSE) ORELSE (warnRequest(mainWindow,'Warning','Are you sure you wish\nto delete this item?',TRUE)=1)
+        updateUndo()
         changes:=TRUE
         removeObject(selectedComp)
+        addUndo()
       ENDIF
     ENDIF
   ENDIF
@@ -2139,10 +2200,12 @@ PROC doMoveToBuffer(comp:PTR TO reactionObject)
   IF comp.children.count()>0
     IF warnRequest(mainWindow,'Warning','This will move this and all child items into the buffer.\nDo you wish to continue?',TRUE)=0 THEN RETURN
   ENDIF
+  updateUndo()
   changes:=TRUE
 
   copyToBuffer(comp,TRUE)
   removeObject(comp)
+  addUndo()
 ENDPROC
 
 PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
@@ -2160,6 +2223,7 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
     RETURN
   ENDIF
 
+  updateUndo()
   bufferComp.serialise(fs)
   END fs
   
@@ -2201,13 +2265,16 @@ PROC copyFromBuffer(bufferComp:PTR TO reactionObject)
   ENDIF
   DeleteFile('t:tempcomp')
   changes:=TRUE
+  addUndo()
 ENDPROC
 
 PROC moveFromBuffer(bufferComp:PTR TO reactionObject)
   DEF i
+  updateUndo()
   copyFromBuffer(bufferComp)
   removeBufferItem(bufferComp)
   changes:=TRUE
+  addUndo()
 ENDPROC
 
 PROC removeBufferItem(bufferComp:PTR TO reactionObject)
@@ -2318,6 +2385,8 @@ PROC newProject()
   rethinkPreviews()
   remakePreviewMenus()
   changes:=FALSE
+  clearUndo()
+  addUndo()
 ENDPROC
 
 PROC updateSettings()
@@ -2458,6 +2527,9 @@ PROC remakePreviewMenus()
   NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Quit',0,0,'Q',
   NM_TITLE,'Edit',0,0,0,
+  NM_ITEM,'Undo',0,0,'Z',
+  NM_ITEM,'Redo',0,MIF_SHIFTCOMMSEQ,'Z',
+  NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Add Gadget',-1,0,0,
   NM_SUB,'Button',TYPE_BUTTON,0,0,
   NM_SUB,'CheckBox',TYPE_CHECKBOX,0,0,
@@ -2691,11 +2763,13 @@ PROC editLists()
   DEF idx,mainRootLayout, window
   
   setBusy()
+  updateUndo()
   NEW listManagerForm.create()
   listManagerForm.manageLists()
   changes:=TRUE
   END listManagerForm
   clearBusy()
+  addUndo()
   
   idx:=ROOT_WINDOW_ITEM
   WHILE idx<objectList.count()
@@ -2814,6 +2888,71 @@ PROC getAllWindowSigs()
   ENDWHILE
 ENDPROC wsig
 
+PROC doUndo() HANDLE
+  DEF strStream:PTR TO stringStreamer
+  IF undoPos>0
+    undoPos-- 
+    strStream:=undoData.item(undoPos)
+  ENDIF
+  strStream.reset()
+  closePreviews()
+  loadStream(strStream)
+  restorePreviews()
+EXCEPT
+ENDPROC
+
+PROC doRedo() HANDLE
+  DEF strStream:PTR TO stringStreamer
+  IF undoPos<(undoData.count()-1)
+    undoPos++
+    strStream:=undoData.item(undoPos)
+  ENDIF
+  strStream.reset()
+  closePreviews()
+  loadStream(strStream)
+  restorePreviews()
+EXCEPT
+ENDPROC
+
+PROC clearUndo()
+  DEF strStream:PTR TO stringStreamer
+  DEF i
+  FOR i:=0 TO undoData.count()-1
+    strStream:=undoData.item(i)
+    END strStream
+  ENDFOR
+  undoData.clear()
+  undoPos:=-1
+ENDPROC
+
+PROC updateUndo()
+  DEF strStream:PTR TO stringStreamer
+  IF undoData.count()>0
+    strStream:=undoData.item(undoData.count()-1)
+    strStream.clear()
+    saveStream(strStream)
+  ENDIF
+ENDPROC
+
+PROC addUndo()
+  DEF strStream:PTR TO stringStreamer
+  WHILE undoPos<(undoData.count()-1)
+    strStream:=undoData.item(undoData.count()-1)
+    END strStream
+    undoData.remove(undoData.count()-1)
+  ENDWHILE
+ 
+  IF undoData.count()>MAX_UNDO_COUNT THEN undoData.remove(0)
+  
+  NEW strStream.create()
+  saveStream(strStream)
+  undoData.add(strStream)
+  undoPos++
+ 
+  menuDisable(win,MENU_EDIT,MENU_EDIT_UNDO,0,undoPos=0)
+  menuDisable(win,MENU_EDIT,MENU_EDIT_REDO,0,undoPos>=(undoData.count()-1))
+ENDPROC
+
 PROC main() HANDLE
   DEF running=TRUE
   DEF wsig,code=0,tmp,sig,result
@@ -2827,6 +2966,7 @@ PROC main() HANDLE
   DEF item,type
 
   DEF hintInfo:PTR TO hintinfo
+  DEF strStream:stringStreamer
   
   openClasses()
   initialise()
@@ -2836,6 +2976,8 @@ PROC main() HANDLE
 
   NEW recentFiles.stringlist(5)
   loadRecent()
+
+  NEW undoData.stdlist(MAX_UNDO_COUNT)
 
   hintInfo:=New(SIZEOF hintinfo*17)
   hintInfo[0].gadgetid:=GAD_ADD
@@ -2985,6 +3127,10 @@ PROC main() HANDLE
                   ENDSELECT
                 CASE MENU_EDIT
                   SELECT menuitem
+                    CASE MENU_EDIT_UNDO
+                      doUndo()
+                    CASE MENU_EDIT_REDO
+                      doRedo()
                     CASE MENU_EDIT_ADD_GADGET  ->Add
                       item:=ItemAddress(win.menustrip,result)
                       type:=GTMENUITEM_USERDATA(item)
@@ -3190,6 +3336,12 @@ EXCEPT DO
     saveRecent()
     END recentFiles
   ENDIF
+  
+  IF undoData
+    clearUndo()
+    END undoData
+  ENDIF
+  
   IF objectList THEN END objectList
   IF bufferList 
     disposeBufferObjects()

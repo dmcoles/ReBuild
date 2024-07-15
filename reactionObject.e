@@ -81,6 +81,7 @@ EXPORT OBJECT reactionObject
   noDispose:CHAR
   weightBar:CHAR
   
+  expanded:CHAR
   tempParentId:INT
   drawInfo:LONG
   visInfo:LONG
@@ -491,6 +492,7 @@ EXPORT PROC create(parent) OF reactionObject
   scr:=LockPubScreen(NIL)
   self.drawInfo:=GetScreenDrawInfo(scr)
   self.visInfo:=GetVisualInfoA(scr,[TAG_END])
+  self.expanded:=self.allowChildren()<>0
   UnlockPubScreen(NIL,scr)
 ENDPROC
 
@@ -634,6 +636,8 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'WEIGHTBAR: \d',self.weightBar)
   fser.writeLine(tempStr)
+  StringF(tempStr,'EXPANDED: \d',self.expanded)
+  fser.writeLine(tempStr)
   fser.writeLine('--')
   
   list:=self.serialiseData()
@@ -736,6 +740,8 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
         self.noDispose:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('WEIGHTBAR: ',tempStr,STRLEN)
         self.weightBar:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('EXPANDED: ',tempStr,STRLEN)
+        self.expanded:=Val(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE

@@ -3,13 +3,13 @@ OPT MODULE
 
   MODULE 'gadgets/layout','gadgets/virtual'
 
-  MODULE '*fileStreamer','*stringlist'
+  MODULE '*baseStreamer','*stringlist'
 
 EXPORT ENUM NONE, ESOURCE_GEN, CSOURCE_GEN
 
 EXPORT OBJECT srcGen
   type:INT
-  fser:PTR TO fileStreamer
+  fser:PTR TO baseStreamer
   libsused:PTR TO CHAR
   stringDelimiter:CHAR
   orOperator:PTR TO CHAR
@@ -24,7 +24,7 @@ EXPORT OBJECT srcGen
   currentGadgetVar:INT
 ENDOBJECT
 
-PROC create(fser:PTR TO fileStreamer,libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF srcGen
+PROC create(fser:PTR TO baseStreamer,libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF srcGen
   self.type:=NONE
   self.fser:=fser
   self.libsused:=libsused

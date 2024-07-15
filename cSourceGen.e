@@ -1,7 +1,7 @@
 OPT MODULE,LARGE
 
   MODULE 'images/drawlist'
-  MODULE '*fileStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
+  MODULE '*baseStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*tabsObject','*reactionListObject',
          '*drawListObject','*speedBarObject','*listViewObject','*rexxObject','*requesterObject'
 
@@ -10,7 +10,7 @@ ENDOBJECT
 
 ENUM ENUM_IDS, ENUM_IDENTS, ENUM_IDXS
 
-PROC create(fser:PTR TO fileStreamer, libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF cSrcGen
+PROC create(fser:PTR TO baseStreamer, libsused:PTR TO CHAR,definitionOnly,useIds,useMacros) OF cSrcGen
   SUPER self.create(fser,libsused,definitionOnly,useIds,useMacros)
   self.type:=CSOURCE_GEN
   self.stringDelimiter:=34
@@ -734,7 +734,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   ENDIF
 
   IF self.libsused[TYPE_LISTVIEW]
-    self.writeLine('  if( !(ListViewBase = (struct Library*) OpenLibrary("gadgest/listview.gadget",0L) ) ) return 0;')
+    self.writeLine('  if( !(ListViewBase = (struct Library*) OpenLibrary("gadgets/listview.gadget",0L) ) ) return 0;')
   ENDIF
 
   IF self.libsused[TYPE_VIRTUAL]

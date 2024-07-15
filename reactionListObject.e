@@ -1,6 +1,6 @@
   OPT MODULE
 
-  MODULE '*stringlist','*reactionObject','*fileStreamer'
+  MODULE '*stringlist','*reactionObject','*baseStreamer'
 
 EXPORT OBJECT reactionListObject OF reactionObject
   listnode:LONG
@@ -21,7 +21,7 @@ PROC end() OF reactionListObject
   SUPER self.end()
 ENDPROC
 
-EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionListObject
+EXPORT PROC serialise(fser:PTR TO baseStreamer) OF reactionListObject
   DEF tempStr[200]:STRING
   DEF i
 
@@ -36,7 +36,7 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionListObject
   
 ENDPROC
 
-EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF reactionListObject
+EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF reactionListObject
   DEF tempStr[200]:STRING
   DEF done=FALSE
   DEF i

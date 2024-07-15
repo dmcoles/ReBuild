@@ -23,7 +23,7 @@ OPT MODULE, OSVERSION=37
         'exec/nodes',
         'amigalib/lists'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*fileStreamer','*sourceGen','*stringlist','*validator'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*baseStreamer','*sourceGen','*stringlist','*validator'
 
 EXPORT ENUM DRAWLISTGAD_IDENT, DRAWLISTGAD_LIST,DRAWLISTGAD_ADD, DRAWLISTGAD_EDIT, DRAWLISTGAD_DEL,
       DRAWLISTGAD_OK, DRAWLISTGAD_CHILD, DRAWLISTGAD_CANCEL
@@ -705,7 +705,7 @@ EXPORT PROC getTypeName() OF drawListObject
   RETURN 'DrawList'
 ENDPROC
 
-EXPORT PROC serialise(fser:PTR TO fileStreamer) OF drawListObject
+EXPORT PROC serialise(fser:PTR TO baseStreamer) OF drawListObject
   DEF tempStr[200]:STRING
   DEF drawItem:PTR TO drawlist
   DEF i
@@ -731,7 +731,7 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF drawListObject
   self.serialiseChildren(fser)
 ENDPROC
 
-EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF drawListObject
+EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF drawListObject
   DEF tempStr[200]:STRING
   DEF done=FALSE
   DEF i

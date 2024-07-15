@@ -1,8 +1,9 @@
 OPT MODULE,OSVERSION=37
 
   MODULE 'dos/dos'
+  MODULE '*baseStreamer'
 
-EXPORT OBJECT fileStreamer
+EXPORT OBJECT fileStreamer OF baseStreamer
 PRIVATE
   fname:PTR TO CHAR
   fh:LONG
@@ -39,9 +40,4 @@ PROC readLine(outStr:PTR TO CHAR) OF fileStreamer
     l:=StrLen(outStr)
     IF (l>0) AND (outStr[l-1]="\n") THEN outStr[l-1]:=0
   ENDIF
-ENDPROC r
-
-PROC read(outStr:PTR TO CHAR, len) OF fileStreamer
-  DEF r
-  r:=Fread(self.fh,outStr,1,len)
 ENDPROC r

@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
         'exec/lists','exec/nodes',
         'requester','classes/requester'
 
-  MODULE '*reactionObject','*reactionForm','*sourcegen','*validator','*stringlist','*fileStreamer'
+  MODULE '*reactionObject','*reactionForm','*sourcegen','*validator','*stringlist','*baseStreamer'
 
 EXPORT DEF texteditorbase
 
@@ -547,7 +547,7 @@ EXPORT PROC getTypeName() OF requesterObject
   RETURN 'Requester'
 ENDPROC
 
-EXPORT PROC serialise(fser:PTR TO fileStreamer) OF requesterObject
+EXPORT PROC serialise(fser:PTR TO baseStreamer) OF requesterObject
   DEF tempStr[200]:STRING
   DEF reqItem:PTR TO requesterItem
   DEF i,j
@@ -573,7 +573,7 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF requesterObject
   self.serialiseChildren(fser)
 ENDPROC
 
-EXPORT PROC deserialise(fser:PTR TO fileStreamer) OF requesterObject
+EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF requesterObject
   DEF tempStr[200]:STRING
   DEF done=FALSE
   DEF i
