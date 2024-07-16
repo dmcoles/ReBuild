@@ -2936,6 +2936,8 @@ ENDPROC
 
 PROC addUndo()
   DEF strStream:PTR TO stringStreamer
+  DEF prevStream:PTR TO stringStreamer
+  DEF doAdd=FALSE,i
   WHILE undoPos<(undoData.count()-1)
     strStream:=undoData.item(undoData.count()-1)
     END strStream
@@ -2946,8 +2948,20 @@ PROC addUndo()
   
   NEW strStream.create()
   saveStream(strStream)
-  undoData.add(strStream)
-  undoPos++
+  
+  IF (undoData.count()=0) 
+    doAdd:=TRUE
+  ELSE
+    prevStream:=undoData.item(undoData.count()-1)
+    IF prevStream.compareTo(strStream)=FALSE THEN doAdd:=TRUE
+  ENDIF
+
+  IF doAdd
+    undoData.add(strStream)
+    undoPos++
+  ELSE
+    END strStream
+  ENDIF
  
   menuDisable(win,MENU_EDIT,MENU_EDIT_UNDO,0,undoPos=0)
   menuDisable(win,MENU_EDIT,MENU_EDIT_REDO,0,undoPos>=(undoData.count()-1))

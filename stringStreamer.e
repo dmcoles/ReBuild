@@ -58,3 +58,16 @@ PROC reset() OF stringStreamer
   self.currpos:=0
 ENDPROC
 
+PROC compareTo(otherStream:PTR TO stringStreamer) OF stringStreamer
+  DEF i
+  
+  IF otherStream.data.count()<>self.data.count()
+    RETURN FALSE
+  ELSE
+    i:=otherStream.data.count()-1
+    WHILE (i>=0)
+      IF StrCmp(otherStream.data.item(i),self.data.item(i))=FALSE THEN RETURN FALSE
+      i--
+    ENDWHILE
+  ENDIF    
+ENDPROC TRUE
