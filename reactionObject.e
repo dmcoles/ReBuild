@@ -423,6 +423,7 @@ PROC create() OF hintEditForm
           GA_TABCYCLE, TRUE,
         ButtonEnd,
       LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
     LayoutEnd,
   WindowEnd
 

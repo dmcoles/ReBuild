@@ -48,15 +48,29 @@ ENDPROC
 PROC readLine(outStr:PTR TO CHAR) OF stringStreamer
   DEF r,l
   IF self.data
-    AstrCopy(outStr,self.data.item(self.currpos),200)
-    r:=StrLen(outStr)
-    self.currpos:=self.currpos+1
+    IF (self.currpos<(self.data.count()))
+      AstrCopy(outStr,self.data.item(self.currpos),200)
+      r:=StrLen(outStr)
+      self.currpos:=self.currpos+1
+    ELSE
+      r:=-1
+    ENDIF
   ENDIF
 ENDPROC r
 
 PROC reset() OF stringStreamer
   self.currpos:=0
 ENDPROC
+
+PROC getSize() OF stringStreamer
+  //very rough size estimation
+  DEF r=0,i
+  FOR i:=0 TO self.data.count()-1
+    r:=r+EstrLen(self.data.item(i))+8
+  ENDFOR
+  r:=r+32
+ENDPROC r
+
 
 PROC compareTo(otherStream:PTR TO stringStreamer) OF stringStreamer
   DEF i

@@ -52,7 +52,7 @@ EXPORT PROC create() OF codeGenForm
   self.fullCodeOption:=chooserLabelsA(['Generate full code','Generate definitions only',0])
 
   self.windowObj:=WindowObject,
-    WA_TITLE, 'Generate Code',
+    WA_TITLE, 'Code Options',
     WA_LEFT, 0,
     WA_TOP, 0,
     WA_HEIGHT, 80,
