@@ -2574,7 +2574,7 @@ PROC newProject()
   objectList.add(createWindowObject(0))  ->Window
   objectList.add(createMenuObject(0))  ->Menu
   objectList.add(createLayoutObject(0))  ->Layout
-  makeList()
+  makeList(objectList.item(ROOT_LAYOUT_ITEM))
 
   i:=ROOT_WINDOW_ITEM
   WHILE i<objectList.count()
