@@ -134,6 +134,7 @@ PROC end() OF virtualSettingsForm
 
   END self.gadgetList[NUM_VIRTUAL_GADS]
   END self.gadgetActions[NUM_VIRTUAL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF virtualSettingsForm

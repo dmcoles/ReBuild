@@ -191,6 +191,7 @@ ENDPROC
 PROC end() OF paletteSettingsForm
   END self.gadgetList[NUM_PAL_GADS]
   END self.gadgetActions[NUM_PAL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF paletteSettingsForm

@@ -789,6 +789,7 @@ PROC end() OF objectPickerForm
   ->freeClickTabs( self.tabs1 )
   END self.gadgetList[NUMGADS]
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC selectItem() OF  objectPickerForm

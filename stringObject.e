@@ -242,6 +242,7 @@ PROC end() OF stringSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_STR_GADS]
   END self.gadgetActions[NUM_STR_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF stringSettingsForm

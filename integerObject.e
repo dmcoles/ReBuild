@@ -248,6 +248,7 @@ ENDPROC
 PROC end() OF integerSettingsForm
   END self.gadgetList[NUM_INT_GADS]
   END self.gadgetActions[NUM_INT_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF integerSettingsForm

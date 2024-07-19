@@ -234,6 +234,7 @@ PROC end() OF requesterItemSettingsForm
   IF self.imageLabels THEN freeChooserLabels(self.imageLabels)
   END self.gadgetList[NUM_REQITEM_GADS]
   END self.gadgetActions[NUM_REQITEM_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettings(reqItem:PTR TO requesterItem) OF requesterItemSettingsForm
@@ -245,7 +246,7 @@ PROC editSettings(reqItem:PTR TO requesterItem) OF requesterItemSettingsForm
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_GADTEXT ],0,0,[STRINGA_TEXTVAL,reqItem.gadgetsText,0])
   bodyText:=reqItem.bodyText.makeTextString()
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_BODY ],0,0,[GA_TEXTEDITOR_CONTENTS, bodyText,0])
-  Dispose(bodyText)
+  DisposeLink(bodyText)
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_IMAGE ],0,0,[CHOOSER_SELECTED,reqItem.image,0]) 
 
   res:=self.showModal()
@@ -515,6 +516,7 @@ PROC end() OF requesterSettingsForm
   freeBrowserNodes(self.browserlist)
   END self.gadgetList[NUM_REQ_GADS]
   END self.gadgetActions[NUM_REQ_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC create(parent) OF requesterObject

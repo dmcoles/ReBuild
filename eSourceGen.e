@@ -636,7 +636,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
                             reqItem.titleText,
                             bodyText,
                             reqItem.gadgetsText)
-    Dispose(bodyText)
+    DisposeLink(bodyText)
     self.writeLine(tempStr)
     self.writeLine('  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])')
     self.writeLine('  IF reqobj')
@@ -960,7 +960,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
         ELSE
           StringF(tempStr,'             \s,-1,\a\s\a,0,',itemName,hintText)
         ENDIF         
-        Dispose(hintText)
+        DisposeLink(hintText)
         self.writeLine(tempStr)
         j++
       ENDIF

@@ -208,6 +208,7 @@ ENDPROC
 PROC end() OF penMapSettingsForm
   END self.gadgetList[NUM_PENMAP_GADS]
   END self.gadgetActions[NUM_PENMAP_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF penMapSettingsForm

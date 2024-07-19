@@ -482,6 +482,7 @@ PROC end() OF layoutSettingsForm
 
   END self.gadgetList[NUM_LAYOUT_GADS]
   END self.gadgetActions[NUM_LAYOUT_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF layoutSettingsForm

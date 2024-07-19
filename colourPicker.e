@@ -96,6 +96,7 @@ ENDPROC
 PROC end() OF colourPickerForm
   END self.gadgetList[NUMGADS]
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC selectColour(current) OF colourPickerForm

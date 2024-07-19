@@ -117,6 +117,7 @@ PROC end() OF listPickerForm
   freeBrowserNodes(self.browserlist)
   END self.gadgetList[NUMGADS]
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC makeList() OF listPickerForm

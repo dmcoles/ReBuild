@@ -497,6 +497,7 @@ PROC end() OF getScreenModeSettingsForm
   freeChooserLabels( self.labels3 )
   END self.gadgetList[NUM_GETSCREEN_GADS]
   END self.gadgetActions[NUM_GETSCREEN_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF getScreenModeSettingsForm

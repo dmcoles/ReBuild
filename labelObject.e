@@ -180,6 +180,7 @@ PROC end() OF labelSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_LBL_GADS]
   END self.gadgetActions[NUM_LBL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF labelSettingsForm

@@ -276,6 +276,7 @@ PROC end() OF screenSettingsForm
 
   END self.gadgetList[NUM_SCR_GADS]
   END self.gadgetActions[NUM_SCR_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC update(nself,gadget,id,code) OF screenSettingsForm

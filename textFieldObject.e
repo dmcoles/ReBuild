@@ -531,6 +531,7 @@ PROC end() OF textFieldSettingsForm
 
   END self.gadgetList[NUM_TEXTFIELD_GADS]
   END self.gadgetActions[NUM_TEXTFIELD_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF textFieldSettingsForm

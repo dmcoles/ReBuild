@@ -373,6 +373,7 @@ ENDPROC
 PROC end() OF getFileSettingsForm
   END self.gadgetList[NUM_GETFILE_GADS]
   END self.gadgetActions[NUM_GETFILE_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF getFileSettingsForm

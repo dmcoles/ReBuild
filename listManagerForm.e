@@ -405,6 +405,7 @@ PROC end() OF listManagerForm
 
   END self.gadgetList[NUMGADS] 
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC manageLists() OF listManagerForm

@@ -256,6 +256,7 @@ PROC end() OF checkboxSettingsForm
 
   END self.gadgetList[NUM_CHK_GADS]
   END self.gadgetActions[NUM_CHK_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF checkboxSettingsForm

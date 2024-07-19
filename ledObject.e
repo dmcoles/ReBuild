@@ -256,6 +256,7 @@ PROC end() OF ledSettingsForm
 
   END self.gadgetList[NUM_LED_GADS]
   END self.gadgetActions[NUM_LED_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF ledSettingsForm

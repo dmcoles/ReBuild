@@ -504,7 +504,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
                             reqItem.titleText,
                             bodyText,
                             reqItem.gadgetsText)
-    Dispose(bodyText)
+    DisposeLink(bodyText)
     self.writeLine(tempStr)
     self.writeLine('  if (reqobj)')
     self.writeLine('  {')
@@ -1016,7 +1016,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
         hintText:=reactionObject.hintText.makeTextString('\\n')
         StringF(tempStr,'    {\s,-1,\q\s\q,0},',itemName,hintText)
-        Dispose(hintText)
+        DisposeLink(hintText)
         self.writeLine(tempStr)
       ENDIF
     ENDFOR

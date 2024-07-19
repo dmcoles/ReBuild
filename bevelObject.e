@@ -394,6 +394,7 @@ PROC end() OF bevelSettingsForm
 
   END self.gadgetList[NUM_BEVEL_GADS]
   END self.gadgetActions[NUM_BEVEL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF bevelSettingsForm

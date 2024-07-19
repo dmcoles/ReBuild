@@ -197,6 +197,7 @@ ENDPROC
 PROC end() OF tabsSettingsForm
   END self.gadgetList[NUM_TABS_GADS]
   END self.gadgetActions[NUM_TABS_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF tabsSettingsForm

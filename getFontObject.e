@@ -331,6 +331,7 @@ ENDPROC
 PROC end() OF getFontSettingsForm
   END self.gadgetList[NUM_GETFONT_GADS]
   END self.gadgetActions[NUM_GETFONT_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF getFontSettingsForm

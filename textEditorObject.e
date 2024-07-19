@@ -279,6 +279,7 @@ PROC end() OF textEditorSettingsForm
 
   END self.gadgetList[NUM_TEXTED_GADS]
   END self.gadgetActions[NUM_TEXTED_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF textEditorSettingsForm

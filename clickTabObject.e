@@ -232,6 +232,7 @@ ENDPROC
 PROC end() OF clickTabSettingsForm
   END self.gadgetList[NUM_CLICKTAB_GADS]
   END self.gadgetActions[NUM_CLICKTAB_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF clickTabSettingsForm

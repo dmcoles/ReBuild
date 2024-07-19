@@ -466,6 +466,7 @@ ENDPROC
 PROC end() OF listBrowserSettingsForm
   END self.gadgetList[NUM_LISTB_GADS]
   END self.gadgetActions[NUM_LISTB_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF listBrowserSettingsForm

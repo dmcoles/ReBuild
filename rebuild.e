@@ -2874,7 +2874,7 @@ PROC makeHintList(comp:PTR TO reactionObject, hintGadIds:PTR TO stdlist, hintTex
   IF comp.hintText.count()
     tempText:=comp.hintText.makeTextString()
     hintTexts.add(tempText)
-    Dispose(tempText)
+    DisposeLink(tempText)
     hintGadIds.add(comp.id)
   ENDIF
   
@@ -3232,7 +3232,7 @@ PROC main() HANDLE
 
   DEF hintInfo:PTR TO hintinfo
   DEF strStream:stringStreamer
-  
+
   openClasses()
   initialise()
   NEW objectList.stdlist(20)
@@ -3243,7 +3243,7 @@ PROC main() HANDLE
   loadRecent()
 
   NEW undoData.stdlist(MAX_UNDO_COUNT)
-
+ 
   
   scr:=LockPubScreen(0)
   IF scr

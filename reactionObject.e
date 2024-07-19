@@ -323,6 +323,7 @@ ENDPROC
 PROC end() OF childSettingsForm
   END self.gadgetList[NUM_CHI_GADS]
   END self.gadgetActions[NUM_CHI_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettings(comp:PTR TO reactionObject) OF childSettingsForm
@@ -436,6 +437,7 @@ ENDPROC
 PROC end() OF hintEditForm
   END self.gadgetList[NUM_HINT_GADS]
   END self.gadgetActions[NUM_HINT_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editHint(comp:PTR TO reactionObject) OF hintEditForm
@@ -443,7 +445,7 @@ PROC editHint(comp:PTR TO reactionObject) OF hintEditForm
 
   newval:=comp.hintText.makeTextString()
   SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,newval,0])
-  Dispose(newval)
+  DisposeLink(newval)
 
   res:=self.showModal()
   IF res=MR_OK

@@ -179,6 +179,7 @@ PROC end() OF rexxSettingsForm
   END self.tempCommands
   END self.gadgetList[NUM_REXX_GADS]
   END self.gadgetActions[NUM_REXX_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettings(comp:PTR TO rexxObject) OF rexxSettingsForm
@@ -376,8 +377,9 @@ ENDPROC res=MR_OK
 
 PROC end() OF rexxCommandSettingsForm
   freeBrowserNodes(self.browserlist)
-  END self.gadgetList[NUM_REXX_GADS]
-  END self.gadgetActions[NUM_REXX_GADS]
+  END self.gadgetList[NUM_REXXCMD_GADS]
+  END self.gadgetActions[NUM_REXXCMD_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC create(parent) OF rexxObject

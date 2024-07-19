@@ -502,6 +502,7 @@ PROC end() OF drawListSettingsForm
 
   END self.gadgetList[NUM_DRAWLIST_GADS]
   END self.gadgetActions[NUM_DRAWLIST_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC updateNode(node,drawitem:PTR TO drawlist) OF drawListSettingsForm

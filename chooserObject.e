@@ -269,6 +269,7 @@ ENDPROC
 PROC end() OF chooserSettingsForm
   END self.gadgetList[NUM_CHOOSER_GADS]
   END self.gadgetActions[NUM_CHOOSER_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF chooserSettingsForm

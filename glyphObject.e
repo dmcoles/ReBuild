@@ -149,6 +149,7 @@ PROC end() OF glyphSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_GLY_GADS]
   END self.gadgetActions[NUM_GLY_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF glyphSettingsForm

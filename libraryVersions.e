@@ -148,6 +148,7 @@ PROC end() OF libraryList
   freeBrowserNodes(self.browserlist)
   END self.gadgetList[NUMGADS]
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC addLibrary(name,lib:PTR TO lib) OF libraryList

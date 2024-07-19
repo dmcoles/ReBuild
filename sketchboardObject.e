@@ -268,6 +268,7 @@ PROC end() OF sketchboardSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_SBOARD_GADS]
   END self.gadgetActions[NUM_SBOARD_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF sketchboardSettingsForm

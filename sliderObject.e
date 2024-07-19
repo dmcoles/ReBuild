@@ -317,6 +317,7 @@ PROC end() OF sliderSettingsForm
   freeChooserLabels( self.labels3 )
   END self.gadgetList[NUM_SLD_GADS]
   END self.gadgetActions[NUM_SLD_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF sliderSettingsForm

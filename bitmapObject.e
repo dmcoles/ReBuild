@@ -210,6 +210,7 @@ ENDPROC
 PROC end() OF bitmapSettingsForm
   END self.gadgetList[NUM_BITMAP_GADS]
   END self.gadgetActions[NUM_BITMAP_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF bitmapSettingsForm

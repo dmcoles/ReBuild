@@ -350,6 +350,7 @@ PROC end() OF fuelGaugeSettingsForm
 
   END self.gadgetList[NUM_FGAUGE_GADS]
   END self.gadgetActions[NUM_FGAUGE_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 

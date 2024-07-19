@@ -149,6 +149,7 @@ PROC end() OF colorWheelSettingsForm
 
   END self.gadgetList[NUM_CWHEEL_GADS]
   END self.gadgetActions[NUM_CWHEEL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF colorWheelSettingsForm

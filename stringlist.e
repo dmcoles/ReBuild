@@ -135,7 +135,7 @@ EXPORT PROC setFromTextString(newText:PTR TO CHAR) OF stringlist
   WHILE (n:=InStr(newText+pos,'\n'))>=0
     str:=AstrClone(newText+pos,n)
     self.add(str)
-    Dispose(str)
+    DisposeLink(str)
     pos:=pos+n+1
   ENDWHILE
   IF StrLen(newText+pos) THEN self.add(newText+pos)

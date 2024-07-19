@@ -175,6 +175,7 @@ ENDPROC
 PROC end() OF listViewSettingsForm
   END self.gadgetList[NUM_LVIEW_GADS]
   END self.gadgetActions[NUM_LVIEW_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF listViewSettingsForm

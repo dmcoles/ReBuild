@@ -341,6 +341,7 @@ ENDPROC
 PROC end() OF windowIDCMPSettingsForm
   END self.gadgetList[NUM_WIN_IDCMP_GADS]
   END self.gadgetActions[NUM_WIN_IDCMP_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettingsIDCMP(idcmpPtr:PTR TO LONG) OF windowIDCMPSettingsForm
@@ -631,6 +632,7 @@ PROC end() OF windowFlagsSettingsForm
 
   END self.gadgetList[NUM_WIN_FLAGS_GADS]
   END self.gadgetActions[NUM_WIN_FLAGS_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettingsFlags(refreshPtr:PTR TO CHAR, flagsPtr:PTR TO LONG) OF windowFlagsSettingsForm
@@ -1045,6 +1047,7 @@ PROC end() OF windowSettingsForm
 
   END self.gadgetList[NUM_WIN_GADS]
   END self.gadgetActions[NUM_WIN_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm

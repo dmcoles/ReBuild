@@ -205,6 +205,7 @@ ENDPROC
 PROC end() OF boingBallSettingsForm
   END self.gadgetList[NUM_BB_GADS]
   END self.gadgetActions[NUM_BB_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 PROC selectPen(nself,gadget,id,code) OF boingBallSettingsForm

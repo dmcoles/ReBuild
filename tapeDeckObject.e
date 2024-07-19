@@ -203,6 +203,7 @@ PROC end() OF tapeDeckSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_TAPE_GADS]
   END self.gadgetActions[NUM_TAPE_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF tapeDeckSettingsForm

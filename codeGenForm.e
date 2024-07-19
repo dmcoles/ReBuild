@@ -183,6 +183,7 @@ PROC end() OF codeGenForm
   freeChooserLabels( self.fullCodeOption )
   END self.gadgetList[NUMGADS]
   END self.gadgetActions[NUMGADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC selectLang(codeOptions:PTR TO codeOptions) OF codeGenForm

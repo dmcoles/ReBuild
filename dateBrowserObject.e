@@ -185,6 +185,7 @@ ENDPROC
 PROC end() OF dateBrowserSettingsForm
   END self.gadgetList[NUM_DATE_GADS]
   END self.gadgetActions[NUM_DATE_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF dateBrowserSettingsForm

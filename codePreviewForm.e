@@ -115,6 +115,7 @@ PROC end() OF codePreviewForm
   self.close()
   END self.gadgetList[NUM_PREVIEW_GADS]
   END self.gadgetActions[NUM_PREVIEW_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC showCode(strStream:PTR TO stringStreamer) OF codePreviewForm

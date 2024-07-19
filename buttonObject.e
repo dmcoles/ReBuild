@@ -352,6 +352,7 @@ PROC end() OF buttonSettingsForm
 
   END self.gadgetList[NUM_BTN_GADS]
   END self.gadgetActions[NUM_BTN_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF buttonSettingsForm
@@ -372,7 +373,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
   self.tmpBgPen:=comp.bgPen
   self.tmpFillTextPen:=comp.fillTextPen
   self.tmpFillPen:=comp.fillPen
-  
+ 
   self.updateHint(BTNGAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])

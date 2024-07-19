@@ -59,7 +59,7 @@ PROC updateHint(gadid,hintText:PTR TO stringlist) OF reactionForm
 
   SetGadgetAttrsA(self.gadgetList[ gadid ],win,0,[BUTTON_TEXTPEN,IF hintText.count() THEN 2 ELSE 1,0])
 
-  IF self.hintText THEN Dispose(self.hintText)  
+  IF self.hintText THEN DisposeLink(self.hintText)  
   self.hintText:=hintText.makeTextString()
   self.hintInfo.text:=self.hintText
   Sets(self.windowObj,WINDOW_HINTINFO,self.hintInfo)
@@ -100,7 +100,7 @@ EXPORT PROC showModal() OF reactionForm HANDLE
     Raise("WIN")
   ENDIF
   
-  IF self.hintText THEN Dispose(self.hintText)
+  IF self.hintText THEN DisposeLink(self.hintText)
   IF self.hintInfo THEN Dispose(self.hintInfo)
   
 EXCEPT DO

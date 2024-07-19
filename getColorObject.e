@@ -266,6 +266,7 @@ PROC end() OF getColorSettingsForm
   freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_GETCOL_GADS]
   END self.gadgetActions[NUM_GETCOL_GADS]
+  DisposeObject(self.windowObj)
 ENDPROC
 
 EXPORT PROC canClose(modalRes) OF getColorSettingsForm

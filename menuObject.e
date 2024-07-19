@@ -577,8 +577,8 @@ PROC end() OF menuSettingsForm
   END self.gadgetList[NUM_MENU_GADS]
   END self.gadgetActions[NUM_MENU_GADS]
   freeChooserLabels( self.labels1 ) 
+  DisposeObject(self.windowObj)
 ENDPROC
-
 
 PROC validate(nself,gadget,id,code) OF menuSettingsForm
   DEF win,menuItem:PTR TO menuItem
