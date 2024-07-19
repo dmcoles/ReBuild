@@ -60,7 +60,7 @@ virtualObject.m:			virtualObject.e reactionObject.m reactionForm.m sourceGen.m v
 sketchboardObject.m:			sketchboardObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m validator.m
 							$(compiler) sketchboardObject $(options)
 
-textEditorObject.m:			textEditorObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
+textEditorObject.m:			textEditorObject.e reactionObject.m reactionForm.m sourceGen.m validator.m stringlist.m
 							$(compiler) textEditorObject $(options)
 
 ledObject.m:			ledObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m validator.m
@@ -129,7 +129,7 @@ libraryVersions.m:			libraryVersions.e reactionForm.m
 bevelObject.m:			bevelObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m validator.m
 							$(compiler) bevelObject $(options)
 
-textFieldObject.m:			textFieldObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m validator.m
+textFieldObject.m:			textFieldObject.e reactionObject.m reactionForm.m colourPicker.m sourceGen.m validator.m  stringlist.m
 							$(compiler) textFieldObject $(options)
 
 tabsObject.m:			tabsObject.e reactionObject.m reactionForm.m sourceGen.m stringlist.m listPicker.m reactionLists.m reactionListObject.m validator.m

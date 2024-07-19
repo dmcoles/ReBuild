@@ -20,17 +20,31 @@ OPT MODULE, OSVERSION=37
         'intuition/gadgetclass',
         'utility/tagitem'
 
-  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
+  MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator','*stringlist'
 
 EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
       TEXTFIELDGAD_BLINKRATE, TEXTFIELDGAD_MAXSIZE, TEXTFIELDGAD_SPACING, TEXTFIELDGAD_TABSPACES,
       TEXTFIELDGAD_DISABLED, TEXTFIELDGAD_TABCYCLE, TEXTFIELDGAD_BLOCK, TEXTFIELDGAD_MAXSIZEBEEP, TEXTFIELDGAD_PARTIAL,
       TEXTFIELDGAD_NOGHOST, TEXTFIELDGAD_READONLY, TEXTFIELDGAD_NONPRINTCHARS, TEXTFIELDGAD_INVERTED, TEXTFIELDGAD_VCENTER,
-      TEXTFIELDGAD_USERALIGN, TEXTFIELDGAD_RULEDPAPER, TEXTFIELDGAD_SCROLLBAR,
+      TEXTFIELDGAD_USERALIGN, TEXTFIELDGAD_RULEDPAPER, TEXTFIELDGAD_LINKTOSCROLLBAR,
       TEXTFIELDGAD_PAPERPEN, TEXTFIELDGAD_INKPEN, TEXTFIELDGAD_LINEPEN,
       TEXTFIELDGAD_BORDER, TEXTFIELDGAD_ALIGN,
       TEXTFIELDGAD_OK, TEXTFIELDGAD_CHILD, TEXTFIELDGAD_CANCEL
-      
+
+/*struct TagItem TextEditMaps[] =
+{
+	TEXTFIELD_Lines, SCROLLER_Total,
+	TEXTFIELD_Visible, SCROLLER_Visible,
+	TEXTFIELD_Top, SCROLLER_Top,
+	TAG_END
+};
+
+struct TagItem ScrollerMaps[] =
+{
+	SCROLLER_Top, TEXTFIELD_Top,
+	TAG_END
+};
+ */
 
 CONST NUM_TEXTFIELD_GADS=TEXTFIELDGAD_CANCEL+1
 // V1 attributes
@@ -119,7 +133,7 @@ EXPORT OBJECT textFieldObject OF reactionObject
   vCenter:CHAR
   userAlign:CHAR
   ruledPaper:CHAR
-  scrollBar:CHAR
+  linkToScrollBar:INT
   paperPen:INT
   inkPen:INT
   linePen:INT
@@ -132,6 +146,7 @@ PRIVATE
   textFieldObject:PTR TO textFieldObject
   labels1:PTR TO LONG
   labels2:PTR TO LONG
+  labels3:PTR TO LONG
   tempPaperPen:INT
   tempInkPen:INT
   tempLinePen:INT
@@ -149,7 +164,7 @@ PROC create() OF textFieldSettingsForm
   scr:=LockPubScreen(NIL)
   arrows:=(scr.width>=800)
   UnlockPubScreen(NIL,scr)
- 
+
   self.windowObj:=WindowObject,
     WA_TITLE, 'TextField Attribute Setting',
     WA_LEFT, 0,
@@ -390,14 +405,19 @@ PROC create() OF textFieldSettingsForm
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_SCROLLBAR ]:=CheckBoxObject,
-          GA_DISABLED, TRUE,
-          GA_ID, TEXTFIELDGAD_SCROLLBAR,
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ]:=ChooserObject,
+          GA_ID, TEXTFIELDGAD_LINKTOSCROLLBAR,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          GA_TEXT, 'ScrollBar',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 32,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,          
+          CHOOSER_LABELS, self.labels3:=chooserLabelsA(['None',0]),
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Link to scroller',
+        LabelEnd,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -528,6 +548,7 @@ ENDPROC
 PROC end() OF textFieldSettingsForm
   freeChooserLabels( self.labels1 )
   freeChooserLabels( self.labels2 )
+  freeChooserLabels( self.labels3 )
 
   END self.gadgetList[NUM_TEXTFIELD_GADS]
   END self.gadgetActions[NUM_TEXTFIELD_GADS]
@@ -553,6 +574,33 @@ ENDPROC
 
 PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   DEF res
+  DEF scrlgads:PTR TO LONG
+  DEF i,counter=0,selscroll
+  DEF gad:PTR TO reactionObject
+    
+  FOR i:=0 TO comp.parent.children.count()-1
+    IF comp.parent.children.item(i)::reactionObject.type=TYPE_SCROLLER
+      counter++
+    ENDIF
+  ENDFOR
+
+  scrlgads:=List(counter+2)
+  ListAddItem(scrlgads,'None')
+  selscroll:=0
+  counter:=0
+  FOR i:=0 TO comp.parent.children.count()-1
+    gad:=comp.parent.children.item(i)
+    IF gad.type=TYPE_SCROLLER
+      counter++
+      IF gad.id=comp.linkToScrollBar THEN selscroll:=counter
+      ListAddItem(scrlgads,gad.ident)
+    ENDIF
+  ENDFOR
+  ListAddItem(scrlgads,0)
+  freeChooserLabels(self.labels3)
+  self.labels3:=chooserLabelsA(scrlgads)
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],0,0,[CHOOSER_LABELS,self.labels3,0]) 
+  DisposeLink(scrlgads)
 
   self.textFieldObject:=comp
     
@@ -585,7 +633,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_USERALIGN ],0,0,[CHECKBOX_CHECKED,comp.userAlign,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_RULEDPAPER ],0,0,[CHECKBOX_CHECKED,comp.ruledPaper,0]) 
-  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_SCROLLBAR ],0,0,[CHECKBOX_CHECKED,comp.scrollBar,0]) 
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],0,0,[CHOOSER_SELECTED,selscroll,0]) 
 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_BORDER ],0,0,[CHOOSER_SELECTED,comp.border,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_ALIGN ],0,0,[CHOOSER_SELECTED,comp.align,0]) 
@@ -621,10 +669,20 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 
     comp.userAlign:=Gets(self.gadgetList[ TEXTFIELDGAD_USERALIGN ],CHECKBOX_CHECKED)
     comp.ruledPaper:=Gets(self.gadgetList[ TEXTFIELDGAD_RULEDPAPER ],CHECKBOX_CHECKED)
-    comp.scrollBar:=Gets(self.gadgetList[ TEXTFIELDGAD_SCROLLBAR ],CHECKBOX_CHECKED)
+    selscroll:=Gets(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],CHOOSER_SELECTED)
 
     comp.border:=Gets(self.gadgetList[ TEXTFIELDGAD_BORDER ],CHOOSER_SELECTED)
     comp.align:=Gets(self.gadgetList[ TEXTFIELDGAD_ALIGN ],CHOOSER_SELECTED)
+
+    comp.linkToScrollBar:=0
+    FOR i:=0 TO comp.parent.children.count()-1
+      gad:=comp.parent.children.item(i)
+      IF gad.type=TYPE_SCROLLER
+        selscroll--
+        IF selscroll=0 THEN comp.linkToScrollBar:=gad.id
+      ENDIF
+    ENDFOR
+
   ENDIF
 ENDPROC res=MR_OK
 
@@ -711,7 +769,7 @@ EXPORT PROC create(parent) OF textFieldObject
   self.vCenter:=0
   self.userAlign:=0
   self.ruledPaper:=0
-  self.scrollBar:=FALSE
+  self.linkToScrollBar:=FALSE
   self.paperPen:=-1
   self.inkPen:=-1
   self.linePen:=-1
@@ -756,7 +814,7 @@ EXPORT PROC serialiseData() OF textFieldObject IS
   makeProp(vCenter,FIELDTYPE_CHAR),
   makeProp(userAlign,FIELDTYPE_CHAR),
   makeProp(ruledPaper,FIELDTYPE_CHAR),
-  makeProp(scrollBar,FIELDTYPE_CHAR),
+  makeProp(linkToScrollBar,FIELDTYPE_INT),
   makeProp(paperPen,FIELDTYPE_INT),
   makeProp(inkPen,FIELDTYPE_INT),
   makeProp(linePen,FIELDTYPE_INT),
@@ -796,8 +854,6 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textFieldObject
   IF self.border<>0 THEN srcGen.componentProperty('TEXTFIELD_Border',ListItem(['TEXTFIELD_BORDER_NONE','TEXTFIELD_BORDER_BEVEL','TEXTFIELD_BORDER_DOUBLEBEVEL'],self.border),FALSE)
   IF self.align<>0 THEN srcGen.componentProperty('TEXTFIELD_Alignment',ListItem(['TEXTFIELD_ALIGN_LEFT','TEXTFIELD_ALIGN_CENTER','TEXTFIELD_ALIGN_RIGHT'],self.align),FALSE)
 ENDPROC
-
-->  scrollBar:CHAR
 
 EXPORT PROC getTypeName() OF textFieldObject
   RETURN 'TextField'

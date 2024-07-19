@@ -111,9 +111,10 @@ ENDPROC
 
 EXPORT PROC showCode(strStream:PTR TO stringStreamer) OF codePreviewForm
   DEF str[201]:ARRAY OF CHAR
-  DEF win
+  DEF win,top
   strStream.reset()
   win:=Gets(self.windowObj,WINDOW_WINDOW)
+  top:=Gets(self.gadgetList[ PREVIEWGAD_SCROLL ],SCROLLER_TOP)
   DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_CLEARTEXT, 0]:gp_texteditor_cleartext)
   SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,1,TAG_END])
   WHILE strStream.readLine(str)<>-1
@@ -122,8 +123,8 @@ EXPORT PROC showCode(strStream:PTR TO stringStreamer) OF codePreviewForm
     DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_INSERTTEXT, 0, str, GV_TEXTEDITOR_INSERTTEXT_BOTTOM]:gp_texteditor_inserttext)
   ENDWHILE
   SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,FALSE,TAG_END])
-  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_CURSORY,0,TAG_END])
-  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_SCROLL ],win,0,[SCROLLER_TOP,0,TAG_END]) 
+  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_PROP_FIRST,top,TAG_END])
+  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_SCROLL ],win,0,[SCROLLER_TOP,top,TAG_END]) 
   
 ENDPROC
 
