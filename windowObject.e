@@ -77,6 +77,8 @@ EXPORT OBJECT windowObject OF reactionObject
   previewRootLayout:LONG
   previewLeft:INT
   previewTop:INT
+  previewWidth:INT
+  previewHeight:INT
   previewHintInfo:PTR TO hintinfo
 ENDOBJECT
 
@@ -1175,7 +1177,7 @@ EXPORT PROC create(parent) OF windowObject
   self.gadgetHelp:=TRUE
   self.refreshType:=0
   self.flags:=WFLG_CLOSEGADGET OR WFLG_DEPTHGADGET OR WFLG_SIZEGADGET OR WFLG_DRAGBAR OR WFLG_ACTIVATE
-  self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW
+  self.idcmp:=IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW OR IDCMP_NEWSIZE
 
   self.previewHintInfo:=New(SIZEOF hintinfo) 
   self.previewHintInfo.gadgetid:=-1
@@ -1188,6 +1190,8 @@ EXPORT PROC create(parent) OF windowObject
   self.previewOpen:=TRUE
   self.previewLeft:=-1
   self.previewTop:=-1
+  self.previewWidth:=-1
+  self.previewHeight:=-1
 ENDPROC
 
 PROC end() OF windowObject
@@ -1228,7 +1232,9 @@ EXPORT PROC serialiseData() OF windowObject IS
   makeProp(idcmp,FIELDTYPE_LONG),
   makeProp(previewOpen,FIELDTYPE_CHAR),
   makeProp(previewLeft,FIELDTYPE_INT),
-  makeProp(previewTop,FIELDTYPE_INT)
+  makeProp(previewTop,FIELDTYPE_INT),
+  makeProp(previewWidth,FIELDTYPE_INT),
+  makeProp(previewHeight,FIELDTYPE_INT)
 ]
 
 EXPORT PROC getTypeName() OF windowObject

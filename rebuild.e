@@ -135,6 +135,10 @@ OPT OSVERSION=37,LARGE
     windowLeft:INT
     windowWidth:INT
     windowHeight:INT
+    codePreviewTop:INT
+    codePreviewLeft:INT
+    codePreviewWidth:INT
+    codePreviewHeight:INT
   ENDOBJECT
 
 
@@ -267,6 +271,7 @@ PROC closeClasses()
   IF statusbarbase THEN CloseLibrary(statusbarbase)
   IF tapedeckbase THEN CloseLibrary(tapedeckbase)
   IF textfieldbase THEN CloseLibrary(textfieldbase)
+  IF texteditorbase THEN CloseLibrary(texteditorbase)
   IF virtualbase THEN CloseLibrary(virtualbase)
   IF boingballbase THEN CloseLibrary(boingballbase)
   IF ledbase THEN CloseLibrary(ledbase)
@@ -744,19 +749,19 @@ PROC loadIconPrefs()
     ENDIF
 
     IF(s:=FindToolType(dobj.tooltypes,'CODEWINDOWLEFT'))
-      codePreviewForm.left:=Val(s)
+      systemOptions.codePreviewLeft:=Val(s)
     ENDIF
 
     IF(s:=FindToolType(dobj.tooltypes,'CODEWINDOWTOP'))
-      codePreviewForm.top:=Val(s)
+      systemOptions.codePreviewTop:=Val(s)
     ENDIF
 
     IF(s:=FindToolType(dobj.tooltypes,'CODEWINDOWWIDTH'))
-      codePreviewForm.width:=Val(s)
+      systemOptions.codePreviewWidth:=Val(s)
     ENDIF
 
     IF(s:=FindToolType(dobj.tooltypes,'CODEWINDOWHEIGHT'))
-      codePreviewForm.height:=Val(s)
+      systemOptions.codePreviewHeight:=Val(s)
     ENDIF
 
     FreeDiskObject(dobj)
@@ -820,7 +825,7 @@ PROC createForm()
     WA_SIZEGADGET, TRUE,
     WA_DRAGBAR, TRUE,
     ->WA_NOCAREREFRESH, TRUE,
-    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR IDCMP_MENUPICK,
+    WA_IDCMP,IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR IDCMP_MENUPICK OR IDCMP_NEWSIZE,
     WINDOW_PARENTGROUP, VLayoutObject,
       LAYOUT_DEFERLAYOUT, TRUE,
       LAYOUT_SPACEOUTER, TRUE,
@@ -921,8 +926,7 @@ PROC createForm()
     LayoutEnd,
   WindowEnd
   
-  toggleBuffer()
-  
+  toggleBuffer() 
 ENDPROC
 
 PROC addObject(parent:PTR TO reactionObject,newobj:PTR TO reactionObject, index=-1)
@@ -1647,6 +1651,118 @@ PROC addRecent(filename:PTR TO CHAR)
   recentFiles.insert(0,filename)
 ENDPROC
 
+PROC loadSettings()
+  DEF fs:PTR TO fileStreamer
+  DEF tempStr[300]:STRING
+  NEW fs.create('ENVARC:Rebuild/systemOptions',MODE_OLDFILE)
+  IF fs.isOpen()
+    WHILE fs.readLine(tempStr)
+      IF StrCmp(tempStr,'SAVEPATH=',STRLEN)
+        AstrCopy(systemOptions.savePath,tempStr+STRLEN,255)
+      ELSEIF StrCmp(tempStr,'SHOWBUFFER=',STRLEN)
+        systemOptions.showBuffer:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'SHOWONADD=',STRLEN)
+        systemOptions.showSettingsOnAdd:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'WARNONDEL=',STRLEN)
+        systemOptions.warnOnDelete:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'SAVEPROJICONS=',STRLEN)
+        systemOptions.saveProjectIcons:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'PREVIEWCODE=',STRLEN)
+        systemOptions.previewCode:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'WINDOWLEFT=',STRLEN)
+        systemOptions.windowLeft:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'WINDOWTOP=',STRLEN)
+        systemOptions.windowTop:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'WINDOWWIDTH=',STRLEN)
+        systemOptions.windowWidth:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'WINDOWHEIGHT=',STRLEN)
+        systemOptions.windowHeight:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'CODEPREVIEWLEFT=',STRLEN)
+        systemOptions.codePreviewLeft:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'CODEPREVIEWTOP=',STRLEN)
+        systemOptions.codePreviewTop:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'CODEPREVIEWWIDTH=',STRLEN)
+        systemOptions.codePreviewWidth:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'CODEPREVIEWHEIGHT=',STRLEN)
+        systemOptions.codePreviewHeight:=Val(tempStr+STRLEN)
+      ENDIF
+    ENDWHILE
+  ENDIF
+  END fs
+
+  NEW fs.create('ENVARC:Rebuild/systemOptions',MODE_OLDFILE)
+  IF fs.isOpen()
+    WHILE fs.readLine(tempStr)
+      IF StrCmp(tempStr,'LANGID=',STRLEN)
+        codeOptions.langid:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'USEIDS=',STRLEN)
+        codeOptions.useids:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'FULLCODE=',STRLEN)
+        codeOptions.fullcode:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'USEMACROS=',STRLEN)
+        codeOptions.usemacros:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp(tempStr,'SAVEPATH=',STRLEN)
+        AstrCopy(codeOptions.savePath,tempStr+STRLEN,255)
+      ENDIF
+    ENDWHILE
+  ENDIF
+  END fs
+ENDPROC
+
+PROC saveSettings()
+  DEF fs:PTR TO fileStreamer,fl
+  DEF tempStr[300]:STRING
+  fl:=CreateDir('ENVARC:Rebuild')
+  IF fl THEN UnLock(fl)
+  NEW fs.create('ENVARC:Rebuild/systemOptions',MODE_NEWFILE)
+  IF fs.isOpen()
+    StringF(tempStr,'SAVEPATH=\s',systemOptions.savePath)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'SHOWBUFFER=\d',systemOptions.showBuffer)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'SHOWONADD=\d',systemOptions.showSettingsOnAdd)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'WARNONDEL=\d',systemOptions.warnOnDelete)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'SAVEPROJICONS=\d',systemOptions.saveProjectIcons)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'PREVIEWCODE=\d',systemOptions.previewCode)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'WINDOWLEFT=\d',systemOptions.windowLeft)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'WINDOWTOP=\d',systemOptions.windowTop)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'WINDOWWIDTH=\d',systemOptions.windowWidth)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'WINDOWHEIGHT=\d',systemOptions.windowHeight)
+    fs.writeLine(tempStr) 
+    StringF(tempStr,'CODEPREVIEWLEFT=\d',systemOptions.codePreviewLeft)
+    fs.writeLine(tempStr) 
+    StringF(tempStr,'CODEPREVIEWTOP=\d',systemOptions.codePreviewTop)
+    fs.writeLine(tempStr) 
+    StringF(tempStr,'CODEPREVIEWWIDTH=\d',systemOptions.codePreviewWidth)
+    fs.writeLine(tempStr) 
+    StringF(tempStr,'CODEPREVIEWHEIGHT=\d',systemOptions.codePreviewHeight)
+    fs.writeLine(tempStr) 
+  ENDIF
+  END fs
+
+  NEW fs.create('ENVARC:Rebuild/codeOptions',MODE_NEWFILE)
+  IF fs.isOpen()
+    StringF(tempStr,'LANGID=\d',codeOptions.langid)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'USEIDS=\d',codeOptions.useids)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'FULLCODE=\d',codeOptions.fullcode)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'USEMACROS=\d',codeOptions.usemacros)
+    fs.writeLine(tempStr)
+    StringF(tempStr,'SAVEPATH=\s',codeOptions.savePath)
+    fs.writeLine(tempStr)
+  ENDIF
+  END fs    
+ENDPROC
+
 PROC loadStream(fs:PTR TO baseStreamer) HANDLE
   DEF newObj:PTR TO reactionObject
   DEF tmpObj:PTR TO reactionObject
@@ -1716,16 +1832,16 @@ PROC loadStream(fs:PTR TO baseStreamer) HANDLE
       ENDIF
     ELSEIF StrCmp(tempStr,'CODEWINLEFT=',STRLEN)
       v:=Val(tempStr+STRLEN)
-      codePreviewForm.left:=v
+      systemOptions.codePreviewLeft:=v
     ELSEIF StrCmp(tempStr,'CODEWINTOP=',STRLEN)
       v:=Val(tempStr+STRLEN)
-      codePreviewForm.top:=v
+      systemOptions.codePreviewTop:=v
     ELSEIF StrCmp(tempStr,'CODEWINWIDTH=',STRLEN)
       v:=Val(tempStr+STRLEN)
-      codePreviewForm.width:=v
+      systemOptions.codePreviewWidth:=v
     ELSEIF StrCmp(tempStr,'CODEWINHEIGHT=',STRLEN)
       v:=Val(tempStr+STRLEN)
-      codePreviewForm.height:=v
+      systemOptions.codePreviewHeight:=v
     ELSEIF StrCmp(tempStr,'LANGID=',STRLEN)
       v:=Val(tempStr+STRLEN)
       codeOptions.langid:=v
@@ -1874,7 +1990,7 @@ PROC loadFile(loadfilename:PTR TO CHAR) HANDLE
   
   loadStream(fs)
   IF systemOptions.previewCode
-    codePreviewForm.show()
+    codePreviewForm.show(systemOptions.codePreviewLeft,systemOptions.codePreviewTop,systemOptions.codePreviewWidth,systemOptions.codePreviewHeight)
   ELSE
     codePreviewForm.close()
   ENDIF
@@ -1915,13 +2031,13 @@ PROC saveStream(fs:PTR TO baseStreamer)
   fs.writeLine(tempStr)
   StringF(tempStr,'PREVIEWCODE=\d',IF systemOptions.previewCode THEN TRUE ELSE FALSE)
   fs.writeLine(tempStr)
-  StringF(tempStr,'CODEWINLEFT=\d',codePreviewForm.left)
+  StringF(tempStr,'CODEWINLEFT=\d',systemOptions.codePreviewLeft)
   fs.writeLine(tempStr)
-  StringF(tempStr,'CODEWINTOP=\d',codePreviewForm.top)
+  StringF(tempStr,'CODEWINTOP=\d',systemOptions.codePreviewTop)
   fs.writeLine(tempStr)
-  StringF(tempStr,'CODEWINWIDTH=\d',codePreviewForm.width)
+  StringF(tempStr,'CODEWINWIDTH=\d',systemOptions.codePreviewWidth)
   fs.writeLine(tempStr)
-  StringF(tempStr,'CODEWINHEIGHT=\d',codePreviewForm.height)
+  StringF(tempStr,'CODEWINHEIGHT=\d',systemOptions.codePreviewHeight)
   fs.writeLine(tempStr)
   StringF(tempStr,'LANGID=\d',codeOptions.langid)
   fs.writeLine(tempStr)
@@ -2653,11 +2769,15 @@ PROC togglePreview(subitem)
     winObj.previewOpen:=FALSE
     winObj.previewLeft:=Gets(previewWin,WA_LEFT)
     winObj.previewTop:=Gets(previewWin,WA_TOP)
+    winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
+    winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
     RA_CloseWindow(previewWin)
   ELSE
     winObj.previewOpen:=TRUE
     Sets(previewWin,WA_LEFT,winObj.previewLeft)
     Sets(previewWin,WA_TOP,winObj.previewTop)
+    Sets(previewWin,WA_WIDTH,winObj.previewWidth)
+    Sets(previewWin,WA_HEIGHT,winObj.previewHeight)
     menu:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
     pwin:=RA_OpenWindow(previewWin)
     IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
@@ -2672,10 +2792,10 @@ PROC handleCodePreviewInputs()
     tmp:=(result AND WMHI_CLASSMASK)
     SELECT tmp
       CASE WMHI_CHANGEWINDOW
-        codePreviewForm.left:=Gets(codePreviewForm.windowObj,WA_LEFT)
-        codePreviewForm.top:=Gets(codePreviewForm.windowObj,WA_TOP)
-        codePreviewForm.width:=Gets(codePreviewForm.windowObj,WA_WIDTH)
-        codePreviewForm.height:=Gets(codePreviewForm.windowObj,WA_HEIGHT)
+        systemOptions.codePreviewLeft:=Gets(codePreviewForm.windowObj,WA_LEFT)
+        systemOptions.codePreviewTop:=Gets(codePreviewForm.windowObj,WA_TOP)
+        systemOptions.codePreviewWidth:=Gets(codePreviewForm.windowObj,WA_INNERWIDTH)
+        systemOptions.codePreviewHeight:=Gets(codePreviewForm.windowObj,WA_INNERHEIGHT)
       CASE WMHI_CLOSEWINDOW
         a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_PREVIEWCODE,0))
         a.flags:=a.flags AND Not(CHECKED)
@@ -2702,7 +2822,13 @@ PROC handlePreviewInputs()
         CASE WMHI_CHANGEWINDOW
           winObj.previewLeft:=Gets(previewWin,WA_LEFT)
           winObj.previewTop:=Gets(previewWin,WA_TOP)
+          winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
+          winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
         CASE WMHI_CLOSEWINDOW
+          winObj.previewLeft:=Gets(previewWin,WA_LEFT)
+          winObj.previewTop:=Gets(previewWin,WA_TOP)
+          winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
+          winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
           winObj.previewOpen:=FALSE
           RA_CloseWindow(previewWin)
           remakePreviewMenus()
@@ -2977,6 +3103,8 @@ PROC restorePreviews()
     IF winObj.previewOpen
       Sets(previewWin,WA_LEFT,winObj.previewLeft)
       Sets(previewWin,WA_TOP,winObj.previewTop)
+      Sets(previewWin,WA_WIDTH,winObj.previewWidth)
+      Sets(previewWin,WA_HEIGHT,winObj.previewHeight)
       menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
       pwin:=RA_OpenWindow(previewWin)
       IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
@@ -3244,15 +3372,6 @@ PROC main() HANDLE
 
   NEW undoData.stdlist(MAX_UNDO_COUNT)
  
-  
-  scr:=LockPubScreen(0)
-  IF scr
-    tmp:=scr.width-350
-    IF tmp<0 THEN tmp:=0
-  ENDIF
-  UnlockPubScreen(0,scr)
-  NEW codePreviewForm.create(tmp,20,350,120)
-  
   hintInfo:=New(SIZEOF hintinfo*17)
   hintInfo[0].gadgetid:=GAD_ADD
   hintInfo[0].code:=-1
@@ -3350,16 +3469,29 @@ PROC main() HANDLE
   systemOptions.windowWidth:=-1
   systemOptions.windowHeight:=-1
   
+  scr:=LockPubScreen(0)
+  IF scr
+    tmp:=scr.width-350
+    IF tmp<0 THEN tmp:=0
+  ENDIF
+  UnlockPubScreen(0,scr)
+  systemOptions.codePreviewLeft:=tmp
+  systemOptions.codePreviewTop:=20
+  systemOptions.codePreviewWidth:=350
+  systemOptions.codePreviewHeight:=120
   AstrCopy(systemOptions.savePath,'')
   
+  loadSettings()
   loadIconPrefs()
-  IF systemOptions.previewCode THEN codePreviewForm.show()
+  NEW codePreviewForm.create()
+  IF systemOptions.previewCode THEN codePreviewForm.show(systemOptions.codePreviewLeft,systemOptions.codePreviewTop,systemOptions.codePreviewWidth,systemOptions.codePreviewHeight)
 
   createForm()
   Sets(mainWindow,WINDOW_HINTINFO,hintInfo)
   Sets(mainWindow,WINDOW_GADGETHELP, TRUE)
-  
+ 
   IF (win:=RA_OpenWindow(mainWindow))
+
     IF systemOptions.showBuffer=FALSE THEN toggleBuffer()
     SetMenuStrip(win,menus)
     newProject()
@@ -3463,7 +3595,7 @@ PROC main() HANDLE
                       updateSettings()
                       a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_PREVIEWCODE,0))
                       IF a.flags AND CHECKED 
-                        codePreviewForm.show()
+                        codePreviewForm.show(systemOptions.codePreviewLeft,systemOptions.codePreviewTop,systemOptions.codePreviewWidth,systemOptions.codePreviewHeight)
                         genCodePreview()
                       ELSE       
                         codePreviewForm.close()
@@ -3527,6 +3659,11 @@ PROC main() HANDLE
                 restorePreviews()
                 GetAttr( WINDOW_SIGMASK, mainWindow, {wsig} )
               ENDIF
+            CASE WMHI_CHANGEWINDOW
+              systemOptions.windowLeft:=Gets(mainWindow,WA_LEFT)
+              systemOptions.windowTop:=Gets(mainWindow,WA_TOP)
+              systemOptions.windowWidth:=Gets(mainWindow,WA_INNERWIDTH)
+              systemOptions.windowHeight:=Gets(mainWindow,WA_INNERHEIGHT)
             CASE WMHI_CLOSEWINDOW
               IF doClose() THEN running:=FALSE
           ENDSELECT
@@ -3610,6 +3747,7 @@ EXCEPT DO
       ENDSELECT
   ENDSELECT
   IF mainWindow THEN RA_CloseWindow(mainWindow)
+  saveSettings()
   win:=0
   closePreviews()
   IF objectList

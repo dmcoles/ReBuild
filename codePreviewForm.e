@@ -23,13 +23,9 @@ EXPORT ENUM PREVIEWGAD_TEXT, PREVIEWGAD_SCROLL
 CONST NUM_PREVIEW_GADS=PREVIEWGAD_SCROLL+1
 
 EXPORT OBJECT codePreviewForm OF reactionForm
-  left:INT
-  top:INT
-  width:INT
-  height:INT
 ENDOBJECT
 
-EXPORT PROC create(left,top,width,height) OF codePreviewForm
+EXPORT PROC create() OF codePreviewForm
   DEF gads:PTR TO LONG
   DEF tempbase,map
 
@@ -40,18 +36,13 @@ EXPORT PROC create(left,top,width,height) OF codePreviewForm
   tempbase:=textfieldbase
   textfieldbase:=texteditorbase
 
-  self.left:=left
-  self.top:=top
-  self.width:=width
-  self.height:=height
-  
   self.gadgetActions:=gads
     self.windowObj:=WindowObject,
     WA_TITLE, 'Code Preview',
-    WA_LEFT, self.left,
-    WA_TOP, self.top,
-    WA_HEIGHT, self.height,
-    WA_WIDTH, self.width,
+    WA_LEFT, 0,
+    WA_TOP, 20,
+    WA_HEIGHT, 100,
+    WA_WIDTH, 200,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
     WA_MINHEIGHT, 80,
@@ -65,7 +56,7 @@ EXPORT PROC create(left,top,width,height) OF codePreviewForm
     WA_SIZEGADGET, TRUE,
     WA_DRAGBAR, TRUE,
     WA_NOCAREREFRESH, TRUE,
-    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW,
+    WA_IDCMP,IDCMP_GADGETDOWN OR  IDCMP_GADGETUP OR  IDCMP_CLOSEWINDOW OR IDCMP_NEWSIZE, 
 
     WINDOW_PARENTGROUP, HLayoutObject,
     LAYOUT_SPACEOUTER, TRUE,
@@ -140,12 +131,12 @@ EXPORT PROC close() OF codePreviewForm
   RA_CloseWindow(self.windowObj)
 ENDPROC
 
-EXPORT PROC show() OF codePreviewForm
+EXPORT PROC show(left,top,width,height) OF codePreviewForm
   SetAttrsA(self.windowObj,[
-    WA_LEFT, self.left,
-    WA_TOP, self.top,
-    WA_HEIGHT, self.height,
-    WA_WIDTH, self.width,
+    WA_LEFT, left,
+    WA_TOP, top,
+    WA_HEIGHT, height,
+    WA_WIDTH, width,
     TAG_DONE])
 
   RA_OpenWindow(self.windowObj)
