@@ -9,6 +9,7 @@ OPT MODULE,OSVERSION=37
         'gadgets/integer','integer',
         'gadgets/checkbox','checkbox',
         'gadgets/textEditor','texteditor',
+        '*textfield',
         'images/label','label',
         'amigalib/boopsi',
         'gadtools',
@@ -20,6 +21,12 @@ OPT MODULE,OSVERSION=37
         'intuition/gadgetclass'
 
   MODULE '*stringlist','*reactionForm','*fileStreamer','*sourceGen'
+
+CONST TEXTFIELD_TEXT=$84000001
+CONST TEXTFIELD_BORDER_BEVEL=1
+CONST TEXTFIELD_BORDER=$8400000C
+CONST TEXTFIELD_SIZE=$84000007
+CONST TEXTFIELD_READONLY=$8400001F
 
 EXPORT DEF texteditorbase
 
@@ -364,14 +371,31 @@ ENDPROC res=MR_OK
 
 PROC create() OF hintEditForm
   DEF gads:PTR TO LONG
-  DEF tempbase
+  DEF tempbase=0
 
   NEW gads[NUM_HINT_GADS]
   self.gadgetList:=gads
   NEW gads[NUM_HINT_GADS]
 
-  tempbase:=textfieldbase
-  textfieldbase:=texteditorbase
+  IF texteditorbase
+    tempbase:=textfieldbase
+    textfieldbase:=texteditorbase
+
+    self.gadgetList[ HINTGAD_TEXT ]:=NewObjectA( TextEditor_GetClass(), NIL,[
+        GA_ID, HINTGAD_TEXT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_READONLY, FALSE,
+      TAG_END])
+  ELSE
+    self.gadgetList[ HINTGAD_TEXT ]:=NewObjectA( TextField_GetClass(), NIL,[
+        GA_ID, HINTGAD_TEXT,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_READONLY, FALSE,
+        TEXTFIELD_BORDER, TEXTFIELD_BORDER_BEVEL,
+      TAG_END])
+  ENDIF
 
   self.gadgetActions:=gads
     self.windowObj:=WindowObject,
@@ -400,12 +424,7 @@ PROC create() OF hintEditForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ HINTGAD_TEXT ]:=NewObjectA( TextEditor_GetClass(), NIL,[
-        GA_ID, HINTGAD_TEXT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_READONLY, FALSE,
-      TAG_END]),
+      LAYOUT_ADDCHILD, self.gadgetList[ HINTGAD_TEXT ],
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -428,7 +447,7 @@ PROC create() OF hintEditForm
     LayoutEnd,
   WindowEnd
 
-  textfieldbase:=tempbase
+  IF tempbase THEN textfieldbase:=tempbase
 
   self.gadgetActions[HINTGAD_CANCEL]:=MR_CANCEL
   self.gadgetActions[HINTGAD_OK]:=MR_OK
@@ -441,15 +460,31 @@ PROC end() OF hintEditForm
 ENDPROC
 
 PROC editHint(comp:PTR TO reactionObject) OF hintEditForm
-  DEF res,newval
+  DEF res,newval,strval,vallen
 
   newval:=comp.hintText.makeTextString()
-  SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,newval,0])
+  IF texteditorbase
+    SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[GA_TEXTEDITOR_CONTENTS,newval,0])
+  ELSE
+    SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[TEXTFIELD_TEXT,newval,0])
+  ENDIF
   DisposeLink(newval)
 
   res:=self.showModal()
   IF res=MR_OK
-    newval:=DoMethod(self.gadgetList[ HINTGAD_TEXT ], GM_TEXTEDITOR_EXPORTTEXT);
+    IF texteditorbase
+      newval:=DoMethod(self.gadgetList[ HINTGAD_TEXT ], GM_TEXTEDITOR_EXPORTTEXT);
+    ELSE
+      SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[TEXTFIELD_READONLY,TRUE,0])
+      vallen:=Gets(self.gadgetList[ HINTGAD_TEXT ], TEXTFIELD_SIZE)
+      strval:=Gets(self.gadgetList[ HINTGAD_TEXT ], TEXTFIELD_TEXT)
+      newval:=AllocVec(vallen+1,0)
+      IF (vallen<>0) AND (strval<>0)
+        CopyMem(strval,newval,vallen)
+      ENDIF
+      newval[vallen]:=0
+      SetGadgetAttrsA(self.gadgetList[ HINTGAD_TEXT ],0,0,[TEXTFIELD_READONLY,FALSE,0])
+    ENDIF
     comp.hintText.setFromTextString(newval)
     FreeVec(newval)
   ENDIF

@@ -227,6 +227,7 @@ PROC openClasses()
   ledbase:=OpenLibrary('images/led.image',0)
   smartbitmapbase:=OpenLibrary('images/smartbitmap.image',0)
   titlebarbase:=OpenLibrary('images/titlebar.image',0)
+  IF (texteditorbase=NIL) AND (textfieldbase=NIL) THEN Throw("LIB","text")
 ENDPROC
 
 PROC closeClasses()
@@ -3719,7 +3720,7 @@ EXCEPT DO
         CASE "fuel"
           errorRequest(0,'Error','Unable to open fuelgauge.gadget')
         CASE "text"
-          errorRequest(0,'Error','Unable to open textfield.gadget')
+          errorRequest(0,'Error','Unable to open textfield.gadget and texteditor.gadget,\nyou must have at least one of these')
         CASE "file"
           errorRequest(0,'Error','Unable to open getfile.gadget')
         CASE "font"

@@ -6,7 +6,9 @@ OPT MODULE, OSVERSION=37
         'reaction/reaction_lib',
         'images/bevel',
         'gadgets/textEditor','texteditor',
+        '*textfield',
         'gadgets/scroller','scroller',
+        'graphics/gfxbase',
         'images/label','label',
         'amigalib/boopsi',
         'intuition/intuition',
@@ -19,6 +21,18 @@ OPT MODULE, OSVERSION=37
 
 EXPORT DEF texteditorbase
 
+CONST TEXTFIELD_TEXT=$84000001
+CONST TEXTFIELD_TEXTFONT=$84000003
+CONST TEXTFIELD_BORDER_BEVEL=1
+CONST TEXTFIELD_BORDER=$8400000C
+CONST TEXTFIELD_SIZE=$84000007
+CONST TEXTFIELD_READONLY=$8400001F
+CONST TEXTFIELD_TOP=$84000005
+CONST TEXTFIELD_LINES=$84000009
+CONST TEXTFIELD_VISIBLE=$84000008
+CONST TEXTFIELD_INSERTTEXT=$84000002
+
+
 EXPORT ENUM PREVIEWGAD_TEXT, PREVIEWGAD_SCROLL
 CONST NUM_PREVIEW_GADS=PREVIEWGAD_SCROLL+1
 
@@ -27,13 +41,42 @@ ENDOBJECT
 
 EXPORT PROC create() OF codePreviewForm
   DEF gads:PTR TO LONG
-  DEF tempbase,map
+  DEF tempbase=0,map
+  DEF gfxb:PTR TO gfxbase
 
   NEW gads[NUM_PREVIEW_GADS]
   self.gadgetList:=gads
   NEW gads[NUM_PREVIEW_GADS]
 
-  tempbase:=textfieldbase
+  IF texteditorbase
+    tempbase:=textfieldbase
+    textfieldbase:=texteditorbase
+
+    self.gadgetList[ PREVIEWGAD_TEXT ]:=NewObjectA( TextEditor_GetClass(), NIL,[
+        GA_ID, PREVIEWGAD_TEXT,
+        GA_TEXTEDITOR_WRAPBORDER,-1,
+        GA_TEXTEDITOR_FIXEDFONT,TRUE,
+        GA_TEXTEDITOR_HORIZONTALSCROLL, TRUE,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_READONLY, TRUE,
+      TAG_END])
+  ELSE
+    gfxb:=gfxbase
+    self.gadgetList[ PREVIEWGAD_TEXT ]:=NewObjectA( TextField_GetClass(), NIL,[
+        GA_ID, PREVIEWGAD_TEXT,
+        //GA_TEXTEDITOR_WRAPBORDER,-1,
+        //GA_TEXTEDITOR_FIXEDFONT,TRUE,
+        //GA_TEXTEDITOR_HORIZONTALSCROLL, TRUE,
+        
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        TEXTFIELD_TEXTFONT, gfxb.defaultfont,
+        TEXTFIELD_READONLY, TRUE,
+        TEXTFIELD_BORDER, TEXTFIELD_BORDER_BEVEL,
+      TAG_END])
+  ENDIF
+
   textfieldbase:=texteditorbase
 
   self.gadgetActions:=gads
@@ -62,15 +105,7 @@ EXPORT PROC create() OF codePreviewForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ PREVIEWGAD_TEXT ]:=NewObjectA( TextEditor_GetClass(), NIL,[
-        GA_ID, PREVIEWGAD_TEXT,
-        GA_TEXTEDITOR_WRAPBORDER,-1,
-        GA_TEXTEDITOR_FIXEDFONT,TRUE,
-        GA_TEXTEDITOR_HORIZONTALSCROLL, TRUE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_READONLY, TRUE,
-      TAG_END]),
+      LAYOUT_ADDCHILD, self.gadgetList[ PREVIEWGAD_TEXT ],
 
       LAYOUT_ADDCHILD, self.gadgetList[ PREVIEWGAD_SCROLL ]:=NewObjectA(Scroller_GetClass(),NIL,[
         GA_ID, PREVIEWGAD_SCROLL,
@@ -83,22 +118,37 @@ EXPORT PROC create() OF codePreviewForm
     LayoutEnd,
   WindowEnd
 
-  map:=[GA_TEXTEDITOR_PROP_FIRST, SCROLLER_TOP,
-		GA_TEXTEDITOR_PROP_ENTRIES, SCROLLER_TOTAL,
-		GA_TEXTEDITOR_PROP_VISIBLE, SCROLLER_VISIBLE,
-    TAG_DONE]
+  IF texteditorbase
+    map:=[GA_TEXTEDITOR_PROP_FIRST, SCROLLER_TOP,
+      GA_TEXTEDITOR_PROP_ENTRIES, SCROLLER_TOTAL,
+      GA_TEXTEDITOR_PROP_VISIBLE, SCROLLER_VISIBLE,
+      TAG_DONE]
+  ELSE
+    map:=[TEXTFIELD_TOP, SCROLLER_TOP,
+      TEXTFIELD_LINES, SCROLLER_TOTAL,
+      TEXTFIELD_VISIBLE, SCROLLER_VISIBLE,
+      TAG_DONE]
+  ENDIF
 
   SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],0,0,[ICA_MAP,map,ICA_TARGET,self.gadgetList[ PREVIEWGAD_SCROLL ],0])
 
-  map:=[
-		SCROLLER_TOP, GA_TEXTEDITOR_PROP_FIRST,
-		SCROLLER_TOTAL, GA_TEXTEDITOR_PROP_ENTRIES,
-		SCROLLER_VISIBLE, GA_TEXTEDITOR_PROP_VISIBLE,
-		TAG_DONE]
+  IF texteditorbase
+    map:=[
+      SCROLLER_TOP, GA_TEXTEDITOR_PROP_FIRST,
+      SCROLLER_TOTAL, GA_TEXTEDITOR_PROP_ENTRIES,
+      SCROLLER_VISIBLE, GA_TEXTEDITOR_PROP_VISIBLE,
+      TAG_DONE]
+  ELSE
+    map:=[
+      SCROLLER_TOP, TEXTFIELD_TOP,
+      SCROLLER_TOTAL, TEXTFIELD_LINES,
+      SCROLLER_VISIBLE, TEXTFIELD_VISIBLE,
+      TAG_DONE]
+  ENDIF
 
   SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_SCROLL ],0,0,[ICA_MAP,map,ICA_TARGET,self.gadgetList[ PREVIEWGAD_TEXT ],0])
 
-  textfieldbase:=tempbase
+  IF tempbase THEN textfieldbase:=tempbase
 
 ENDPROC
 
@@ -115,15 +165,27 @@ EXPORT PROC showCode(strStream:PTR TO stringStreamer) OF codePreviewForm
   strStream.reset()
   win:=Gets(self.windowObj,WINDOW_WINDOW)
   top:=Gets(self.gadgetList[ PREVIEWGAD_SCROLL ],SCROLLER_TOP)
-  DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_CLEARTEXT, 0]:gp_texteditor_cleartext)
-  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,1,TAG_END])
+  IF texteditorbase
+    DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_CLEARTEXT, 0]:gp_texteditor_cleartext)
+    SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,1,TAG_END])
+  ELSE
+    SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[TEXTFIELD_TEXT,'',0])
+  ENDIF
   WHILE strStream.readLine(str)<>-1
     str[StrLen(str)+1]:=0
     str[StrLen(str)]:="\n"   
-    DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_INSERTTEXT, 0, str, GV_TEXTEDITOR_INSERTTEXT_BOTTOM]:gp_texteditor_inserttext)
+    IF texteditorbase
+      DoGadgetMethodA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GM_TEXTEDITOR_INSERTTEXT, 0, str, GV_TEXTEDITOR_INSERTTEXT_BOTTOM]:gp_texteditor_inserttext)
+    ELSE
+      SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[TEXTFIELD_INSERTTEXT,str,0])
+    ENDIF
   ENDWHILE
-  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,FALSE,TAG_END])
-  SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_PROP_FIRST,top,TAG_END])
+  IF texteditorbase
+    SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_QUIET,FALSE,TAG_END])
+    SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[GA_TEXTEDITOR_PROP_FIRST,top,TAG_END])
+  ELSE
+    SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_TEXT ],win,0,[TEXTFIELD_TOP,top,TAG_END])
+  ENDIF
   SetGadgetAttrsA(self.gadgetList[ PREVIEWGAD_SCROLL ],win,0,[SCROLLER_TOP,top,TAG_END]) 
   
 ENDPROC
