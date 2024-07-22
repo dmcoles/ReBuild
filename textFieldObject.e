@@ -10,6 +10,7 @@ OPT MODULE, OSVERSION=37
         'gadgets/integer','integer',
         'gadgets/chooser','chooser',
         'gadgets/checkbox','checkbox',
+        'gadgets/scroller',
         'images/label','label',
         'images/bevel',
         'amigalib/boopsi',
@@ -18,6 +19,7 @@ OPT MODULE, OSVERSION=37
         'intuition/intuition',
         'intuition/imageclass',
         'intuition/gadgetclass',
+        'intuition/icclass',
         'utility/tagitem'
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator','*stringlist'
@@ -30,21 +32,6 @@ EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELD
       TEXTFIELDGAD_PAPERPEN, TEXTFIELDGAD_INKPEN, TEXTFIELDGAD_LINEPEN,
       TEXTFIELDGAD_BORDER, TEXTFIELDGAD_ALIGN,
       TEXTFIELDGAD_OK, TEXTFIELDGAD_CHILD, TEXTFIELDGAD_CANCEL
-
-/*struct TagItem TextEditMaps[] =
-{
-	TEXTFIELD_Lines, SCROLLER_Total,
-	TEXTFIELD_Visible, SCROLLER_Visible,
-	TEXTFIELD_Top, SCROLLER_Top,
-	TAG_END
-};
-
-struct TagItem ScrollerMaps[] =
-{
-	SCROLLER_Top, TEXTFIELD_Top,
-	TAG_END
-};
- */
 
 CONST NUM_TEXTFIELD_GADS=TEXTFIELDGAD_CANCEL+1
 // V1 attributes
@@ -694,11 +681,11 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
       GA_RELVERIFY, TRUE,
       GA_DISABLED, self.disabled,
       GA_TABCYCLE, self.tabCycle,
-      GA_READONLY, self.readOnly,
+      TEXTFIELD_READONLY, self.readOnly,
       
       TEXTFIELD_DELIMITERS, self.delimiters,
-      TEXTFIELD_ACCEPTCHARS, self.acceptChars,
-      TEXTFIELD_ACCEPTCHARS, self.rejectChars,
+      TEXTFIELD_ACCEPTCHARS, IF StrLen(self.acceptChars) THEN self.acceptChars ELSE 0,
+      TEXTFIELD_REJECTCHARS, IF StrLen(self.rejectChars) THEN self.rejectChars ELSE 0,
       TEXTFIELD_BLINKRATE, self.blinkRate,
       TEXTFIELD_MAXSIZE, self.maxSize,
       TEXTFIELD_SPACING, self.spacing,
@@ -743,6 +730,24 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
         CHILD_WEIGHTMINIMUM, self.weightMinimum,
         IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
         TAG_END]
+ENDPROC
+
+EXPORT PROC updatePreviewObject() OF textFieldObject
+  DEF map,maptarget:PTR TO reactionObject
+
+  IF self.linkToScrollBar
+    map:=[TEXTFIELD_TOP, SCROLLER_TOP,
+      TEXTFIELD_LINES, SCROLLER_TOTAL,
+      TEXTFIELD_VISIBLE, SCROLLER_VISIBLE,
+      TAG_DONE]
+      maptarget:=self.findSibling(self.linkToScrollBar)
+  ELSE
+    map:=0
+    maptarget:=0
+  ENDIF
+  IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
+  IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
+
 ENDPROC
 
 EXPORT PROC create(parent) OF textFieldObject

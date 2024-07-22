@@ -340,6 +340,10 @@ PROC addMembers(comp:PTR TO reactionObject,window:PTR TO windowObject)
     FOR i:=0 TO comp.children.count()-1
       addMembers(comp.children.item(i),window)
     ENDFOR
+
+    FOR i:=0 TO comp.children.count()-1
+      comp.children.item(i)::reactionObject.updatePreviewObject()
+    ENDFOR
   ENDIF
 ENDPROC
 

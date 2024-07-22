@@ -10,18 +10,20 @@ OPT MODULE, OSVERSION=37
         'gadgets/integer','integer',
         'gadgets/chooser','chooser',
         'gadgets/checkbox','checkbox',
+        'gadgets/slider',
         'images/label','label',
         'amigalib/boopsi',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
+        'intuition/icclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator','*stringlist'
 
 EXPORT ENUM INTGAD_IDENT, INTGAD_NAME,INTGAD_HINT, INTGAD_MAXCHARS, INTGAD_VALUE,INTGAD_MINVISIBLE,
       INTGAD_MINIMUM, INTGAD_MAXIMUM,
-      INTGAD_DISABLED, INTGAD_TABCYCLE, INTGAD_ARROWS,
+      INTGAD_DISABLED, INTGAD_TABCYCLE, INTGAD_ARROWS, INTGAD_LINKTOSLIDER,
       INTGAD_OK, INTGAD_CHILD, INTGAD_CANCEL
       
 
@@ -36,11 +38,14 @@ EXPORT OBJECT integerObject OF reactionObject
   disabled:CHAR
   tabCycle:CHAR
   arrows:CHAR
+  linkToSlider:INT
 ENDOBJECT
 
 OBJECT integerSettingsForm OF reactionForm
 PRIVATE
   integerObject:PTR TO integerObject
+  labels1:PTR TO LONG
+
 ENDOBJECT
 
 PROC create() OF integerSettingsForm
@@ -204,6 +209,20 @@ PROC create() OF integerSettingsForm
           GA_TEXT, '_Arrows',
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ INTGAD_LINKTOSLIDER ]:=ChooserObject,
+          GA_ID, INTGAD_LINKTOSLIDER,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_MAXLABELS, 32,
+          CHOOSER_ACTIVE, 0,
+          CHOOSER_WIDTH, -1,          
+          CHOOSER_LABELS, self.labels1,
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Link to slider',
+        LabelEnd,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -246,6 +265,7 @@ PROC editChildSettings(nself,gadget,id,code) OF integerSettingsForm
 ENDPROC
 
 PROC end() OF integerSettingsForm
+  freeChooserLabels( self.labels1 )
   END self.gadgetList[NUM_INT_GADS]
   END self.gadgetActions[NUM_INT_GADS]
   DisposeObject(self.windowObj)
@@ -270,6 +290,33 @@ ENDPROC
 
 PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   DEF res
+  DEF slidergads:PTR TO LONG
+  DEF i,counter=0,selslider
+  DEF gad:PTR TO reactionObject
+    
+  FOR i:=0 TO comp.parent.children.count()-1
+    IF comp.parent.children.item(i)::reactionObject.type=TYPE_SLIDER
+      counter++
+    ENDIF
+  ENDFOR
+
+  slidergads:=List(counter+2)
+  ListAddItem(slidergads,'None')
+  selslider:=0
+  counter:=0
+  FOR i:=0 TO comp.parent.children.count()-1
+    gad:=comp.parent.children.item(i)
+    IF gad.type=TYPE_SLIDER
+      counter++
+      IF gad.id=comp.linkToSlider THEN selslider:=counter
+      ListAddItem(slidergads,gad.ident)
+    ENDIF
+  ENDFOR
+  ListAddItem(slidergads,0)
+  freeChooserLabels(self.labels1)
+  self.labels1:=chooserLabelsA(slidergads)
+  SetGadgetAttrsA(self.gadgetList[ INTGAD_LINKTOSLIDER ],0,0,[CHOOSER_LABELS,self.labels1,0]) 
+  DisposeLink(slidergads)
   
   self.integerObject:=comp
 
@@ -284,6 +331,7 @@ PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   SetGadgetAttrsA(self.gadgetList[ INTGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ INTGAD_TABCYCLE ],0,0,[CHECKBOX_CHECKED,comp.tabCycle,0]) 
   SetGadgetAttrsA(self.gadgetList[ INTGAD_ARROWS ],0,0,[CHECKBOX_CHECKED,comp.arrows,0]) 
+  SetGadgetAttrsA(self.gadgetList[ INTGAD_LINKTOSLIDER ],0,0,[CHOOSER_SELECTED,selslider,0]) 
 
   res:=self.showModal()
   IF res=MR_OK
@@ -297,6 +345,17 @@ PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
     comp.disabled:=Gets(self.gadgetList[ INTGAD_DISABLED ],CHECKBOX_CHECKED)
     comp.tabCycle:=Gets(self.gadgetList[ INTGAD_TABCYCLE ],CHECKBOX_CHECKED)
     comp.arrows:=Gets(self.gadgetList[ INTGAD_ARROWS ],CHECKBOX_CHECKED)
+
+    selslider:=Gets(self.gadgetList[ INTGAD_LINKTOSLIDER ],CHOOSER_SELECTED)
+
+    comp.linkToSlider:=0
+    FOR i:=0 TO comp.parent.children.count()-1
+      gad:=comp.parent.children.item(i)
+      IF gad.type=TYPE_SLIDER
+        selslider--
+        IF selslider=0 THEN comp.linkToSlider:=gad.id
+      ENDIF
+    ENDFOR   
   ENDIF
 ENDPROC res=MR_OK
 
@@ -354,6 +413,24 @@ EXPORT PROC createPreviewObject(scr) OF integerObject
   ENDIF
 ENDPROC
 
+EXPORT PROC updatePreviewObject() OF integerObject
+  DEF map,maptarget:PTR TO reactionObject
+
+  IF self.linkToSlider
+    map:=[INTEGER_MINIMUM, SLIDER_MIN,
+      INTEGER_MAXIMUM, SLIDER_MAX,
+      INTEGER_NUMBER, SLIDER_LEVEL,
+      TAG_DONE]
+      maptarget:=self.findSibling(self.linkToSlider)
+  ELSE
+    map:=0
+    maptarget:=0
+  ENDIF
+  IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
+  IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
+
+ENDPROC
+
 EXPORT PROC create(parent) OF integerObject
   self.type:=TYPE_INTEGER
   SUPER self.create(parent)
@@ -365,6 +442,7 @@ EXPORT PROC create(parent) OF integerObject
   self.disabled:=0
   self.tabCycle:=TRUE
   self.arrows:=TRUE
+  self.linkToSlider:=0
 
   self.libsused:=[TYPE_INTEGER,TYPE_LABEL]
 ENDPROC
@@ -390,7 +468,8 @@ EXPORT PROC serialiseData() OF integerObject IS
   makeProp(maximum,FIELDTYPE_LONG),
   makeProp(disabled,FIELDTYPE_CHAR),
   makeProp(tabCycle,FIELDTYPE_CHAR),
-  makeProp(arrows,FIELDTYPE_CHAR)
+  makeProp(arrows,FIELDTYPE_CHAR),
+  makeProp(linkToSlider,FIELDTYPE_INT)
 ]
 
 EXPORT PROC getTypeName() OF integerObject

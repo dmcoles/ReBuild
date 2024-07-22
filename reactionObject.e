@@ -554,6 +554,8 @@ EXPORT PROC end() OF reactionObject
 
 EXPORT PROC createPreviewObject(scr) OF reactionObject IS -1
 
+EXPORT PROC updatePreviewObject() OF reactionObject IS -1
+
 EXPORT PROC getTypeName() OF reactionObject
   RETURN ''
 ENDPROC
@@ -911,6 +913,13 @@ ENDPROC
 EXPORT PROC deinitialise()
   IF imageData THEN Dispose(imageData)
 ENDPROC
+
+EXPORT PROC findSibling(id) OF reactionObject
+  DEF i
+  FOR i:=0 TO self.parent.children.count()-1
+    IF self.parent.children.item(i)::reactionObject.id = id THEN RETURN self.parent.children.item(i)
+  ENDFOR
+ENDPROC 0
 
 PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   DEF i

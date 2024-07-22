@@ -11,14 +11,18 @@ OPT MODULE, OSVERSION=37
         'gadgets/integer','integer',
         'gadgets/chooser','chooser',
         'gadgets/checkbox','checkbox',
+        'gadgets/texteditor',
         'images/label','label',
         'amigalib/boopsi',
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
+        'intuition/icclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator','*textEditorObject','*textFieldObject','*stringlist'
+
+CONST TEXTFIELD_TOP=$84000005
 
 EXPORT ENUM SCLGAD_IDENT, SCLGAD_NAME, SCLGAD_HINT, SCLGAD_TOP, SCLGAD_VISIBLE, SCLGAD_TOTAL, SCLGAD_ARROWDELTA,
       SCLGAD_ARROWS, SCLGAD_ORIENTATION,
@@ -325,6 +329,30 @@ EXPORT PROC createPreviewObject(scr) OF scrollerObject
       IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
       TAG_END]
   ENDIF
+ENDPROC
+
+EXPORT PROC updatePreviewObject() OF scrollerObject
+  DEF i,comp:PTR TO reactionObject
+  DEF map=0,maptarget=0:PTR TO reactionObject
+   
+  FOR i:=0 TO self.parent.children.count()-1
+    comp:=self.parent.children.item(i)
+    IF comp.type=TYPE_TEXTEDITOR
+      IF comp::textEditorObject.linkToVScroll=self.id
+        map:=[SCROLLER_TOP, GA_TEXTEDITOR_PROP_FIRST,TAG_DONE]
+        maptarget:=comp
+      ENDIF
+    ENDIF
+    IF comp.type=TYPE_TEXTFIELD
+      IF comp::textFieldObject.linkToScrollBar=self.id
+        map:=[SCROLLER_TOP, TEXTFIELD_TOP,TAG_DONE]
+        maptarget:=comp
+      ENDIF
+    ENDIF
+  ENDFOR
+
+  IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
+  IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
 ENDPROC
 
 EXPORT PROC create(parent) OF scrollerObject

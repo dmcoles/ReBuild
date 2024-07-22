@@ -45,7 +45,7 @@ bitmapObject.m:			bitmapObject.e reactionObject.m reactionForm.m sourceGen.m val
 penMapObject.m:			penMapObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m validator.m
 							$(compiler) penMapObject $(options)
 
-sliderObject.m:			sliderObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
+sliderObject.m:			sliderObject.e reactionObject.m reactionForm.m sourceGen.m validator.m integerObject.m stringlist.m
 							$(compiler) sliderObject $(options)
 
 spaceObject.m:			spaceObject.e reactionObject.m reactionForm.m
@@ -60,7 +60,7 @@ virtualObject.m:			virtualObject.e reactionObject.m reactionForm.m sourceGen.m v
 sketchboardObject.m:			sketchboardObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m validator.m
 							$(compiler) sketchboardObject $(options)
 
-textEditorObject.m:			textEditorObject.e reactionObject.m reactionForm.m sourceGen.m validator.m stringlist.m
+textEditorObject.m:			textEditorObject.e reactionObject.m reactionForm.m sourceGen.m validator.m stringlist.m stringlist.m
 							$(compiler) textEditorObject $(options)
 
 ledObject.m:			ledObject.e reactionObject.m reactionForm.m sourceGen.m colourPicker.m validator.m
@@ -90,7 +90,7 @@ layoutObject.m:			layoutObject.e reactionObject.m reactionForm.m sourceGen.m val
 integerObject.m:			integerObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
 							$(compiler) integerObject $(options)
               
-scrollerObject.m:			scrollerObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
+scrollerObject.m:			scrollerObject.e reactionObject.m reactionForm.m sourceGen.m validator.m textEditorObject.m textFieldObject.m stringlist.m
 							$(compiler) scrollerObject $(options)
 
 stringObject.m:			stringObject.e reactionObject.m reactionForm.m sourceGen.m validator.m

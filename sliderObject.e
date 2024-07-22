@@ -16,9 +16,10 @@ OPT MODULE, OSVERSION=37
         'libraries/gadtools',
         'intuition/intuition',
         'intuition/imageclass',
+        'intuition/icclass',
         'intuition/gadgetclass'
 
-  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
+  MODULE '*reactionObject','*reactionForm','*sourceGen','*validator','*integerObject','*stringlist'
 
 EXPORT ENUM SLDGAD_IDENT, SLDGAD_NAME, SLDGAD_HINT, SLDGAD_MIN, SLDGAD_MAX, SLDGAD_LEVEL, SLDGAD_TICKS,SLDGAD_TICKSIZE,
       SLDGAD_MAXLEN, SLDGAD_SHORTTICKS,
@@ -439,6 +440,24 @@ EXPORT PROC createPreviewObject(scr) OF sliderObject
       IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
       TAG_END]
   ENDIF
+ENDPROC
+
+EXPORT PROC updatePreviewObject() OF sliderObject
+  DEF i,comp:PTR TO reactionObject
+  DEF map=0,maptarget=0:PTR TO reactionObject
+   
+  FOR i:=0 TO self.parent.children.count()-1
+    comp:=self.parent.children.item(i)
+    IF comp.type=TYPE_INTEGER
+      IF comp::integerObject.linkToSlider=self.id
+        map:=[SLIDER_LEVEL, INTEGER_NUMBER,TAG_DONE]
+        maptarget:=comp
+      ENDIF
+    ENDIF
+  ENDFOR
+
+  IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
+  IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
 ENDPROC
 
 EXPORT PROC create(parent) OF sliderObject
