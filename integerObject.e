@@ -290,33 +290,27 @@ ENDPROC
 
 PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
   DEF res
-  DEF slidergads:PTR TO LONG
-  DEF i,counter=0,selslider
+  DEF slidergads2:PTR TO LONG
+  DEF i,selslider
   DEF gad:PTR TO reactionObject
+  DEF slidergads:PTR TO stdlist
     
-  FOR i:=0 TO comp.parent.children.count()-1
-    IF comp.parent.children.item(i)::reactionObject.type=TYPE_SLIDER
-      counter++
-    ENDIF
-  ENDFOR
-
-  slidergads:=List(counter+2)
-  ListAddItem(slidergads,'None')
+  NEW slidergads.stdlist(10)
+  comp.parent.findObjectsByType(slidergads,TYPE_SLIDER)
+  
+  slidergads2:=List(slidergads.count()+2)
+  ListAddItem(slidergads2,'None')
   selslider:=0
-  counter:=0
-  FOR i:=0 TO comp.parent.children.count()-1
-    gad:=comp.parent.children.item(i)
-    IF gad.type=TYPE_SLIDER
-      counter++
-      IF gad.id=comp.linkToSlider THEN selslider:=counter
-      ListAddItem(slidergads,gad.ident)
-    ENDIF
+  FOR i:=0 TO slidergads.count()-1
+    gad:=slidergads.item(i)
+    IF gad.id=comp.linkToSlider THEN selslider:=(i+1)
+    ListAddItem(slidergads2,gad.ident)
   ENDFOR
-  ListAddItem(slidergads,0)
+  ListAddItem(slidergads2,0)
   freeChooserLabels(self.labels1)
-  self.labels1:=chooserLabelsA(slidergads)
+  self.labels1:=chooserLabelsA(slidergads2)
   SetGadgetAttrsA(self.gadgetList[ INTGAD_LINKTOSLIDER ],0,0,[CHOOSER_LABELS,self.labels1,0]) 
-  DisposeLink(slidergads)
+  DisposeLink(slidergads2)
   
   self.integerObject:=comp
 
@@ -349,14 +343,13 @@ PROC editSettings(comp:PTR TO integerObject) OF integerSettingsForm
     selslider:=Gets(self.gadgetList[ INTGAD_LINKTOSLIDER ],CHOOSER_SELECTED)
 
     comp.linkToSlider:=0
-    FOR i:=0 TO comp.parent.children.count()-1
-      gad:=comp.parent.children.item(i)
-      IF gad.type=TYPE_SLIDER
-        selslider--
-        IF selslider=0 THEN comp.linkToSlider:=gad.id
-      ENDIF
-    ENDFOR   
+    FOR i:=0 TO slidergads.count()-1
+      gad:=slidergads.item(i)
+      selslider--
+      IF selslider=0 THEN comp.linkToSlider:=gad.id
+    ENDFOR
   ENDIF
+  END slidergads
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF integerObject
@@ -421,7 +414,7 @@ EXPORT PROC updatePreviewObject() OF integerObject
       INTEGER_MAXIMUM, SLIDER_MAX,
       INTEGER_NUMBER, SLIDER_LEVEL,
       TAG_DONE]
-      maptarget:=self.findSibling(self.linkToSlider)
+      maptarget:=self.parent.findReactionObject(self.linkToSlider)
   ELSE
     map:=0
     maptarget:=0
@@ -494,6 +487,17 @@ EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF integerObject
   SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
+EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF integerObject
+  DEF maptarget
+  IF self.linkToSlider
+    maptarget:=self.parent.findReactionObject(self.linkToSlider)
+  ELSE
+    maptarget:=0
+  ENDIF
+  IF maptarget
+    srcGen.setIcaMap(header, 'INTEGER_Minimum, SLIDER_Min, INTEGER_Maximum, SLIDER_Max, INTEGER_Number, SLIDER_Level',self,maptarget)
+  ENDIF
+ENDPROC
 
 EXPORT PROC createIntegerObject(parent)
   DEF integer:PTR TO integerObject

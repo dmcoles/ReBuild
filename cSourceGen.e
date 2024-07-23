@@ -161,6 +161,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   self.writeLine('#include <libraries/gadtools.h>')
   self.writeLine('#include <reaction/reaction.h>')
   self.writeLine('#include <intuition/gadgetclass.h>')
+  self.writeLine('#include <intuition/icclass.h>')
   self.writeLine('#include <reaction/reaction_macros.h>')
   self.writeLine('#include <classes/window.h>')
   self.writeLine('#include <exec/memory.h>')
@@ -1026,6 +1027,7 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     
     listObjects.clear()
   ENDIF
+  layoutObject.genComponentMaps(TRUE, self)
 
   layoutObject.findObjectsByType(listObjects,TYPE_CHOOSER)
   layoutObject.findObjectsByType(listObjects,TYPE_RADIO)
@@ -1190,6 +1192,8 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   StringF(tempStr,'  main_gadgets[\d] = 0;',count)
   self.writeLine(tempStr)
+  
+  layoutObject.genComponentMaps(FALSE, self)
   
   StrCopy(windowName,windowObject.ident)
   LowerStr(windowName)
@@ -1510,3 +1514,29 @@ PROC makeList2(start:PTR TO CHAR,list:PTR TO stringlist) OF cSrcGen
   ENDFOR
   StrAdd(res,' NULL };') 
 ENDPROC res
+
+PROC setIcaMap(header,mapText,mapSource:PTR TO reactionObject,mapTarget:PTR TO reactionObject) OF cSrcGen
+  DEF tempStr1[255]:STRING
+  DEF tempStr2[255]:STRING
+  DEF mapName[100]:STRING
+  StrCopy(tempStr2,mapSource.ident)
+  LowerStr(tempStr2)
+
+  IF header
+    StringF(tempStr1,'  struct TagItem map_\s',tempStr2)
+    StringF(tempStr2,'[] = { \s, TAG_DONE };',mapText) 
+    StrAdd(tempStr1,tempStr2)
+    
+    self.writeLine(tempStr1)
+  ELSE
+    self.writeLine('')
+    StringF(mapName,'map_\s',tempStr2) 
+    StringF(tempStr1,'  SetGadgetAttrs(main_gadgets[\s],0,0,ICA_MAP,\s,TAG_DONE);',tempStr2,mapName)
+    
+    self.writeLine(tempStr1)
+    StrCopy(tempStr1,mapTarget.ident)
+    LowerStr(tempStr1)
+    StringF(tempStr1,'  SetGadgetAttrs(main_gadgets[\s],0,0,ICA_TARGET,main_gadgets[\s],TAG_DONE);',tempStr2,tempStr1)
+    self.writeLine(tempStr1)
+  ENDIF
+ENDPROC

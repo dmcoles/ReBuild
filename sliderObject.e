@@ -445,16 +445,23 @@ ENDPROC
 EXPORT PROC updatePreviewObject() OF sliderObject
   DEF i,comp:PTR TO reactionObject
   DEF map=0,maptarget=0:PTR TO reactionObject
-   
-  FOR i:=0 TO self.parent.children.count()-1
-    comp:=self.parent.children.item(i)
-    IF comp.type=TYPE_INTEGER
-      IF comp::integerObject.linkToSlider=self.id
-        map:=[SLIDER_LEVEL, INTEGER_NUMBER,TAG_DONE]
-        maptarget:=comp
-      ENDIF
+  DEF linkedgads:PTR TO stdlist
+  DEF root:PTR TO reactionObject
+
+  NEW linkedgads.stdlist(10)
+
+  root:=self
+  WHILE root.parent DO root:=root.parent
+
+  root.findObjectsByType(linkedgads,TYPE_INTEGER) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::integerObject.linkToSlider=self.id
+      map:=[SLIDER_LEVEL, INTEGER_NUMBER,TAG_DONE]
+      maptarget:=comp
     ENDIF
   ENDFOR
+  END linkedgads
 
   IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
   IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
@@ -528,6 +535,32 @@ ENDPROC
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF sliderObject
   srcGen.componentAddChildLabel(self.name)
   SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
+EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF sliderObject
+  DEF i,comp:PTR TO reactionObject
+  DEF map=0,maptarget=0:PTR TO reactionObject
+  DEF linkedgads:PTR TO stdlist
+  DEF root:PTR TO reactionObject
+
+  NEW linkedgads.stdlist(10)
+
+  root:=self
+  WHILE root.parent DO root:=root.parent
+
+  root.findObjectsByType(linkedgads,TYPE_INTEGER) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::integerObject.linkToSlider=self.id
+      map:='SLIDER_Level, INTEGER_Number'
+      maptarget:=comp
+    ENDIF
+  ENDFOR
+  END linkedgads
+
+  IF maptarget
+    srcGen.setIcaMap(header, map,self,maptarget)
+  ENDIF
 ENDPROC
 
 EXPORT PROC getTypeName() OF sliderObject

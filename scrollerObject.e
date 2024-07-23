@@ -334,22 +334,32 @@ ENDPROC
 EXPORT PROC updatePreviewObject() OF scrollerObject
   DEF i,comp:PTR TO reactionObject
   DEF map=0,maptarget=0:PTR TO reactionObject
-   
-  FOR i:=0 TO self.parent.children.count()-1
-    comp:=self.parent.children.item(i)
-    IF comp.type=TYPE_TEXTEDITOR
-      IF comp::textEditorObject.linkToVScroll=self.id
-        map:=[SCROLLER_TOP, GA_TEXTEDITOR_PROP_FIRST,TAG_DONE]
-        maptarget:=comp
-      ENDIF
-    ENDIF
-    IF comp.type=TYPE_TEXTFIELD
-      IF comp::textFieldObject.linkToScrollBar=self.id
-        map:=[SCROLLER_TOP, TEXTFIELD_TOP,TAG_DONE]
-        maptarget:=comp
-      ENDIF
+  DEF linkedgads:PTR TO stdlist
+  DEF root:PTR TO reactionObject
+
+  NEW linkedgads.stdlist(10)
+
+  root:=self
+  WHILE root.parent DO root:=root.parent
+
+  root.findObjectsByType(linkedgads,TYPE_TEXTEDITOR) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::textEditorObject.linkToVScroll=self.id
+      map:=[SCROLLER_TOP, GA_TEXTEDITOR_PROP_FIRST,TAG_DONE]
+      maptarget:=comp
     ENDIF
   ENDFOR
+
+  self.parent.findObjectsByType(linkedgads,TYPE_TEXTFIELD) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::textFieldObject.linkToVScroll=self.id
+      map:=[SCROLLER_TOP, TEXTFIELD_TOP,TAG_DONE]
+      maptarget:=comp
+    ENDIF
+  ENDFOR
+  END linkedgads
 
   IF map THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_MAP,map,TAG_DONE])
   IF maptarget THEN SetGadgetAttrsA(self.previewObject,0,0,[ICA_TARGET,maptarget.previewObject,TAG_DONE])
@@ -404,6 +414,41 @@ ENDPROC
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF scrollerObject
   srcGen.componentAddChildLabel(self.name)
   SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
+
+EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF scrollerObject
+  DEF i,comp:PTR TO reactionObject
+  DEF map=0,maptarget=0:PTR TO reactionObject
+  DEF linkedgads:PTR TO stdlist
+  DEF root:PTR TO reactionObject
+
+  NEW linkedgads.stdlist(10)
+
+  root:=self
+  WHILE root.parent DO root:=root.parent
+
+  root.findObjectsByType(linkedgads,TYPE_TEXTEDITOR) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::textEditorObject.linkToVScroll=self.id
+      map:='SCROLLER_Top, GA_TEXTEDITOR_Prop_First'
+      maptarget:=comp
+    ENDIF
+  ENDFOR
+
+  self.parent.findObjectsByType(linkedgads,TYPE_TEXTFIELD) 
+  FOR i:=0 TO linkedgads.count()-1
+    comp:=linkedgads.item(i)
+    IF comp::textFieldObject.linkToVScroll=self.id
+      map:='SCROLLER_Top, TEXTFIELD_Top'
+      maptarget:=comp
+    ENDIF
+  ENDFOR
+  END linkedgads
+
+  IF maptarget
+    srcGen.setIcaMap(header, map,self,maptarget)
+  ENDIF
 ENDPROC
 
 EXPORT PROC getTypeName() OF scrollerObject

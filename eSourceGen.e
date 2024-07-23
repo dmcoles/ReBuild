@@ -1,5 +1,4 @@
 OPT MODULE,LARGE
-OPT MODULE,LARGE
 
   MODULE 'images/drawlist','gadgets/tabs'
   MODULE '*baseStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
@@ -121,6 +120,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   ENDIF
   self.writeLine('      \aintuition/intuition\a,')
   self.writeLine('      \aintuition/imageclass\a,')
+  self.writeLine('      \aintuition/icclass\a,')
   self.writeLine('      \aintuition/screens\a,')
   IF self.libsused[TYPE_GETSCREENMODE]
     self.writeLine('      \agraphics/displayinfo\a,')
@@ -973,6 +973,8 @@ PROC genWindowHeader(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
     self.writeLine('')  
     END listObjects
   ENDIF
+  layoutObject.genComponentMaps(TRUE,self)
+  
   self.indent:=2
 ENDPROC
 
@@ -985,6 +987,8 @@ PROC genWindowFooter(count, windowObject:PTR TO windowObject, menuObject:PTR TO 
 
   StringF(tempStr,'  mainGadgets[\d]:=0',count)
   self.writeLine(tempStr)
+
+  layoutObject.genComponentMaps(FALSE,self)
 
   StrCopy(windowName,windowObject.ident)
   UpperStr(windowName)
@@ -1272,3 +1276,24 @@ PROC makeList2(start:PTR TO CHAR,list:PTR TO stringlist) OF eSrcGen
   StrAdd(res,'0])')
 ENDPROC res
 
+PROC setIcaMap(header, mapText,mapSource:PTR TO reactionObject,mapTarget:PTR TO reactionObject) OF eSrcGen
+  DEF tempStr1[255]:STRING
+  DEF tempStr2[255]:STRING
+  DEF upperMap
+  
+  IF header=0
+    StrCopy(tempStr2,mapSource.ident)
+    UpperStr(tempStr2)
+    upperMap:=AstrClone(mapText)
+    UpperStr(upperMap)
+    self.writeLine('')
+    StringF(tempStr1,'  SetGadgetAttrsA(mainGadgets[\s],0,0,[ICA_MAP,[\s,TAG_DONE],TAG_DONE])',tempStr2,upperMap)
+    DisposeLink(upperMap)
+    
+    self.writeLine(tempStr1)
+    StrCopy(tempStr1,mapTarget.ident)
+    UpperStr(tempStr1)
+    StringF(tempStr1,'  SetGadgetAttrsA(mainGadgets[\s],0,0,[ICA_TARGET,mainGadgets[\s],TAG_DONE])',tempStr2,tempStr1)
+    self.writeLine(tempStr1)
+  ENDIF
+ENDPROC

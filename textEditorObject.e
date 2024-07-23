@@ -335,26 +335,20 @@ ENDPROC
 PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
   DEF res
   DEF scrlgads:PTR TO LONG
-  DEF i,counter=0,selscroll
+  DEF i,selscroll
   DEF gad:PTR TO reactionObject
-    
-  FOR i:=0 TO comp.parent.children.count()-1
-    IF comp.parent.children.item(i)::reactionObject.type=TYPE_SCROLLER
-      counter++
-    ENDIF
-  ENDFOR
+  DEF scrollgads:PTR TO stdlist
 
-  scrlgads:=List(counter+2)
+  NEW scrollgads.stdlist(10)
+  comp.parent.findObjectsByType(scrollgads,TYPE_SCROLLER)
+  
+  scrlgads:=List(scrollgads.count()+2)
   ListAddItem(scrlgads,'None')
   selscroll:=0
-  counter:=0
-  FOR i:=0 TO comp.parent.children.count()-1
-    gad:=comp.parent.children.item(i)
-    IF gad.type=TYPE_SCROLLER
-      counter++
-      IF gad.id=comp.linkToVScroll THEN selscroll:=counter
-      ListAddItem(scrlgads,gad.ident)
-    ENDIF
+  FOR i:=0 TO scrollgads.count()-1
+    gad:=scrollgads.item(i)
+    IF gad.id=comp.linkToVScroll THEN selscroll:=(i+1)
+    ListAddItem(scrlgads,gad.ident)
   ENDFOR
   ListAddItem(scrlgads,0)
   freeChooserLabels(self.labels4)
@@ -397,15 +391,13 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
     selscroll:=Gets(self.gadgetList[ TEXTEDGAD_LINKTOVSCROLL ],CHOOSER_SELECTED)
 
     comp.linkToVScroll:=0
-    FOR i:=0 TO comp.parent.children.count()-1
-      gad:=comp.parent.children.item(i)
-      IF gad.type=TYPE_SCROLLER
-        selscroll--
-        IF selscroll=0 THEN comp.linkToVScroll:=gad.id
-      ENDIF
+    FOR i:=0 TO scrollgads.count()-1
+      gad:=scrollgads.item(i)
+      selscroll--
+      IF selscroll=0 THEN comp.linkToVScroll:=gad.id
     ENDFOR
-
   ENDIF
+  END scrollgads
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textEditorObject
@@ -459,7 +451,7 @@ EXPORT PROC updatePreviewObject() OF textEditorObject
       GA_TEXTEDITOR_PROP_ENTRIES, SCROLLER_TOTAL,
       GA_TEXTEDITOR_PROP_VISIBLE, SCROLLER_VISIBLE,
       TAG_DONE]
-      maptarget:=self.findSibling(self.linkToVScroll)
+      maptarget:=self.parent.findReactionObject(self.linkToVScroll)
   ELSE
     map:=0
     maptarget:=0
@@ -537,6 +529,18 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textEditorObject
     srcGen.componentProperty('GA_TEXTEDITOR_TabKeyPolicy',ListItem(['GV_TEXTEDITOR_TabKey_IndentsLine','GV_TEXTEDITOR_TabKey_IndentsAfter'],self.tabKeyPolicy),FALSE)
   ELSE
     srcGen.componentProperty('GA_TEXTEDITOR_TabKeyPolicy',ListItem(['GV_TEXTEDITOR_TABKEY_INDENTSLINE','GV_TEXTEDITOR_TABKEY_INDENTSAFTER'],self.tabKeyPolicy),FALSE)
+  ENDIF
+ENDPROC
+
+EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF textEditorObject
+  DEF maptarget
+  IF self.linkToVScroll
+    maptarget:=self.parent.findReactionObject(self.linkToVScroll)
+  ELSE
+    maptarget:=0
+  ENDIF
+  IF maptarget
+    srcGen.setIcaMap(header,'GA_TEXTEDITOR_Prop_First, SCROLLER_Top, GA_TEXTEDITOR_Prop_Entries, SCROLLER_Total, GA_TEXTEDITOR_Prop_Visible, SCROLLER_Visible',self,maptarget)
   ENDIF
 ENDPROC
 

@@ -256,3 +256,4 @@ PROC genHeader(screenObject,rexxObject,requesterObject, windowItems, windowLayou
 PROC genFooter(windowObject,rexxObject) OF srcGen IS -1
 PROC genWindowHeader(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
 PROC genWindowFooter(count, windowObject, menuObject, layoutObject, reactionLists) OF srcGen IS -1
+PROC setIcaMap(header,mapText,mapSource,mapTarget) OF srcGen IS -1

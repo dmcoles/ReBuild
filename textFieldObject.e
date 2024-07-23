@@ -28,7 +28,7 @@ EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELD
       TEXTFIELDGAD_BLINKRATE, TEXTFIELDGAD_MAXSIZE, TEXTFIELDGAD_SPACING, TEXTFIELDGAD_TABSPACES,
       TEXTFIELDGAD_DISABLED, TEXTFIELDGAD_TABCYCLE, TEXTFIELDGAD_BLOCK, TEXTFIELDGAD_MAXSIZEBEEP, TEXTFIELDGAD_PARTIAL,
       TEXTFIELDGAD_NOGHOST, TEXTFIELDGAD_READONLY, TEXTFIELDGAD_NONPRINTCHARS, TEXTFIELDGAD_INVERTED, TEXTFIELDGAD_VCENTER,
-      TEXTFIELDGAD_USERALIGN, TEXTFIELDGAD_RULEDPAPER, TEXTFIELDGAD_LINKTOSCROLLBAR,
+      TEXTFIELDGAD_USERALIGN, TEXTFIELDGAD_RULEDPAPER, TEXTFIELDGAD_LINKTOVSCROLL,
       TEXTFIELDGAD_PAPERPEN, TEXTFIELDGAD_INKPEN, TEXTFIELDGAD_LINEPEN,
       TEXTFIELDGAD_BORDER, TEXTFIELDGAD_ALIGN,
       TEXTFIELDGAD_OK, TEXTFIELDGAD_CHILD, TEXTFIELDGAD_CANCEL
@@ -120,7 +120,7 @@ EXPORT OBJECT textFieldObject OF reactionObject
   vCenter:CHAR
   userAlign:CHAR
   ruledPaper:CHAR
-  linkToScrollBar:INT
+  linkToVScroll:INT
   paperPen:INT
   inkPen:INT
   linePen:INT
@@ -392,8 +392,8 @@ PROC create() OF textFieldSettingsForm
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ]:=ChooserObject,
-          GA_ID, TEXTFIELDGAD_LINKTOSCROLLBAR,
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_LINKTOVSCROLL ]:=ChooserObject,
+          GA_ID, TEXTFIELDGAD_LINKTOVSCROLL,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
           CHOOSER_POPUP, TRUE,
@@ -562,31 +562,25 @@ ENDPROC
 PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
   DEF res
   DEF scrlgads:PTR TO LONG
-  DEF i,counter=0,selscroll
+  DEF i,selscroll
   DEF gad:PTR TO reactionObject
+  DEF scrollgads:PTR TO stdlist
     
-  FOR i:=0 TO comp.parent.children.count()-1
-    IF comp.parent.children.item(i)::reactionObject.type=TYPE_SCROLLER
-      counter++
-    ENDIF
-  ENDFOR
-
-  scrlgads:=List(counter+2)
+  NEW scrollgads.stdlist(10)
+  comp.parent.findObjectsByType(scrollgads,TYPE_SCROLLER)
+  
+  scrlgads:=List(scrollgads.count()+2)
   ListAddItem(scrlgads,'None')
   selscroll:=0
-  counter:=0
-  FOR i:=0 TO comp.parent.children.count()-1
-    gad:=comp.parent.children.item(i)
-    IF gad.type=TYPE_SCROLLER
-      counter++
-      IF gad.id=comp.linkToScrollBar THEN selscroll:=counter
-      ListAddItem(scrlgads,gad.ident)
-    ENDIF
+  FOR i:=0 TO scrollgads.count()-1
+    gad:=scrollgads.item(i)
+    IF gad.id=comp.linkToVScroll THEN selscroll:=(i+1)
+    ListAddItem(scrlgads,gad.ident)
   ENDFOR
   ListAddItem(scrlgads,0)
   freeChooserLabels(self.labels3)
   self.labels3:=chooserLabelsA(scrlgads)
-  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],0,0,[CHOOSER_LABELS,self.labels3,0]) 
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOVSCROLL ],0,0,[CHOOSER_LABELS,self.labels3,0]) 
   DisposeLink(scrlgads)
 
   self.textFieldObject:=comp
@@ -620,7 +614,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_USERALIGN ],0,0,[CHECKBOX_CHECKED,comp.userAlign,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_RULEDPAPER ],0,0,[CHECKBOX_CHECKED,comp.ruledPaper,0]) 
-  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],0,0,[CHOOSER_SELECTED,selscroll,0]) 
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LINKTOVSCROLL ],0,0,[CHOOSER_SELECTED,selscroll,0]) 
 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_BORDER ],0,0,[CHOOSER_SELECTED,comp.border,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_ALIGN ],0,0,[CHOOSER_SELECTED,comp.align,0]) 
@@ -656,21 +650,19 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
 
     comp.userAlign:=Gets(self.gadgetList[ TEXTFIELDGAD_USERALIGN ],CHECKBOX_CHECKED)
     comp.ruledPaper:=Gets(self.gadgetList[ TEXTFIELDGAD_RULEDPAPER ],CHECKBOX_CHECKED)
-    selscroll:=Gets(self.gadgetList[ TEXTFIELDGAD_LINKTOSCROLLBAR ],CHOOSER_SELECTED)
+    selscroll:=Gets(self.gadgetList[ TEXTFIELDGAD_LINKTOVSCROLL ],CHOOSER_SELECTED)
 
     comp.border:=Gets(self.gadgetList[ TEXTFIELDGAD_BORDER ],CHOOSER_SELECTED)
     comp.align:=Gets(self.gadgetList[ TEXTFIELDGAD_ALIGN ],CHOOSER_SELECTED)
 
-    comp.linkToScrollBar:=0
-    FOR i:=0 TO comp.parent.children.count()-1
-      gad:=comp.parent.children.item(i)
-      IF gad.type=TYPE_SCROLLER
-        selscroll--
-        IF selscroll=0 THEN comp.linkToScrollBar:=gad.id
-      ENDIF
+    comp.linkToVScroll:=0
+    FOR i:=0 TO scrollgads.count()-1
+      gad:=scrollgads.item(i)
+      selscroll--
+      IF selscroll=0 THEN comp.linkToVScroll:=gad.id
     ENDFOR
-
   ENDIF
+  END scrollgads
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textFieldObject
@@ -735,12 +727,12 @@ ENDPROC
 EXPORT PROC updatePreviewObject() OF textFieldObject
   DEF map,maptarget:PTR TO reactionObject
 
-  IF self.linkToScrollBar
+  IF self.linkToVScroll
     map:=[TEXTFIELD_TOP, SCROLLER_TOP,
       TEXTFIELD_LINES, SCROLLER_TOTAL,
       TEXTFIELD_VISIBLE, SCROLLER_VISIBLE,
       TAG_DONE]
-      maptarget:=self.findSibling(self.linkToScrollBar)
+      maptarget:=self.parent.findReactionObject(self.linkToVScroll)
   ELSE
     map:=0
     maptarget:=0
@@ -774,7 +766,7 @@ EXPORT PROC create(parent) OF textFieldObject
   self.vCenter:=0
   self.userAlign:=0
   self.ruledPaper:=0
-  self.linkToScrollBar:=FALSE
+  self.linkToVScroll:=FALSE
   self.paperPen:=-1
   self.inkPen:=-1
   self.linePen:=-1
@@ -819,7 +811,7 @@ EXPORT PROC serialiseData() OF textFieldObject IS
   makeProp(vCenter,FIELDTYPE_CHAR),
   makeProp(userAlign,FIELDTYPE_CHAR),
   makeProp(ruledPaper,FIELDTYPE_CHAR),
-  makeProp(linkToScrollBar,FIELDTYPE_INT),
+  makeProp(linkToVScroll,FIELDTYPE_INT),
   makeProp(paperPen,FIELDTYPE_INT),
   makeProp(inkPen,FIELDTYPE_INT),
   makeProp(linePen,FIELDTYPE_INT),
@@ -858,6 +850,19 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textFieldObject
   IF self.linePen<>-1 THEN srcGen.componentPropertyInt('TEXTFIELD_LinePen',self.linePen)
   IF self.border<>0 THEN srcGen.componentProperty('TEXTFIELD_Border',ListItem(['TEXTFIELD_BORDER_NONE','TEXTFIELD_BORDER_BEVEL','TEXTFIELD_BORDER_DOUBLEBEVEL'],self.border),FALSE)
   IF self.align<>0 THEN srcGen.componentProperty('TEXTFIELD_Alignment',ListItem(['TEXTFIELD_ALIGN_LEFT','TEXTFIELD_ALIGN_CENTER','TEXTFIELD_ALIGN_RIGHT'],self.align),FALSE)
+ENDPROC
+
+
+EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF textFieldObject
+  DEF maptarget
+  IF self.linkToVScroll
+    maptarget:=self.parent.findReactionObject(self.linkToVScroll)
+  ELSE
+    maptarget:=0
+  ENDIF
+  IF maptarget
+    srcGen.setIcaMap(header, 'TEXTFIELD_Top, SCROLLER_Top, TEXTFIELD_Lines, SCROLLER_Total, TEXTFIELD_Visible, SCROLLER_Visible',self,maptarget)
+  ENDIF
 ENDPROC
 
 EXPORT PROC getTypeName() OF textFieldObject

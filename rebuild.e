@@ -1695,7 +1695,7 @@ PROC loadSettings()
   ENDIF
   END fs
 
-  NEW fs.create('ENVARC:Rebuild/systemOptions',MODE_OLDFILE)
+  NEW fs.create('ENVARC:Rebuild/codeOptions',MODE_OLDFILE)
   IF fs.isOpen()
     WHILE fs.readLine(tempStr)
       IF StrCmp(tempStr,'LANGID=',STRLEN)

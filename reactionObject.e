@@ -851,6 +851,21 @@ ENDPROC
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF reactionObject IS -1
 
+EXPORT PROC genCodeMaps(header,srcGen:PTR TO srcGen) OF reactionObject IS -1
+
+EXPORT PROC genComponentMaps(header,srcGen:PTR TO srcGen)OF reactionObject
+  DEF i,child:PTR TO reactionObject
+  FOR i:=0 TO self.children.count()-1
+    child:=self.children.item(i)
+    child.genCodeMaps(header,srcGen)   
+  ENDFOR
+
+  FOR i:=0 TO self.children.count()-1
+    child:=self.children.item(i)
+    child.genComponentMaps(header,srcGen)   
+  ENDFOR
+ENDPROC
+
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF reactionObject
   IF self.minWidth<>-1 THEN srcGen.componentPropertyInt('CHILD_MinWidth',self.minWidth)
   IF self.minHeight<>-1 THEN srcGen.componentPropertyInt('CHILD_MinHeight',self.minHeight)
@@ -914,10 +929,15 @@ EXPORT PROC deinitialise()
   IF imageData THEN Dispose(imageData)
 ENDPROC
 
-EXPORT PROC findSibling(id) OF reactionObject
-  DEF i
-  FOR i:=0 TO self.parent.children.count()-1
-    IF self.parent.children.item(i)::reactionObject.id = id THEN RETURN self.parent.children.item(i)
+EXPORT PROC findReactionObject(id) OF reactionObject
+  DEF i,res
+  
+  FOR i:=0 TO self.children.count()-1
+    IF self.children.item(i)::reactionObject.id = id THEN RETURN self.children.item(i)
+  ENDFOR
+
+  FOR i:=0 TO self.children.count()-1
+    IF res:=self.children.item(i)::reactionObject.findReactionObject(id) THEN RETURN res
   ENDFOR
 ENDPROC 0
 
