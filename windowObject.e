@@ -1109,12 +1109,16 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
     comp.flags:=self.tmpFlags
     comp.idcmp:=self.tmpIDCMP
     
+    comp.previewLeft:=comp.leftEdge
+    comp.previewTop:=comp.topEdge
+    comp.previewWidth:=comp.width
+    comp.previewHeight:=comp.height
   ENDIF
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF windowObject
   IF self.previewObject THEN DisposeObject(self.previewObject)
-   
+  
   self.previewObject:=WindowObject,
     WA_TITLE, self.title,
     IF StrLen(self.screentitle) THEN WA_SCREENTITLE ELSE TAG_IGNORE, self.screentitle,
@@ -1188,10 +1192,10 @@ EXPORT PROC create(parent) OF windowObject
   self.createPreviewObject(0)
   self.previewChildAttrs:=0
   self.previewOpen:=TRUE
-  self.previewLeft:=-1
-  self.previewTop:=-1
-  self.previewWidth:=-1
-  self.previewHeight:=-1
+  self.previewLeft:=self.leftEdge
+  self.previewTop:=self.topEdge
+  self.previewWidth:=self.width
+  self.previewHeight:=self.height
 ENDPROC
 
 PROC end() OF windowObject
