@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM CWHEELGAD_IDENT, CWHEELGAD_HINT, CWHEELGAD_BEVELBOX,
+EXPORT ENUM CWHEELGAD_IDENT, CWHEELGAD_LABEL, CWHEELGAD_HINT, CWHEELGAD_BEVELBOX,
       CWHEELGAD_OK, CWHEELGAD_CHILD, CWHEELGAD_CANCEL
       
 
@@ -78,6 +78,16 @@ PROC create() OF colorWheelSettingsForm
         StringEnd,
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ CWHEELGAD_LABEL ]:=StringObject,
+          GA_ID, CWHEELGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ CWHEELGAD_HINT ]:=ButtonObject,
@@ -168,10 +178,12 @@ PROC editSettings(comp:PTR TO colorWheelObject) OF colorWheelSettingsForm
     
   SetGadgetAttrsA(self.gadgetList[ CWHEELGAD_BEVELBOX ],0,0,[CHECKBOX_CHECKED,comp.bevelBox,0]) 
   SetGadgetAttrsA(self.gadgetList[ CWHEELGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ CWHEELGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
 
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ CWHEELGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ CWHEELGAD_LABEL ],STRINGA_TEXTVAL))
     comp.bevelBox:=Gets(self.gadgetList[ CWHEELGAD_BEVELBOX ],CHECKBOX_CHECKED)   
   ENDIF
 ENDPROC res=MR_OK
@@ -187,22 +199,7 @@ EXPORT PROC createPreviewObject(scr) OF colorWheelObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF colorWheelObject
@@ -237,6 +234,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF colorWheelObject
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
   srcGen.componentProperty('WHEEL_Screen','gScreen',FALSE) 
   IF self.bevelBox THEN srcGen.componentProperty('WHEEL_BevelBox','TRUE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF colorWheelObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC libNameCreate() OF colorWheelObject IS 'colorwheel.gadget'

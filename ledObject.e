@@ -22,7 +22,7 @@ OPT MODULE, OSVERSION=37
 
 EXPORT DEF ledbase
 
-EXPORT ENUM LEDGAD_IDENT, LEDGAD_FGPEN,LEDGAD_BGPEN,LEDGAD_WIDTH,LEDGAD_HEIGHT,LEDGAD_COLON,
+EXPORT ENUM LEDGAD_IDENT, LEDGAD_LABEL, LEDGAD_FGPEN,LEDGAD_BGPEN,LEDGAD_WIDTH,LEDGAD_HEIGHT,LEDGAD_COLON,
           LEDGAD_NEGATIVE,LEDGAD_SIGNED,LEDGAD_TIME,LEDGAD_HEX,
       LEDGAD_OK, LEDGAD_CHILD, LEDGAD_CANCEL
 
@@ -88,6 +88,16 @@ PROC create() OF ledSettingsForm
       StringEnd,
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ LEDGAD_LABEL ]:=StringObject,
+        GA_ID, LEDGAD_LABEL,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -277,6 +287,7 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
   self.tmpBgPen:=comp.bgPen
 
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ LEDGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0]) 
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0]) 
   SetGadgetAttrsA(self.gadgetList[ LEDGAD_COLON ],0,0,[CHECKBOX_CHECKED,comp.colon,0]) 
@@ -291,6 +302,7 @@ PROC editSettings(comp:PTR TO ledObject) OF ledSettingsForm
     comp.bgPen:=self.tmpBgPen
   
     AstrCopy(comp.ident,Gets(self.gadgetList[ LEDGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ LEDGAD_LABEL ],STRINGA_TEXTVAL))
     comp.width:=Gets(self.gadgetList[ LEDGAD_WIDTH ],INTEGER_NUMBER)   
     comp.height:=Gets(self.gadgetList[ LEDGAD_HEIGHT ],INTEGER_NUMBER)   
     comp.colon:=Gets(self.gadgetList[ LEDGAD_COLON ],CHECKBOX_CHECKED)   
@@ -321,22 +333,7 @@ EXPORT PROC createPreviewObject(scr) OF ledObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF ledObject
@@ -399,11 +396,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF ledObject
   ELSE
     srcGen.componentProperty('LED_Values','[12,34,56,78]:INT',FALSE)
   ENDIF
+ENDPROC
 
-  /*srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
-  srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
-  srcGen.componentProperty('WHEEL_Screen','gScreen',FALSE) 
-  IF self.bevelBox THEN srcGen.componentProperty('WHEEL_BevelBox','TRUE',FALSE)*/
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF ledObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC isImage() OF ledObject IS TRUE

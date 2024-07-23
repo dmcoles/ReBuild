@@ -41,7 +41,6 @@ EXPORT OBJECT layoutObject OF reactionObject
   rightSpacing:INT
   topSpacing:INT
   bottomSpacing:INT
-  label[80]:ARRAY OF CHAR
   labelPlace:CHAR
   fixedHoriz:CHAR
   fixedVert:CHAR
@@ -76,22 +75,7 @@ EXPORT PROC createPreviewObject(scr) OF layoutObject
       LayoutEnd
     IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-    self.previewChildAttrs:=[
-        LAYOUT_MODIFYCHILD, self.previewObject,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_NODISPOSE, FALSE,
-        CHILD_MINWIDTH, self.minWidth,
-        CHILD_MINHEIGHT, self.minHeight,
-        CHILD_MAXWIDTH, self.maxWidth,
-        CHILD_MAXHEIGHT, self.maxHeight,
-        CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-        CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-        CHILD_SCALEWIDTH, self.scaleWidth,
-        CHILD_SCALEHEIGHT, self.scaleHeight,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_WEIGHTMINIMUM, self.weightMinimum,
-        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-        TAG_END]
+    self.makePreviewChildAttrs(-1)
 ENDPROC
 
 EXPORT PROC create(parent) OF layoutObject
@@ -110,7 +94,6 @@ EXPORT PROC create(parent) OF layoutObject
   self.rightSpacing:=0
   self.topSpacing:=0
   self.bottomSpacing:=0
-  AstrCopy(self.label,'')
   self.labelPlace:=0
   self.fixedHoriz:=TRUE
   self.fixedVert:=TRUE
@@ -581,7 +564,6 @@ EXPORT PROC serialiseData() OF layoutObject IS
   makeProp(rightSpacing,FIELDTYPE_INT),
   makeProp(topSpacing,FIELDTYPE_INT),
   makeProp(bottomSpacing,FIELDTYPE_INT),
-  makeProp(label,FIELDTYPE_STR),
   makeProp(labelPlace,FIELDTYPE_CHAR),
   makeProp(fixedHoriz,FIELDTYPE_CHAR),
   makeProp(fixedVert,FIELDTYPE_CHAR),

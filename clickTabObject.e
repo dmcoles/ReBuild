@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM CLICKTAB_GAD_IDENT,CLICKTAB_GAD_HINT, CLICKTAB_GAD_LISTSELECT,
+EXPORT ENUM CLICKTAB_GAD_IDENT,CLICKTAB_GAD_LABEL, CLICKTAB_GAD_HINT, CLICKTAB_GAD_LISTSELECT,
       CLICKTAB_GAD_TOP, CLICKTAB_GAD_LEFT, CLICKTAB_GAD_HEIGHT,
       CLICKTAB_GAD_CURRENT, CLICKTAB_GAD_DISABLED, 
       CLICKTAB_GAD_OK, CLICKTAB_GAD_CHILD, CLICKTAB_GAD_CANCEL
@@ -92,6 +92,16 @@ PROC create() OF clickTabSettingsForm
           StringEnd,
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Identifier',
+          LabelEnd,
+
+          LAYOUT_ADDCHILD, self.gadgetList[ CLICKTAB_GAD_LABEL ]:=StringObject,
+            GA_ID, CLICKTAB_GAD_LABEL,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Label',
           LabelEnd,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ CLICKTAB_GAD_HINT ]:=ButtonObject,
@@ -253,6 +263,7 @@ PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
   self.updateHint(CLICKTAB_GAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_LEFT ],0,0,[INTEGER_NUMBER,comp.left,0])
   SetGadgetAttrsA(self.gadgetList[ CLICKTAB_GAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0])
@@ -263,6 +274,7 @@ PROC editSettings(comp:PTR TO clickTabObject) OF clickTabSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ CLICKTAB_GAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ CLICKTAB_GAD_LABEL ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.top:=Gets(self.gadgetList[ CLICKTAB_GAD_TOP ],INTEGER_NUMBER)
     comp.left:=Gets(self.gadgetList[ CLICKTAB_GAD_LEFT ],INTEGER_NUMBER)
@@ -322,28 +334,13 @@ EXPORT PROC createPreviewObject(scr) OF clickTabObject
 
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]    
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF clickTabObject
   self.type:=TYPE_CLICKTAB
   SUPER self.create(parent)
-  
+
   self.listObjectId:=-1
   self.top:=0
   self.left:=0
@@ -409,6 +406,10 @@ EXPORT PROC genChildObjectsFooter(srcGen:PTR TO srcGen) OF clickTabObject
   srcGen.componentEnd('PageEnd,')
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF clickTabObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
 
 EXPORT PROC getTypeName() OF clickTabObject
   RETURN 'ClickTab'

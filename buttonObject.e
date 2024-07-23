@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BTNGAD_IDENT, BTNGAD_NAME, BTNGAD_HINT, BTNGAD_TEXTPEN, BTNGAD_BGPEN, BTNGAD_FILLTEXTPEN, BTNGAD_FILLPEN,
+EXPORT ENUM BTNGAD_IDENT, BTNGAD_LABEL, BTNGAD_NAME, BTNGAD_HINT, BTNGAD_TEXTPEN, BTNGAD_BGPEN, BTNGAD_FILLTEXTPEN, BTNGAD_FILLPEN,
       BTNGAD_AUTOBUTTON, BTNGAD_BEVELSTYLE, BTNGAD_JUSTIFICATION, BTNGAD_SELECTED,
       BTNGAD_DISABLED, BTNGAD_READONLY, BTNGAD_PUSHBUTTON, BTNGAD_TRANSPARENT,
       BTNGAD_OK, BTNGAD_CHILD, BTNGAD_CANCEL
@@ -101,6 +101,17 @@ PROC create() OF buttonSettingsForm
             LABEL_TEXT, 'Identifier',
           LabelEnd,
 
+          LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_LABEL ]:=StringObject,
+            GA_ID, BTNGAD_LABEL,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Label',
+          LabelEnd,
+
           LAYOUT_ADDCHILD, self.gadgetList[ BTNGAD_NAME ]:=StringObject,
             GA_ID, BTNGAD_NAME,
             GA_RELVERIFY, TRUE,
@@ -109,7 +120,7 @@ PROC create() OF buttonSettingsForm
           StringEnd,
 
           CHILD_LABEL, LabelObject,
-            LABEL_TEXT, '_Label',
+            LABEL_TEXT, 'Text',
           LabelEnd,
 
           LAYOUT_ADDCHILD,  self.gadgetList[ BTNGAD_HINT ]:=ButtonObject,
@@ -378,6 +389,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
 
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
+  SetGadgetAttrsA(self.gadgetList[ BTNGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_AUTOBUTTON ],0,0,[CHOOSER_SELECTED,comp.autoButton,0]) 
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_BEVELSTYLE ],0,0,[CHOOSER_SELECTED,comp.bevelStyle,0]) 
   SetGadgetAttrsA(self.gadgetList[ BTNGAD_JUSTIFICATION  ],0,0,[CHOOSER_SELECTED,comp.justify,0]) 
@@ -391,6 +403,7 @@ PROC editSettings(comp:PTR TO buttonObject) OF buttonSettingsForm
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ BTNGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ BTNGAD_NAME ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ BTNGAD_LABEL ],STRINGA_TEXTVAL))
     comp.textPen:=self.tmpTextPen
     comp.bgPen:=self.tmpBgPen
     comp.fillTextPen:=self.tmpFillTextPen
@@ -427,28 +440,12 @@ EXPORT PROC createPreviewObject(scr) OF buttonObject
     ButtonEnd
 
     IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
-    
-    self.previewChildAttrs:=[
-        LAYOUT_MODIFYCHILD, self.previewObject,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_NODISPOSE, FALSE,
-        CHILD_MINWIDTH, self.minWidth,
-        CHILD_MINHEIGHT, self.minHeight,
-        CHILD_MAXWIDTH, self.maxWidth,
-        CHILD_MAXHEIGHT, self.maxHeight,
-        CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-        CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-        CHILD_SCALEWIDTH, self.scaleWidth,
-        CHILD_SCALEHEIGHT, self.scaleHeight,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_WEIGHTMINIMUM, self.weightMinimum,
-        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-        TAG_END]
+
+    self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF buttonObject
   self.type:=TYPE_BUTTON
-
   SUPER self.create(parent)
   self.textPen:=1
   self.bgPen:=0
@@ -519,6 +516,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF buttonObject
 
     IF self.bevelStyle<>2 THEN srcGen.componentProperty('BUTTON_BevelStyle',ListItem(['BVS_NONE','BVS_THIN','BVS_BUTTON','BVS_GROUP'],self.bevelStyle),FALSE)
     IF self.justify<>1 THEN srcGen.componentProperty('BUTTON_Justification',ListItem(['BCJ_LEFT','BCJ_CENTER','BCJ_RIGHT'],self.justify),FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF buttonObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC createButtonObject(parent)

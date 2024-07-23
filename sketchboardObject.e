@@ -22,7 +22,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker', '*sourcegen','*validator'
 
-EXPORT ENUM SBOARDGAD_IDENT, SBOARDGAD_HINT, SBOARDGAD_WIDTH, SBOARDGAD_HEIGHT, SBOARDGAD_PEN, SBOARDGAD_ACTIVETOOL,
+EXPORT ENUM SBOARDGAD_IDENT, SBOARDGAD_LABEL, SBOARDGAD_HINT, SBOARDGAD_WIDTH, SBOARDGAD_HEIGHT, SBOARDGAD_PEN, SBOARDGAD_ACTIVETOOL,
       SBOARDGAD_GRID, SBOARDGAD_SCALE, SBOARDGAD_BEVEL, SBOARDGAD_READONLY, SBOARDGAD_DISABLED,
       SBOARDGAD_OK, SBOARDGAD_CHILD, SBOARDGAD_CANCEL
       
@@ -93,6 +93,16 @@ PROC create() OF sketchboardSettingsForm
             LABEL_TEXT, 'Identifier',
           LabelEnd,
 
+          LAYOUT_ADDCHILD, self.gadgetList[ SBOARDGAD_LABEL ]:=StringObject,
+            GA_ID, SBOARDGAD_LABEL,
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            STRINGA_MAXCHARS, 80,
+          StringEnd,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, '_Label',
+          LabelEnd,
+          
           LAYOUT_ADDCHILD,  self.gadgetList[ SBOARDGAD_HINT ]:=ButtonObject,
             GA_ID, SBOARDGAD_HINT,
             GA_TEXT, 'Hint',
@@ -297,6 +307,7 @@ PROC editSettings(comp:PTR TO sketchboardObject) OF sketchboardSettingsForm
 
   self.updateHint(SBOARDGAD_HINT, comp.hintText) 
   SetGadgetAttrsA(self.gadgetList[ SBOARDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ SBOARDGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ SBOARDGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0]) 
   SetGadgetAttrsA(self.gadgetList[ SBOARDGAD_HEIGHT ],0,0,[INTEGER_NUMBER,comp.height,0]) 
   SetGadgetAttrsA(self.gadgetList[ SBOARDGAD_ACTIVETOOL ],0,0,[CHOOSER_SELECTED,comp.activeTool,0]) 
@@ -310,6 +321,7 @@ PROC editSettings(comp:PTR TO sketchboardObject) OF sketchboardSettingsForm
   IF res=MR_OK
     comp.pen:=self.tmpPen
     AstrCopy(comp.ident,Gets(self.gadgetList[ SBOARDGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ SBOARDGAD_LABEL ],STRINGA_TEXTVAL))
     comp.width:=Gets(self.gadgetList[ SBOARDGAD_WIDTH ],INTEGER_NUMBER)   
     comp.height:=Gets(self.gadgetList[ SBOARDGAD_HEIGHT ],INTEGER_NUMBER)   
     comp.activeTool:=Gets(self.gadgetList[ SBOARDGAD_ACTIVETOOL ],CHOOSER_SELECTED)   
@@ -341,19 +353,7 @@ EXPORT PROC createPreviewObject(scr) OF sketchboardObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF sketchboardObject
@@ -417,7 +417,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF sketchboardObject
   IF self.grid THEN srcGen.componentProperty('SGA_ShowGrid','TRUE',FALSE)  
   IF self.scale THEN srcGen.componentProperty('SGA_Scale','1',FALSE)  
   IF self.bevel THEN srcGen.componentProperty('SGA_WithBevel','TRUE',FALSE)   
-  ->IF self.scroller=FALSE THEN srcGen.componentProperty('VIRTUALA_Scroller','FALSE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF sketchboardObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC hasCreateMacro() OF sketchboardObject IS FALSE

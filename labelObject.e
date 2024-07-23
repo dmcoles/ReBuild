@@ -18,7 +18,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM LBLGAD_IDENT, LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
+EXPORT ENUM LBLGAD_IDENT, LBLGAD_LABEL, LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
       LBLGAD_OK, LBLGAD_CHILD, LBLGAD_CANCEL
 
 CONST NUM_LBL_GADS=LBLGAD_CANCEL+1
@@ -78,6 +78,16 @@ PROC create() OF labelSettingsForm
       StringEnd,
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_LABEL ]:=StringObject,
+        GA_ID, LBLGAD_LABEL,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, 'Child _Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, self.gadgetList[ LBLGAD_NAME ]:=StringObject,
@@ -223,6 +233,7 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
   self.tempFgPen:=comp.fgPen
   self.tempBgPen:=comp.bgPen
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ LBLGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_DISPOSE  ],0,0,[CHECKBOX_CHECKED,comp.dispose,0]) 
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_JUSTIFICATION  ],0,0,[CHOOSER_SELECTED,comp.justify,0]) 
@@ -230,6 +241,7 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ LBLGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ LBLGAD_LABEL ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ LBLGAD_NAME ],STRINGA_TEXTVAL))
     comp.fgPen:=self.tempFgPen
     comp.bgPen:=self.tempBgPen
@@ -249,23 +261,7 @@ EXPORT PROC createPreviewObject(scr) OF labelObject
     LabelEnd
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
-      ->drawinfo
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF labelObject
@@ -304,6 +300,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF labelObject
   IF self.bgPen<>0 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
   IF self.dispose THEN srcGen.componentProperty('LABEL_DisposeImage','TRUE',FALSE)
   IF self.justify<>0 THEN srcGen.componentProperty('LABEL_Justification',ListItem(['LJ_LEFT','LJ_CENTER','LJ_RIGHT'],self.justify),FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF labelObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF labelObject

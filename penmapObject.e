@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM PENMAPGAD_IDENT, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
+EXPORT ENUM PENMAPGAD_IDENT, PENMAPGAD_LABEL, PENMAPGAD_LEFTEDGE, PENMAPGAD_TOPEDGE,
             PENMAPGAD_WIDTH, PENMAPGAD_HEIGHT, PENMAPGAD_BGPEN, PENMAPGAD_TRANSPARENT, 
       PENMAPGAD_OK, PENMAPGAD_CHILD, PENMAPGAD_CANCEL
 
@@ -87,6 +87,16 @@ PROC create() OF penMapSettingsForm
       StringEnd,
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ PENMAPGAD_LABEL ]:=StringObject,
+        GA_ID, PENMAPGAD_LABEL,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -248,6 +258,7 @@ PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
 
   self.tempBgPen:=comp.bgPen
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
   SetGadgetAttrsA(self.gadgetList[ PENMAPGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
@@ -257,6 +268,7 @@ PROC editSettings(comp:PTR TO penMapObject) OF penMapSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ PENMAPGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ PENMAPGAD_LABEL ],STRINGA_TEXTVAL))
     comp.leftEdge:=Gets(self.gadgetList[ PENMAPGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ PENMAPGAD_TOPEDGE ],INTEGER_NUMBER)
     comp.width:=Gets(self.gadgetList[ PENMAPGAD_WIDTH ],INTEGER_NUMBER)
@@ -281,22 +293,7 @@ EXPORT PROC createPreviewObject(scr) OF penMapObject
       TAG_DONE])
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF penMapObject
@@ -361,6 +358,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF penMapObject
   
   IF self.bgPen<>0 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
   IF self.transparent=FALSE THEN srcGen.componentProperty('PENMAP_Transparent','FALSE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF penMapObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF penMapObject

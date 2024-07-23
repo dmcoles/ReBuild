@@ -24,7 +24,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator','*stringlist'
 
-EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
+EXPORT ENUM TEXTFIELDGAD_IDENT, TEXTFIELDGAD_LABEL, TEXTFIELDGAD_HINT, TEXTFIELDGAD_DELIM, TEXTFIELDGAD_ACCEPT, TEXTFIELDGAD_REJECT, 
       TEXTFIELDGAD_BLINKRATE, TEXTFIELDGAD_MAXSIZE, TEXTFIELDGAD_SPACING, TEXTFIELDGAD_TABSPACES,
       TEXTFIELDGAD_DISABLED, TEXTFIELDGAD_TABCYCLE, TEXTFIELDGAD_BLOCK, TEXTFIELDGAD_MAXSIZEBEEP, TEXTFIELDGAD_PARTIAL,
       TEXTFIELDGAD_NOGHOST, TEXTFIELDGAD_READONLY, TEXTFIELDGAD_NONPRINTCHARS, TEXTFIELDGAD_INVERTED, TEXTFIELDGAD_VCENTER,
@@ -189,6 +189,17 @@ PROC create() OF textFieldSettingsForm
 
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_LABEL ]:=StringObject,
+          GA_ID, TEXTFIELDGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_HINT ]:=ButtonObject,
@@ -591,6 +602,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
     
   self.updateHint(TEXTFIELDGAD_HINT, comp.hintText)     
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_DELIM ],0,0,[STRINGA_TEXTVAL,comp.delimiters,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_ACCEPT ],0,0,[STRINGA_TEXTVAL,comp.acceptChars,0])
   SetGadgetAttrsA(self.gadgetList[ TEXTFIELDGAD_REJECT ],0,0,[STRINGA_TEXTVAL,comp.rejectChars,0])
@@ -627,6 +639,7 @@ PROC editSettings(comp:PTR TO textFieldObject) OF textFieldSettingsForm
     comp.linePen:=self.tempLinePen
 
     AstrCopy(comp.ident,Gets(self.gadgetList[ TEXTFIELDGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ TEXTFIELDGAD_LABEL ],STRINGA_TEXTVAL))
     AstrCopy(comp.delimiters,Gets(self.gadgetList[ TEXTFIELDGAD_DELIM ],STRINGA_TEXTVAL))
     AstrCopy(comp.acceptChars,Gets(self.gadgetList[ TEXTFIELDGAD_ACCEPT ],STRINGA_TEXTVAL))
     AstrCopy(comp.rejectChars,Gets(self.gadgetList[ TEXTFIELDGAD_REJECT ],STRINGA_TEXTVAL))
@@ -706,22 +719,7 @@ EXPORT PROC createPreviewObject(scr) OF textFieldObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-        LAYOUT_MODIFYCHILD, self.previewObject,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_NODISPOSE, FALSE,
-        CHILD_MINWIDTH, self.minWidth,
-        CHILD_MINHEIGHT, self.minHeight,
-        CHILD_MAXWIDTH, self.maxWidth,
-        CHILD_MAXHEIGHT, self.maxHeight,
-        CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-        CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-        CHILD_SCALEWIDTH, self.scaleWidth,
-        CHILD_SCALEHEIGHT, self.scaleHeight,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_WEIGHTMINIMUM, self.weightMinimum,
-        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-        TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC updatePreviewObject() OF textFieldObject
@@ -852,6 +850,10 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF textFieldObject
   IF self.align<>0 THEN srcGen.componentProperty('TEXTFIELD_Alignment',ListItem(['TEXTFIELD_ALIGN_LEFT','TEXTFIELD_ALIGN_CENTER','TEXTFIELD_ALIGN_RIGHT'],self.align),FALSE)
 ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF textFieldObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
 
 EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF textFieldObject
   DEF maptarget

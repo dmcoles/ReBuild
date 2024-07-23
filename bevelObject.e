@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BEVELGAD_IDENT, BEVELGAD_NAME, BEVELGAD_LEFT, BEVELGAD_TOP, BEVELGAD_WIDTH, BEVELGAD_HEIGHT,
+EXPORT ENUM BEVELGAD_IDENT, BEVELGAD_LABEL, BEVELGAD_NAME, BEVELGAD_LEFT, BEVELGAD_TOP, BEVELGAD_WIDTH, BEVELGAD_HEIGHT,
       BEVELGAD_FILLPEN, BEVELGAD_TEXTPEN, BEVELGAD_STYLE, BEVELGAD_PLACETEXT,
       BEVELGAD_HIGHLIGHTPEN, BEVELGAD_FOREGROUNDPEN, BEVELGAD_BACKGROUNDPEN, BEVELGAD_SHADOWPEN,
       BEVELGAD_RECESSED, BEVELGAD_EDGESONLY, BEVELGAD_TRANSPARENT,
@@ -113,6 +113,18 @@ PROC create() OF bevelSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
+        LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_LABEL ]:=StringObject,
+          GA_ID, BEVELGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+
+
         LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_NAME ]:=StringObject,
           GA_ID, BEVELGAD_NAME,
           GA_RELVERIFY, TRUE,
@@ -121,7 +133,7 @@ PROC create() OF bevelSettingsForm
         StringEnd,
 
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Label',
+          LABEL_TEXT, '_Text',
         LabelEnd,
       LayoutEnd,
 
@@ -415,6 +427,7 @@ PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
   self.tmpTextPen:=comp.textPen
 
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ BEVELGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_LEFT ],0,0,[INTEGER_NUMBER,comp.left,0]) 
   SetGadgetAttrsA(self.gadgetList[ BEVELGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0]) 
@@ -435,6 +448,7 @@ PROC editSettings(comp:PTR TO bevelObject) OF bevelSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ BEVELGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ BEVELGAD_LABEL ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ BEVELGAD_NAME ],STRINGA_TEXTVAL))
     comp.fillPen:=self.tmpFillPen
     comp.textPen:=self.tmpTextPen
@@ -479,22 +493,7 @@ EXPORT PROC createPreviewObject(scr) OF bevelObject
     
     IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-    self.previewChildAttrs:=[
-        LAYOUT_MODIFYCHILD, self.previewObject,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_NODISPOSE, FALSE,
-        CHILD_MINWIDTH, self.minWidth,
-        CHILD_MINHEIGHT, self.minHeight,
-        CHILD_MAXWIDTH, self.maxWidth,
-        CHILD_MAXHEIGHT, self.maxHeight,
-        CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-        CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-        CHILD_SCALEWIDTH, self.scaleWidth,
-        CHILD_SCALEHEIGHT, self.scaleHeight,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_WEIGHTMINIMUM, self.weightMinimum,
-        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-        TAG_END]
+    self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF bevelObject
@@ -572,6 +571,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF bevelObject
   IF self.recessed THEN srcGen.componentProperty('IA_Recessed','TRUE',TRUE)
   IF self.edgesOnly THEN srcGen.componentProperty('IA_EdgesOnly','TRUE',TRUE)
   IF self.transparent THEN srcGen.componentProperty('BEVEL_Transparent','TRUE',TRUE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF bevelObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF bevelObject

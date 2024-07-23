@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator'
 
-EXPORT ENUM DATEGAD_IDENT, DATEGAD_HINT, DATEGAD_MULTISELECT,DATEGAD_SHOWTITLE,DATEGAD_READONLY,DATEGAD_DISABLED,
+EXPORT ENUM DATEGAD_IDENT, DATEGAD_LABEL, DATEGAD_HINT, DATEGAD_MULTISELECT,DATEGAD_SHOWTITLE,DATEGAD_READONLY,DATEGAD_DISABLED,
       DATEGAD_OK, DATEGAD_CHILD, DATEGAD_CANCEL
       
 
@@ -82,6 +82,16 @@ PROC create() OF dateBrowserSettingsForm
         StringEnd,
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ DATEGAD_LABEL ]:=StringObject,
+          GA_ID, DATEGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ DATEGAD_HINT ]:=ButtonObject,
@@ -204,6 +214,7 @@ PROC editSettings(comp:PTR TO dateBrowserObject) OF dateBrowserSettingsForm
   
   self.updateHint(DATEGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ DATEGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_MULTISELECT ],0,0,[CHECKBOX_CHECKED,comp.multiSelect,0]) 
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_SHOWTITLE ],0,0,[CHECKBOX_CHECKED,comp.showTitle,0]) 
   SetGadgetAttrsA(self.gadgetList[ DATEGAD_READONLY ],0,0,[CHECKBOX_CHECKED,comp.readOnly,0]) 
@@ -212,6 +223,7 @@ PROC editSettings(comp:PTR TO dateBrowserObject) OF dateBrowserSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ DATEGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ DATEGAD_LABEL ],STRINGA_TEXTVAL))
     comp.multiSelect:=Gets(self.gadgetList[ DATEGAD_MULTISELECT ],CHECKBOX_CHECKED)   
     comp.showTitle:=Gets(self.gadgetList[ DATEGAD_SHOWTITLE ],CHECKBOX_CHECKED)   
     comp.readOnly:=Gets(self.gadgetList[ DATEGAD_READONLY ],CHECKBOX_CHECKED)   
@@ -234,22 +246,7 @@ EXPORT PROC createPreviewObject(scr) OF dateBrowserObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF dateBrowserObject
@@ -292,6 +289,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF dateBrowserObject
   IF self.readOnly THEN srcGen.componentProperty('GA_ReadOnly','TRUE',FALSE)
   IF self.multiSelect THEN srcGen.componentProperty('DATEBROWSER_MultiSelect','TRUE',FALSE)
   IF self.showTitle THEN srcGen.componentProperty('DATEBROWSER_ShowTitle','TRUE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF dateBrowserObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC hasCreateMacro() OF dateBrowserObject IS FALSE

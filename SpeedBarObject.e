@@ -26,7 +26,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*stringlist','*validator'
 
-EXPORT ENUM SBARGAD_IDENT,SBARGAD_NAME, SBARGAD_HINT, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
+EXPORT ENUM SBARGAD_IDENT,SBARGAD_LABEL, SBARGAD_HINT, SBARGAD_BTNLIST, SBARGAD_BUTTON_TEXT, SBARGAD_BUTTON_TYPE, SBARGAD_BUTTON_ADD, SBARGAD_BUTTON_DEL, SBARGAD_ORIENTATION, SBARGAD_BGPEN,
             SBARGAD_STRUMBAR, SBARGAD_BEVELSTYLE,
       SBARGAD_OK, SBARGAD_CHILD, SBARGAD_CANCEL
       
@@ -187,6 +187,16 @@ PROC create() OF speedBarSettingsForm
         StringEnd,
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ SBARGAD_LABEL ]:=StringObject,
+          GA_ID, SBARGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ SBARGAD_HINT ]:=ButtonObject,
@@ -422,7 +432,7 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   self.selectItem(self,0,0,-1)
 
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
-  SetGadgetAttrsA(self.gadgetList[ SBARGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
+  SetGadgetAttrsA(self.gadgetList[ SBARGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_STRUMBAR ],0,0,[CHECKBOX_CHECKED,comp.strumBar,0]) 
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_ORIENTATION ],0,0,[CHOOSER_SELECTED,comp.orientation,0]) 
   SetGadgetAttrsA(self.gadgetList[ SBARGAD_BEVELSTYLE ],0,0,[CHOOSER_SELECTED,comp.bevelStyle,0]) 
@@ -430,7 +440,7 @@ PROC editSettings(comp:PTR TO speedBarObject) OF speedBarSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ SBARGAD_IDENT ],STRINGA_TEXTVAL))
-    AstrCopy(comp.name,Gets(self.gadgetList[ SBARGAD_NAME ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ SBARGAD_LABEL ],STRINGA_TEXTVAL))
     comp.bgPen:=self.tempBgPen
     comp.strumBar:=Gets(self.gadgetList[ SBARGAD_STRUMBAR ],CHECKBOX_CHECKED)   
     comp.orientation:=Gets(self.gadgetList[ SBARGAD_ORIENTATION ],CHOOSER_SELECTED)   
@@ -508,7 +518,6 @@ EXPORT PROC createPreviewObject(scr) OF speedBarObject
         GA_ID, self.id,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
-        GA_TEXT, self.name,
         SPEEDBAR_ORIENTATION, ListItem([SBORIENT_HORIZ,SBORIENT_VERT],self.orientation),
         SPEEDBAR_BACKGROUND, self.bgPen,
         SPEEDBAR_STRUMBAR, self.strumBar,
@@ -517,23 +526,8 @@ EXPORT PROC createPreviewObject(scr) OF speedBarObject
       SpeedBarEnd
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
+  self.makePreviewChildAttrs(self.label)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
 ENDPROC
 
 EXPORT PROC create(parent) OF speedBarObject
@@ -587,7 +581,6 @@ EXPORT PROC serialiseData() OF speedBarObject IS
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF speedBarObject
   DEF tempStr[200]:STRING
 
-  srcGen.componentProperty('GA_Text',self.name,TRUE)
   srcGen.componentProperty('GA_RelVerify','TRUE',FALSE)
   srcGen.componentProperty('GA_TabCycle','TRUE',FALSE)
 
@@ -599,7 +592,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF speedBarObject
 
   StringF(tempStr,'buttons\d',self.id)
   srcGen.componentProperty('SPEEDBAR_Buttons',tempStr,FALSE)
+ENDPROC
 
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF speedBarObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC createSpeedBarObject(parent)

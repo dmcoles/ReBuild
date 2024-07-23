@@ -23,7 +23,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*validator','*stringlist'
 
-EXPORT ENUM TEXTEDGAD_IDENT, TEXTEDGAD_HINT, TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
+EXPORT ENUM TEXTEDGAD_IDENT, TEXTEDGAD_LABEL, TEXTEDGAD_HINT, TEXTEDGAD_EXPORTWRAP,TEXTEDGAD_FIXEDFONT,TEXTEDGAD_FLOW,TEXTEDGAD_IMPORTWRAP,
       TEXTEDGAD_INDENTWIDTH,TEXTEDGAD_LINEENDING,TEXTEDGAD_LINENUMBERS,TEXTEDGAD_SPACESPERTAB,TEXTEDGAD_TABTYPE,TEXTEDGAD_READONLY,
       TEXTEDGAD_HORIZSCROLL,TEXTEDGAD_LINKTOVSCROLL,
       TEXTEDGAD_OK, TEXTEDGAD_CHILD, TEXTEDGAD_CANCEL
@@ -101,6 +101,17 @@ PROC create() OF textEditorSettingsForm
 
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTEDGAD_LABEL ]:=StringObject,
+          GA_ID, TEXTEDGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ TEXTEDGAD_HINT ]:=ButtonObject,
@@ -360,6 +371,7 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
 
   self.updateHint(TEXTEDGAD_HINT, comp.hintText)     
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])   
+  SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])   
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_EXPORTWRAP ],0,0,[CHECKBOX_CHECKED,comp.exportWrap,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_FIXEDFONT ],0,0,[CHECKBOX_CHECKED,comp.fixedFont,0]) 
   SetGadgetAttrsA(self.gadgetList[ TEXTEDGAD_FLOW ],0,0,[CHOOSER_SELECTED,comp.flow,0]) 
@@ -376,6 +388,7 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ TEXTEDGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ TEXTEDGAD_LABEL ],STRINGA_TEXTVAL))
     comp.exportWrap:=Gets(self.gadgetList[ TEXTEDGAD_EXPORTWRAP ],CHECKBOX_CHECKED)   
     comp.fixedFont:=Gets(self.gadgetList[ TEXTEDGAD_FIXEDFONT ],CHECKBOX_CHECKED)   
     comp.flow:=Gets(self.gadgetList[ TEXTEDGAD_FLOW ],CHOOSER_SELECTED)   
@@ -424,23 +437,8 @@ EXPORT PROC createPreviewObject(scr) OF textEditorObject
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
   textfieldbase:=tempbase
-  
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+
+  self.makePreviewChildAttrs(0)  
 ENDPROC
 
 EXPORT PROC updatePreviewObject() OF textEditorObject
@@ -542,6 +540,11 @@ EXPORT PROC genCodeMaps(header, srcGen:PTR TO srcGen) OF textEditorObject
   IF maptarget
     srcGen.setIcaMap(header,'GA_TEXTEDITOR_Prop_First, SCROLLER_Top, GA_TEXTEDITOR_Prop_Entries, SCROLLER_Total, GA_TEXTEDITOR_Prop_Visible, SCROLLER_Visible',self,maptarget)
   ENDIF
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF textEditorObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC hasCreateMacro() OF textEditorObject IS FALSE ->create macro was missing from EVO modules

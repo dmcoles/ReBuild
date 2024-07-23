@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
-EXPORT ENUM BBGAD_IDENT, BBGAD_LEFTEDGE, BBGAD_TOPEDGE,
+EXPORT ENUM BBGAD_IDENT, BBGAD_LABEL, BBGAD_LEFTEDGE, BBGAD_TOPEDGE,
             BBGAD_WIDTH, BBGAD_HEIGHT, BBGAD_BGPEN, BBGAD_TRANSPARENT, 
       BBGAD_OK, BBGAD_CHILD, BBGAD_CANCEL
 
@@ -85,6 +85,18 @@ PROC create() OF boingBallSettingsForm
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Identifier',
       LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ BBGAD_LABEL ]:=StringObject,
+        GA_ID, BBGAD_LABEL,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_Label',
+      LabelEnd,
+
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
@@ -245,6 +257,7 @@ PROC editSettings(comp:PTR TO boingBallObject) OF boingBallSettingsForm
 
   self.tempBgPen:=comp.bgPen
   SetGadgetAttrsA(self.gadgetList[ BBGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0]) 
+  SetGadgetAttrsA(self.gadgetList[ BBGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0]) 
   SetGadgetAttrsA(self.gadgetList[ BBGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BBGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BBGAD_WIDTH ],0,0,[INTEGER_NUMBER,comp.width,0])
@@ -254,6 +267,7 @@ PROC editSettings(comp:PTR TO boingBallObject) OF boingBallSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ BBGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ BBGAD_LABEL ],STRINGA_TEXTVAL))
     comp.leftEdge:=Gets(self.gadgetList[ BBGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ BBGAD_TOPEDGE ],INTEGER_NUMBER)
     comp.width:=Gets(self.gadgetList[ BBGAD_WIDTH ],INTEGER_NUMBER)
@@ -281,22 +295,7 @@ EXPORT PROC createPreviewObject(scr) OF boingBallObject
 
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF boingBallObject
@@ -342,6 +341,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF boingBallObject
   
   IF self.bgPen<>0 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
   IF self.transparent=FALSE THEN srcGen.componentProperty('PENMAP_Transparent','FALSE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF boingBallObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF boingBallObject

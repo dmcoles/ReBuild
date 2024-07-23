@@ -19,7 +19,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourcegen','*validator'
 
-EXPORT ENUM CHKGAD_IDENT, CHKGAD_NAME, CHKGAD_HINT, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
+EXPORT ENUM CHKGAD_IDENT, CHKGAD_NAME, CHKGAD_LABEL, CHKGAD_HINT, CHKGAD_TEXTPEN, CHKGAD_BGPEN, CHKGAD_FILLTEXTPEN,
       CHKGAD_DISABLED, CHKGAD_SELECTED, CHKGAD_LABELPLACE,
       CHKGAD_OK, CHKGAD_CHILD, CHKGAD_CANCEL
       
@@ -91,6 +91,16 @@ PROC create() OF checkboxSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
 
+        LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_LABEL ]:=StringObject,
+          GA_ID, CHKGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+
         LAYOUT_ADDCHILD, self.gadgetList[ CHKGAD_NAME ]:=StringObject,
           GA_ID, CHKGAD_NAME,
           GA_RELVERIFY, TRUE,
@@ -99,7 +109,7 @@ PROC create() OF checkboxSettingsForm
         StringEnd,
 
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, '_Label',
+          LABEL_TEXT, 'Text',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ CHKGAD_HINT ]:=ButtonObject,
@@ -280,6 +290,7 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   self.updateHint(CHKGAD_HINT, comp.hintText)
 
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ CHKGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ CHKGAD_SELECTED ],0,0,[CHECKBOX_CHECKED,comp.selected,0]) 
@@ -289,6 +300,7 @@ PROC editSettings(comp:PTR TO checkboxObject) OF checkboxSettingsForm
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ CHKGAD_IDENT ],STRINGA_TEXTVAL))
     AstrCopy(comp.name,Gets(self.gadgetList[ CHKGAD_NAME ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ CHKGAD_LABEL ],STRINGA_TEXTVAL))
     comp.textPen:=self.tempTextPen
     comp.bgPen:=self.tempBgPen
     comp.fillTextPen:=self.tempFillTextPen
@@ -314,22 +326,7 @@ EXPORT PROC createPreviewObject(scr) OF checkboxObject
 
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF checkboxObject
@@ -380,6 +377,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF checkboxObject
   IF self.textPen<>1 THEN srcGen.componentPropertyInt('CHECKBOX_TextPen',self.textPen)
   IF self.bgPen<>0 THEN srcGen.componentPropertyInt('CHECKBOX_BackgroundPen',self.bgPen)
   IF self.fillTextPen<>1 THEN srcGen.componentPropertyInt('CHECKBOX_FillTextPen',self.fillTextPen)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF checkboxObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC createCheckboxObject(parent)

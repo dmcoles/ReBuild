@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*listPicker','*stringlist','*reactionListObject','*reactionLists','*sourceGen','*validator'
 
-EXPORT ENUM LISTBGAD_IDENT, LISTBGAD_HINT, LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
+EXPORT ENUM LISTBGAD_IDENT, LISTBGAD_LABEL, LISTBGAD_HINT, LISTBGAD_LISTSELECT, LISTBGAD_COLUMNSBUTTON,
       LISTBGAD_TOP, LISTBGAD_MAKEVISIBLE,
       LISTBGAD_POSITION, LISTBGAD_VIRTUALWIDTH, LISTBGAD_NUMCOLS,
       LISTBGAD_LEFT, LISTBGAD_SPACING, LISTBGAD_SELECTED,
@@ -131,6 +131,16 @@ PROC create() OF listBrowserSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
        
+        LAYOUT_ADDCHILD, self.gadgetList[ LISTBGAD_LABEL ]:=StringObject,
+          GA_ID, LISTBGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
+        LabelEnd,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ LISTBGAD_HINT ]:=ButtonObject,
           GA_ID, LISTBGAD_HINT,
           GA_TEXT, 'Hint',
@@ -498,6 +508,7 @@ PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
 
   self.updateHint(LISTBGAD_HINT, comp.hintText)
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ LISTBGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_TOP ],0,0,[INTEGER_NUMBER,comp.top,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_MAKEVISIBLE ],0,0,[INTEGER_NUMBER,comp.makeVisible,0])
   SetGadgetAttrsA(self.gadgetList[ LISTBGAD_POSITION ],0,0,[INTEGER_NUMBER,comp.position,0])
@@ -531,6 +542,7 @@ PROC editSettings(comp:PTR TO listBrowserObject) OF listBrowserSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ LISTBGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ LISTBGAD_LABEL ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.top:=Gets(self.gadgetList[ LISTBGAD_TOP ],INTEGER_NUMBER)
     comp.makeVisible:=Gets(self.gadgetList[ LISTBGAD_MAKEVISIBLE ],INTEGER_NUMBER)
@@ -875,22 +887,7 @@ EXPORT PROC createPreviewObject(scr) OF listBrowserObject
     ListBrowserEnd
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]    
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF listBrowserObject
@@ -1029,8 +1026,10 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF listBrowserObject
 
 ENDPROC
 
-  ->numColumns:INT
-  ->columninfo
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF listBrowserObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
 
 EXPORT PROC getTypeName() OF listBrowserObject
   RETURN 'ListBrowser'

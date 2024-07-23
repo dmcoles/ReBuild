@@ -68,6 +68,7 @@ EXPORT DEF imageData:PTR TO CHAR
 EXPORT OBJECT reactionObject
   ident[80]:ARRAY OF CHAR
   name[80]:ARRAY OF CHAR
+  label[80]:ARRAY OF CHAR
   hintText:PTR TO stringlist
   parent:PTR TO reactionObject
   children:PTR TO stdlist
@@ -502,6 +503,7 @@ EXPORT PROC create(parent) OF reactionObject
   StringF(name,'\s_\d',self.getTypeName(),self.id)
   AstrCopy(self.name,name)
   AstrCopy(self.ident,name)
+  AstrCopy(self.label,'')
   
   NEW strlist.stringlist(10)
   self.hintText:=strlist
@@ -646,6 +648,8 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   fser.writeLine(tempStr)
   StringF(tempStr,'IDENT: \s',self.ident)
   fser.writeLine(tempStr)
+  StringF(tempStr,'LABEL: \s',self.label)
+  fser.writeLine(tempStr)
   FOR i:=0 TO self.hintText.count()-1
     StringF(tempStr,'HINT: \s',self.hintText.item(i))
     fser.writeLine(tempStr)
@@ -754,6 +758,8 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
         AstrCopy(self.name,tempStr+STRLEN,80)
       ELSEIF StrCmp('IDENT: ',tempStr,STRLEN)
         AstrCopy(self.ident,tempStr+STRLEN,80)
+      ELSEIF StrCmp('LABEL: ',tempStr,STRLEN)
+        AstrCopy(self.label,tempStr+STRLEN,80)
       ELSEIF StrCmp('MINWIDTH: ',tempStr,STRLEN)
         self.minWidth:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('MINHEIGHT: ',tempStr,STRLEN)
@@ -941,6 +947,49 @@ EXPORT PROC findReactionObject(id) OF reactionObject
   ENDFOR
 ENDPROC 0
 
+EXPORT PROC makePreviewChildAttrs(label)  OF reactionObject
+  IF label=0 THEN label:=self.label
+  IF label=-1 THEN label:=''
+  IF StrLen(label)>0
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,
+          CHILD_LABEL, LabelObject,
+            LABEL_TEXT, label,
+          LabelEnd,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]
+  ELSE
+    self.previewChildAttrs:=[
+      LAYOUT_MODIFYCHILD, self.previewObject,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_NODISPOSE, FALSE,
+      CHILD_MINWIDTH, self.minWidth,
+      CHILD_MINHEIGHT, self.minHeight,
+      CHILD_MAXWIDTH, self.maxWidth,
+      CHILD_MAXHEIGHT, self.maxHeight,
+      CHILD_WEIGHTEDWIDTH, self.weightedWidth,
+      CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
+      CHILD_SCALEWIDTH, self.scaleWidth,
+      CHILD_SCALEHEIGHT, self.scaleHeight,
+      CHILD_NOMINALSIZE, self.nominalSize,
+      CHILD_WEIGHTMINIMUM, self.weightMinimum,
+      IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
+      TAG_END]
+  ENDIF
+ENDPROC
+
 PROC findObjectsByType(res:PTR TO stdlist,type) OF reactionObject
   DEF i
   DEF child:PTR TO reactionObject
@@ -962,3 +1011,4 @@ ENDPROC NewObjectA(PenMap_GetClass(),NIL,
                                   TAG_DONE])
 
 EXPORT PROC getObjId() IS objCount
+

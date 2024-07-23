@@ -21,7 +21,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourcegen','*stringlist','*listPicker','*reactionListObject','*reactionLists','*validator'
 
-EXPORT ENUM TABSGAD_IDENT, TABSGAD_HINT, TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
+EXPORT ENUM TABSGAD_IDENT, TABSGAD_LABEL, TABSGAD_HINT, TABSGAD_LISTSELECT, TABSGAD_DISABLED, TABSGAD_CHILDMAXWIDTH, TABSGAD_CURRENT,
       TABSGAD_OK, TABSGAD_CHILD, TABSGAD_CANCEL
 
 EXPORT DEF tabsbase
@@ -88,6 +88,17 @@ PROC create() OF tabsSettingsForm
 
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TABSGAD_LABEL ]:=StringObject,
+          GA_ID, TABSGAD_LABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, '_Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ TABSGAD_HINT ]:=ButtonObject,
@@ -224,6 +235,7 @@ PROC editSettings(comp:PTR TO tabsObject) OF tabsSettingsForm
   self.selectedListId:=comp.listObjectId    
   self.updateHint(TABSGAD_HINT, comp.hintText)  
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ TABSGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_DISABLED ],0,0,[CHECKBOX_CHECKED,comp.disabled,0]) 
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_CHILDMAXWIDTH ],0,0,[CHECKBOX_CHECKED,comp.childMaxWidth,0]) 
   SetGadgetAttrsA(self.gadgetList[ TABSGAD_CURRENT ],0,0,[INTEGER_NUMBER,comp.current,0]) 
@@ -231,6 +243,7 @@ PROC editSettings(comp:PTR TO tabsObject) OF tabsSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ TABSGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ TABSGAD_LABEL ],STRINGA_TEXTVAL))
     comp.listObjectId:=self.selectedListId
     comp.disabled:=Gets(self.gadgetList[ TABSGAD_DISABLED ],CHECKBOX_CHECKED)   
     comp.childMaxWidth:=Gets(self.gadgetList[ TABSGAD_CHILDMAXWIDTH ],CHECKBOX_CHECKED)   
@@ -300,23 +313,8 @@ EXPORT PROC createPreviewObject(scr) OF tabsObject
   ENDIF
   
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
-    
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF tabsObject
@@ -371,6 +369,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF tabsObject
     StringF(tempStr,'labels\d',self.id)
     srcGen.componentProperty('TABS_Labels',tempStr,FALSE)
   ENDIF
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF tabsObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC libNameCreate() OF tabsObject IS 'tabs.gadget'

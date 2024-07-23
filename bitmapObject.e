@@ -22,7 +22,7 @@ OPT MODULE, OSVERSION=37
 
 EXPORT DEF errorState
 
-EXPORT ENUM BITMAPGAD_IDENT, BITMAPGAD_LEFTEDGE, BITMAPGAD_TOPEDGE,
+EXPORT ENUM BITMAPGAD_IDENT, BITMAPGAD_LABEL, BITMAPGAD_LEFTEDGE, BITMAPGAD_TOPEDGE,
             BITMAPGAD_WIDTH, BITMAPGAD_HEIGHT, BITMAPGAD_SOURCEFILE, BITMAPGAD_MASKING, 
       BITMAPGAD_OK, BITMAPGAD_CHILD, BITMAPGAD_CANCEL
 
@@ -84,6 +84,17 @@ PROC create() OF bitmapSettingsForm
 
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Identifier',
+      LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ BITMAPGAD_LABEL ]:=StringObject,
+        GA_ID, BITMAPGAD_LABEL,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        STRINGA_MAXCHARS, 80,
+      StringEnd,
+
+      CHILD_LABEL, LabelObject,
+        LABEL_TEXT, '_Label',
       LabelEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -228,6 +239,7 @@ PROC editSettings(comp:PTR TO bitmapObject) OF bitmapSettingsForm
   self.bitmapObject:=comp
 
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_IDENT ],0,0,[STRINGA_TEXTVAL,comp.ident,0])
+  SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_LABEL ],0,0,[STRINGA_TEXTVAL,comp.label,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_SOURCEFILE ],0,0,[GETFILE_FULLFILE,comp.sourceFile,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_LEFTEDGE ],0,0,[INTEGER_NUMBER,comp.leftEdge,0])
   SetGadgetAttrsA(self.gadgetList[ BITMAPGAD_TOPEDGE ],0,0,[INTEGER_NUMBER,comp.topEdge,0])
@@ -238,6 +250,7 @@ PROC editSettings(comp:PTR TO bitmapObject) OF bitmapSettingsForm
   res:=self.showModal()
   IF res=MR_OK
     AstrCopy(comp.ident,Gets(self.gadgetList[ BITMAPGAD_IDENT ],STRINGA_TEXTVAL))
+    AstrCopy(comp.label,Gets(self.gadgetList[ BITMAPGAD_LABEL ],STRINGA_TEXTVAL))
     AstrCopy(comp.sourceFile,Gets(self.gadgetList[ BITMAPGAD_SOURCEFILE ],GETFILE_FULLFILE),255)
     comp.leftEdge:=Gets(self.gadgetList[ BITMAPGAD_LEFTEDGE ],INTEGER_NUMBER)
     comp.topEdge:=Gets(self.gadgetList[ BITMAPGAD_TOPEDGE ],INTEGER_NUMBER)
@@ -262,22 +275,7 @@ EXPORT PROC createPreviewObject(scr) OF bitmapObject
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
   errorState:=FALSE
 
-  self.previewChildAttrs:=[
-    LAYOUT_MODIFYCHILD, self.previewObject,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_NODISPOSE, FALSE,
-    CHILD_MINWIDTH, self.minWidth,
-    CHILD_MINHEIGHT, self.minHeight,
-    CHILD_MAXWIDTH, self.maxWidth,
-    CHILD_MAXHEIGHT, self.maxHeight,
-    CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-    CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-    CHILD_SCALEWIDTH, self.scaleWidth,
-    CHILD_SCALEHEIGHT, self.scaleHeight,
-    CHILD_NOMINALSIZE, self.nominalSize,
-    CHILD_WEIGHTMINIMUM, self.weightMinimum,
-    IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-    TAG_END]
+  self.makePreviewChildAttrs(0)
 ENDPROC
 
 EXPORT PROC create(parent) OF bitmapObject
@@ -323,6 +321,11 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF bitmapObject
   srcGen.componentProperty('BITMAP_Screen','gScreen',FALSE) 
   srcGen.componentProperty('BITMAP_SourceFile',self.sourceFile,TRUE)
   IF self.masking THEN srcGen.componentProperty('BITMAP_Masking','TRUE',FALSE)
+ENDPROC
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF bitmapObject
+  srcGen.componentAddChildLabel(self.label)
+  SUPER self.genCodeChildProperties(srcGen)
 ENDPROC
 
 EXPORT PROC getTypeName() OF bitmapObject

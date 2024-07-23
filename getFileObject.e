@@ -454,44 +454,7 @@ EXPORT PROC createPreviewObject(scr) OF getFileObject
     GETFILE_READONLY, self.readOnly,
   TAG_DONE])
   
-  IF StrLen(self.name)>0
-    self.previewChildAttrs:=[
-          LAYOUT_MODIFYCHILD, self.previewObject,
-          CHILD_LABEL, LabelObject,
-            LABEL_TEXT, self.name,
-          LabelEnd,
-          CHILD_NOMINALSIZE, self.nominalSize,
-          CHILD_NODISPOSE, FALSE,
-          CHILD_MINWIDTH, self.minWidth,
-          CHILD_MINHEIGHT, self.minHeight,
-          CHILD_MAXWIDTH, self.maxWidth,
-          CHILD_MAXHEIGHT, self.maxHeight,
-          CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-          CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-          CHILD_SCALEWIDTH, self.scaleWidth,
-          CHILD_SCALEHEIGHT, self.scaleHeight,
-          CHILD_NOMINALSIZE, self.nominalSize,
-          CHILD_WEIGHTMINIMUM, self.weightMinimum,
-          IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-          TAG_END]
-  ELSE
-    self.previewChildAttrs:=[
-        LAYOUT_MODIFYCHILD, self.previewObject,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_NODISPOSE, FALSE,
-        CHILD_MINWIDTH, self.minWidth,
-        CHILD_MINHEIGHT, self.minHeight,
-        CHILD_MAXWIDTH, self.maxWidth,
-        CHILD_MAXHEIGHT, self.maxHeight,
-        CHILD_WEIGHTEDWIDTH, self.weightedWidth,
-        CHILD_WEIGHTEDHEIGHT,self.weightedHeight,
-        CHILD_SCALEWIDTH, self.scaleWidth,
-        CHILD_SCALEHEIGHT, self.scaleHeight,
-        CHILD_NOMINALSIZE, self.nominalSize,
-        CHILD_WEIGHTMINIMUM, self.weightMinimum,
-        IF self.weightBar THEN LAYOUT_WEIGHTBAR ELSE TAG_IGNORE, 1,
-        TAG_END]
-  ENDIF
+  self.makePreviewChildAttrs(self.name)
 ENDPROC
 
 EXPORT PROC create(parent) OF getFileObject
