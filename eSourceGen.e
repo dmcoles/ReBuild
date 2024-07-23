@@ -619,7 +619,20 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   self.writeLine('')
   FOR i:=0 TO requesterObject.requesterItems.count()-1
     reqItem:=requesterObject.requesterItems.item(i)
-    StringF(tempStr,'PROC requester\d(reactionWindow)\n',i)
+    StringF(tempStr,'PROC requester\d(reactionWindow',reqItem.id)
+    IF reqItem.titleParam
+      StrAdd(tempStr,',titleText')
+    ENDIF
+
+    IF reqItem.gadgetsParam
+      StrAdd(tempStr,',gadgetsText')
+    ENDIF
+    
+    IF reqItem.bodyParam
+      StrAdd(tempStr,',bodyText')
+    ENDIF
+    StrAdd(tempStr,')')
+    
     self.writeLine(tempStr)
     self.writeLine('  DEF reqmsg:PTR TO orrequest')
     self.writeLine('  DEF reqobj,win,res=0')
@@ -630,12 +643,18 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     self.writeLine('  reqmsg.methodid:=RM_OPENREQ')
     self.writeLine('  reqmsg.window:=win')
     bodyText:=reqItem.bodyText.makeTextString('\\n')
-    StringF(tempStr,'  reqmsg.attrs:=[REQ_TYPE, \s, REQ_IMAGE, \s, REQ_TITLETEXT,\a\s\a,REQ_BODYTEXT,\a\s\a,REQ_GADGETTEXT,\a\s\a,TAG_END]',
+    StringF(tempStr,'  reqmsg.attrs:=[REQ_TYPE, \s, REQ_IMAGE, \s, REQ_TITLETEXT,\s\s\s,REQ_BODYTEXT,\s\s\s,REQ_GADGETTEXT,\s\s\s,TAG_END]',
                             ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
                             ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image),
-                            reqItem.titleText,
-                            bodyText,
-                            reqItem.gadgetsText)
+                            IF reqItem.titleParam THEN '' ELSE '\a',
+                            IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
+                            IF reqItem.titleParam THEN '' ELSE '\a',
+                            IF reqItem.bodyParam  THEN '' ELSE '\a',
+                            IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
+                            IF reqItem.bodyParam THEN '' ELSE '\a',
+                            IF reqItem.gadgetsParam THEN '' ELSE '\a',
+                            IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
+                            IF reqItem.gadgetsParam THEN '' ELSE '\a')
     DisposeLink(bodyText)
     self.writeLine(tempStr)
     self.writeLine('  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])')

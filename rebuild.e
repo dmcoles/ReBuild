@@ -2419,9 +2419,9 @@ PROC doEdit()
           selectedComp.createPreviewObject(win.wscreen)
         ENDIF
         rethinkPreviews()
-        addUndo()
-        genCodePreview()
       ENDIF
+      addUndo()
+      genCodePreview()
     ENDIF
     clearBusy()
 
@@ -3105,7 +3105,7 @@ PROC restorePreviews()
   WHILE (i<objectList.count())
     winObj:=objectList.item(i)
     previewWin:=winObj.previewObject
-    IF winObj.previewOpen
+    IF winObj.previewOpen     
       Sets(previewWin,WA_LEFT,winObj.previewLeft)
       Sets(previewWin,WA_TOP,winObj.previewTop)
       Sets(previewWin,WA_WIDTH,winObj.previewWidth)

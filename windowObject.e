@@ -1114,7 +1114,7 @@ ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF windowObject
   IF self.previewObject THEN DisposeObject(self.previewObject)
-  
+   
   self.previewObject:=WindowObject,
     WA_TITLE, self.title,
     IF StrLen(self.screentitle) THEN WA_SCREENTITLE ELSE TAG_IGNORE, self.screentitle,

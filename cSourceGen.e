@@ -488,8 +488,21 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   ENDIF
 
   FOR i:=0 TO requesterObject.requesterItems.count()-1
-    reqItem:=requesterObject.requesterItems.item(i)
-    StringF(tempStr,'int requester\d(Object *reactionWindow)\n',i)
+    reqItem:=requesterObject.requesterItems.item(i)  
+    StringF(tempStr,'int requester\d(Object *reactionWindow',reqItem.id)
+    IF reqItem.titleParam
+      StrAdd(tempStr,',STRPTR titleText')
+    ENDIF
+
+    IF reqItem.gadgetsParam
+      StrAdd(tempStr,',STRPTR gadgetsText')
+    ENDIF
+    
+    IF reqItem.bodyParam
+      StrAdd(tempStr,',STRPTR bodyText')
+    ENDIF
+    StrAdd(tempStr,')')
+    
     self.writeLine(tempStr)
     self.writeLine('{')
     self.writeLine('  Object *reqobj;')
@@ -499,12 +512,18 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
 
     self.writeLine('  GetAttr(WINDOW_Window, reactionWindow, &win);')
     bodyText:=reqItem.bodyText.makeTextString('\\n')
-	  StringF(tempStr,'  reqobj = NewObject(REQUESTER_GetClass(), NULL, REQ_Type, \s, REQ_Image, \s, REQ_TitleText, \q\s\q, REQ_BodyText,\q\s\q, REQ_GadgetText, \q\s\q, TAG_DONE);',
+	  StringF(tempStr,'  reqobj = NewObject(REQUESTER_GetClass(), NULL, REQ_Type, \s, REQ_Image, \s, REQ_TitleText, \s\s\s, REQ_BodyText,\s\s\s, REQ_GadgetText, \s\s\s, TAG_DONE);',
                             ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
                             ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image),
-                            reqItem.titleText,
-                            bodyText,
-                            reqItem.gadgetsText)
+                            IF reqItem.titleParam THEN '' ELSE '\q',
+                            IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
+                            IF reqItem.titleParam THEN '' ELSE '\q',
+                            IF reqItem.bodyParam  THEN '' ELSE '\q',
+                            IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
+                            IF reqItem.bodyParam THEN '' ELSE '\q',
+                            IF reqItem.gadgetsParam THEN '' ELSE '\q',
+                            IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
+                            IF reqItem.gadgetsParam THEN '' ELSE '\q')
     DisposeLink(bodyText)
     self.writeLine(tempStr)
     self.writeLine('  if (reqobj)')

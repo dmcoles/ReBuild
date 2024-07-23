@@ -25,7 +25,7 @@ OPT MODULE, OSVERSION=37
 
 EXPORT DEF texteditorbase
 
-EXPORT ENUM REQITEMGAD_TYPE, REQITEMGAD_TITLE,REQITEMGAD_GADTEXT,REQITEMGAD_IMAGE,REQITEMGAD_BODY,
+EXPORT ENUM REQITEMGAD_TYPE, REQITEMGAD_TITLEPARAM, REQITEMGAD_TITLE,REQITEMGAD_GADTEXTPARAM, REQITEMGAD_GADTEXT,REQITEMGAD_IMAGE,REQITEMGAD_BODYPARAM, REQITEMGAD_BODY,
       REQITEMGAD_OK, REQITEMGAD_TEST, REQITEMGAD_CANCEL
       
 
@@ -35,7 +35,11 @@ EXPORT ENUM REQGAD_LIST, REQGAD_ADD, REQGAD_EDIT, REQGAD_DELETE, REQGAD_OK, REQG
 CONST NUM_REQ_GADS=REQGAD_CANCEL+1
 
 EXPORT OBJECT requesterItem
+  id:INT
   reqType:CHAR
+  titleParam:CHAR
+  gadgetsParam:CHAR
+  bodyParam:CHAR
   titleText[80]:ARRAY OF CHAR
   gadgetsText[80]:ARRAY OF CHAR
   image:CHAR
@@ -66,8 +70,12 @@ PROC create() OF requesterItem
 
   self.reqType:=0
   self.image:=0
+  self.id:=getObjId()
   AstrCopy(self.titleText,'')
   AstrCopy(self.gadgetsText,'')
+  self.titleParam:=0
+  self.gadgetsParam:=0
+  self.bodyParam:=0
   NEW strlist.stringlist(10)
   self.bodyText:=strlist
 ENDPROC
@@ -127,6 +135,31 @@ PROC create() OF requesterItemSettingsForm
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Type',
       LabelEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_TITLEPARAM ]:=CheckBoxObject,
+        GA_ID, REQITEMGAD_TITLEPARAM,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_TEXT, 'Parameterised title',
+        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+      CheckBoxEnd,
+
+      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_GADTEXTPARAM ]:=CheckBoxObject,
+        GA_ID, REQITEMGAD_GADTEXTPARAM,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_TEXT, 'Parameterised gadgets',
+        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+      CheckBoxEnd,
+      
+      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_BODYPARAM ]:=CheckBoxObject,
+        GA_ID, REQITEMGAD_BODYPARAM,
+        GA_RELVERIFY, TRUE,
+        GA_TABCYCLE, TRUE,
+        GA_TEXT, 'Parameterised body',
+        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+      CheckBoxEnd,
+
       LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_TITLE]:=StringObject,
         GA_ID, REQITEMGAD_TITLE,
         GA_RELVERIFY, TRUE,
@@ -211,6 +244,18 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
   bodyText:=DoMethod(self.gadgetList[ REQITEMGAD_BODY ], GM_TEXTEDITOR_EXPORTTEXT)
   image:=Gets(self.gadgetList[ REQITEMGAD_IMAGE ],CHOOSER_SELECTED)
 
+  IF Gets(self.gadgetList[ REQITEMGAD_TITLEPARAM ],CHECKBOX_CHECKED)
+    titleText:='titleParam'
+  ENDIF
+
+  IF Gets(self.gadgetList[ REQITEMGAD_GADTEXTPARAM ],CHECKBOX_CHECKED)
+    gadText:='gadgetsParam'
+  ENDIF
+
+  IF Gets(self.gadgetList[ REQITEMGAD_BODYPARAM ],CHECKBOX_CHECKED)
+    bodyText:='bodyParam'
+  ENDIF
+
   type:=ListItem([REQTYPE_INFO, REQTYPE_INTEGER, REQTYPE_STRING],type)
   image:=ListItem([REQIMAGE_DEFAULT, REQIMAGE_INFO, REQIMAGE_WARNING, REQIMAGE_ERROR, REQIMAGE_QUESTION, REQIMAGE_INSERTDISK],image)
 
@@ -224,7 +269,9 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
     DisposeObject(reqobj)
   ENDIF
   END reqmsg
-  FreeVec(bodyText)
+  IF Gets(self.gadgetList[ REQITEMGAD_BODYPARAM ],CHECKBOX_CHECKED)=FALSE
+    FreeVec(bodyText)
+  ENDIF
   ADD.L #$100,A7
   
 ENDPROC
@@ -244,6 +291,10 @@ PROC editSettings(reqItem:PTR TO requesterItem) OF requesterItemSettingsForm
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_TYPE ],0,0,[CHOOSER_SELECTED,reqItem.reqType,0]) 
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_TITLE ],0,0,[STRINGA_TEXTVAL,reqItem.titleText,0])
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_GADTEXT ],0,0,[STRINGA_TEXTVAL,reqItem.gadgetsText,0])
+  SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_TITLEPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.titleParam,0])
+  SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_GADTEXTPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.gadgetsParam,0])
+  SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_BODYPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.bodyParam,0])
+  
   bodyText:=reqItem.bodyText.makeTextString()
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_BODY ],0,0,[GA_TEXTEDITOR_CONTENTS, bodyText,0])
   DisposeLink(bodyText)
@@ -254,6 +305,10 @@ PROC editSettings(reqItem:PTR TO requesterItem) OF requesterItemSettingsForm
     reqItem.reqType:=Gets(self.gadgetList[ REQITEMGAD_TYPE ],CHOOSER_SELECTED)
     AstrCopy(reqItem.titleText,Gets(self.gadgetList[ REQITEMGAD_TITLE ],STRINGA_TEXTVAL),80)
     AstrCopy(reqItem.gadgetsText,Gets(self.gadgetList[ REQITEMGAD_GADTEXT ],STRINGA_TEXTVAL),80)
+    reqItem.titleParam:=Gets(self.gadgetList[ REQITEMGAD_TITLEPARAM ],CHECKBOX_CHECKED)
+    reqItem.gadgetsParam:=Gets(self.gadgetList[ REQITEMGAD_GADTEXTPARAM ],CHECKBOX_CHECKED)
+    reqItem.bodyParam:=Gets(self.gadgetList[ REQITEMGAD_BODYPARAM ],CHECKBOX_CHECKED)
+    
     bodyText:=DoMethod(self.gadgetList[ REQITEMGAD_BODY ], GM_TEXTEDITOR_EXPORTTEXT)
     reqItem.bodyText.setFromTextString(bodyText)
     FreeVec(bodyText)
@@ -307,9 +362,6 @@ PROC create() OF requesterSettingsForm
             GA_RELVERIFY, TRUE,
             LISTBROWSER_POSITION, 0,
             LISTBROWSER_SHOWSELECTED, TRUE,
-            //LISTBROWSER_COLUMNTITLES, TRUE,
-            //LISTBROWSER_HIERARCHICAL, TRUE,
-            //LISTBROWSER_COLUMNINFO, self.columninfo,
             LISTBROWSER_LABELS, self.browserlist,
       ListBrowserEnd,
       
@@ -385,6 +437,7 @@ PROC addItem(nself,gadget,id,code) OF requesterSettingsForm
   DEF reqItemSettingsForm:PTR TO requesterItemSettingsForm
   DEF reqItem:PTR TO requesterItem
   DEF res,n,win
+  DEF titleText[100]:STRING
   self:=nself
   
   NEW reqItem.create()
@@ -396,7 +449,12 @@ PROC addItem(nself,gadget,id,code) OF requesterSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[REQGAD_LIST],win,0,[LISTBROWSER_LABELS, -1, TAG_END])
     self.tempRequesterItems.add(reqItem)
-    IF (n:=AllocListBrowserNodeA(1, [LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, reqItem.titleText, TAG_END]))
+    StrCopy(titleText,reqItem.titleText)
+    IF EstrLen(titleText)=0
+      StringF(titleText,'req_\d',reqItem.id)
+    ENDIF
+    
+    IF (n:=AllocListBrowserNodeA(1, [LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, titleText, TAG_END]))
       AddTail(self.browserlist, n)
     ELSE 
       Raise("MEM")    
@@ -459,7 +517,11 @@ PROC editSettings(comp:PTR TO requesterObject) OF requesterSettingsForm
   FOR i:=0 TO comp.requesterItems.count()-1
     NEW reqItem.create()
     oldItem:=comp.requesterItems.item(i)
+    reqItem.id:=oldItem.id
     reqItem.reqType:=oldItem.reqType
+    reqItem.titleParam:=oldItem.titleParam
+    reqItem.gadgetsParam:=oldItem.gadgetsParam
+    reqItem.bodyParam:=oldItem.bodyParam
     AstrCopy(reqItem.titleText,oldItem.titleText)
     AstrCopy(reqItem.gadgetsText,oldItem.gadgetsText)
     reqItem.image:=oldItem.image
@@ -492,10 +554,14 @@ PROC editSettings(comp:PTR TO requesterObject) OF requesterSettingsForm
     FOR i:=0 TO self.tempRequesterItems.count()-1
       NEW reqItem.create()
       oldItem:=self.tempRequesterItems.item(i)
+      reqItem.id:=oldItem.id
       reqItem.reqType:=oldItem.reqType
       AstrCopy(reqItem.titleText,oldItem.titleText)
       AstrCopy(reqItem.gadgetsText,oldItem.gadgetsText)
       reqItem.image:=oldItem.image
+      reqItem.titleParam:=oldItem.titleParam
+      reqItem.gadgetsParam:=oldItem.gadgetsParam
+      reqItem.bodyParam:=oldItem.bodyParam
       FOR j:=0 TO oldItem.bodyText.count()-1
         reqItem.bodyText.add(oldItem.bodyText.item(j))
       ENDFOR
@@ -560,11 +626,19 @@ EXPORT PROC serialise(fser:PTR TO baseStreamer) OF requesterObject
     reqItem:=self.requesterItems.item(i)
     StringF(tempStr,'REQTYPE: \d',reqItem.reqType)
     fser.writeLine(tempStr)
+    StringF(tempStr,'ID: \d',reqItem.id)
+    fser.writeLine(tempStr) 
     StringF(tempStr,'TITLETEXT: \s',reqItem.titleText)
     fser.writeLine(tempStr)
     StringF(tempStr,'GADGETSTEXT: \s',reqItem.gadgetsText)
     fser.writeLine(tempStr)
     StringF(tempStr,'IMAGE: \d',reqItem.image)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'TITLEPARAM: \d',reqItem.titleParam)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'GADGETSPARAM: \d',reqItem.gadgetsParam)
+    fser.writeLine(tempStr)
+    StringF(tempStr,'BODYPARAM: \d',reqItem.bodyParam)
     fser.writeLine(tempStr)
     FOR j:=0 TO reqItem.bodyText.count()-1
       StringF(tempStr,'BODYTEXT: \s',reqItem.bodyText.item(j))
@@ -588,7 +662,6 @@ EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF requesterObject
     END reqItem
   ENDFOR
   self.requesterItems.clear()
-
   REPEAT
     IF fser.readLine(tempStr)
       IF StrCmp('-',tempStr)
@@ -597,6 +670,8 @@ EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF requesterObject
         NEW reqItem.create()
         self.requesterItems.add(reqItem)
         reqItem.reqType:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('ID: ',tempStr,STRLEN)
+        reqItem.id:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('TITLETEXT: ',tempStr,STRLEN)
         AstrCopy(reqItem.titleText,tempStr+STRLEN)
       ELSEIF StrCmp('GADGETSTEXT: ',tempStr,STRLEN)
@@ -605,13 +680,18 @@ EXPORT PROC deserialise(fser:PTR TO baseStreamer) OF requesterObject
         reqItem.image:=Val(tempStr+STRLEN)
       ELSEIF StrCmp('BODYTEXT: ',tempStr,STRLEN)
         reqItem.bodyText.add(tempStr+STRLEN)
+      ELSEIF StrCmp('TITLEPARAM: ',tempStr,STRLEN)
+        reqItem.titleParam:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('GADGETSPARAM: ',tempStr,STRLEN)
+        reqItem.gadgetsParam:=Val(tempStr+STRLEN)
+      ELSEIF StrCmp('BODYPARAM: ',tempStr,STRLEN)
+        reqItem.bodyParam:=Val(tempStr+STRLEN)
       ENDIF
     ELSE
       done:=TRUE
     ENDIF
   UNTIL done  
 ENDPROC
-
 
 EXPORT PROC createRequesterObject(parent)
   DEF requester:PTR TO requesterObject
