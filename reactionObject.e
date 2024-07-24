@@ -378,6 +378,7 @@ PROC create() OF hintEditForm
   NEW gads[NUM_HINT_GADS]
   self.gadgetList:=gads
   NEW gads[NUM_HINT_GADS]
+  self.gadgetActions:=gads
 
   IF texteditorbase
     tempbase:=textfieldbase
@@ -399,8 +400,7 @@ PROC create() OF hintEditForm
       TAG_END])
   ENDIF
 
-  self.gadgetActions:=gads
-    self.windowObj:=WindowObject,
+  self.windowObj:=WindowObject,
     WA_TITLE, 'Hint Text Editor',
     WA_LEFT, 0,
     WA_TOP, 0,

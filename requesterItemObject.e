@@ -30,8 +30,7 @@ CONST TEXTFIELD_BORDER=$8400000C
 CONST TEXTFIELD_SIZE=$84000007
 CONST TEXTFIELD_READONLY=$8400001F
 
-//EXPORT 
-DEF texteditorbase
+EXPORT DEF texteditorbase
 
 EXPORT ENUM REQITEMGAD_TYPE, REQITEMGAD_IDENT, REQITEMGAD_TITLEPARAM, REQITEMGAD_TITLE,REQITEMGAD_GADTEXTPARAM, REQITEMGAD_GADTEXT,REQITEMGAD_IMAGE,REQITEMGAD_BODYPARAM, REQITEMGAD_BODY,
       REQITEMGAD_OK, REQITEMGAD_TEST, REQITEMGAD_CANCEL 
@@ -79,14 +78,13 @@ ENDPROC
 
 PROC create() OF requesterItemSettingsForm
   DEF gads:PTR TO LONG
-  DEF tempbase
+  DEF tempbase=0
 
   NEW gads[NUM_REQITEM_GADS]
   self.gadgetList:=gads
   NEW gads[NUM_REQITEM_GADS]
   self.gadgetActions:=gads
 
-  texteditorbase:=0
   IF texteditorbase
     tempbase:=textfieldbase
     textfieldbase:=texteditorbase
@@ -114,7 +112,7 @@ PROC create() OF requesterItemSettingsForm
     WA_TITLE, 'Requester Attribute Setting',
     WA_LEFT, 0,
     WA_TOP, 0,
-    WA_HEIGHT, 60,
+    WA_HEIGHT, 220,
     WA_WIDTH, 260,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
@@ -135,70 +133,84 @@ PROC create() OF requesterItemSettingsForm
     LAYOUT_SPACEOUTER, TRUE,
     LAYOUT_DEFERLAYOUT, TRUE,
 
-      LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_TYPE]:=ChooserObject,
-        GA_ID, REQITEMGAD_TYPE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        CHOOSER_POPUP, TRUE,
-        CHOOSER_SELECTED, 0,
-        CHOOSER_LABELS, self.typeLabels,
-      ChooserEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Type',
-      LabelEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_IDENT ]:=StringObject,
-        GA_ID, REQITEMGAD_IDENT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Identifier',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_TYPE]:=ChooserObject,
+          GA_ID, REQITEMGAD_TYPE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_SELECTED, 0,
+          CHOOSER_LABELS, self.typeLabels,
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Type',
+        LabelEnd,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_TITLEPARAM ]:=CheckBoxObject,
-        GA_ID, REQITEMGAD_TITLEPARAM,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_TEXT, 'Parameterised title',
-        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-      CheckBoxEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_IDENT ]:=StringObject,
+          GA_ID, REQITEMGAD_IDENT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Identifier',
+        LabelEnd,
+      LayoutEnd,
 
-      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_GADTEXTPARAM ]:=CheckBoxObject,
-        GA_ID, REQITEMGAD_GADTEXTPARAM,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_TEXT, 'Parameterised gadgets',
-        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-      CheckBoxEnd,
-      
-      LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_BODYPARAM ]:=CheckBoxObject,
-        GA_ID, REQITEMGAD_BODYPARAM,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        GA_TEXT, 'Parameterised body',
-        CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-      CheckBoxEnd,
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-      LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_TITLE]:=StringObject,
-        GA_ID, REQITEMGAD_TITLE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Title Text',
-      LabelEnd,
-      LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_GADTEXT]:=StringObject,
-        GA_ID, REQITEMGAD_GADTEXT,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        STRINGA_MAXCHARS, 80,
-      StringEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Gadget Text',
-      LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_TITLEPARAM ]:=CheckBoxObject,
+          GA_ID, REQITEMGAD_TITLEPARAM,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Parameterised title',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_GADTEXTPARAM ]:=CheckBoxObject,
+          GA_ID, REQITEMGAD_GADTEXTPARAM,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Parameterised gadgets',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+        
+        LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_BODYPARAM ]:=CheckBoxObject,
+          GA_ID, REQITEMGAD_BODYPARAM,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Parameterised body',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+      LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+        LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_TITLE]:=StringObject,
+          GA_ID, REQITEMGAD_TITLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Title Text',
+        LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_GADTEXT]:=StringObject,
+          GA_ID, REQITEMGAD_GADTEXT,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Gadget Text',
+        LabelEnd,
+      LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
       LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_IMAGE]:=ChooserObject,
         GA_ID, REQITEMGAD_IMAGE,
         GA_RELVERIFY, TRUE,
@@ -235,6 +247,7 @@ PROC create() OF requesterItemSettingsForm
           GA_TABCYCLE, TRUE,
         ButtonEnd,
       LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
     LayoutEnd,
   WindowEnd
 
