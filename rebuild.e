@@ -52,7 +52,7 @@ OPT OSVERSION=37,LARGE
          '*penMapObject','*sliderObject','*bitmapObject','*speedBarObject','*colorWheelObject','*dateBrowserObject',
          '*getColorObject','*gradSliderObject','*tapeDeckObject','*textEditorObject','*ledObject','*listViewObject',
          '*virtualObject','*sketchboardObject','*tabsObject','*requesterObject',
-         '*codePreviewForm'
+         '*requesterItemObject','*codePreviewForm'
 
 #define vernum '1.2.0-dev'
 #date verstring '$VER:Rebuild 1.2.0-%Y%m%d%h%n%s'
@@ -374,7 +374,7 @@ PROC makeList(selcomp=0)
           IF (n:=AllocListBrowserNodeA(3, [LBNA_FLAGS, LBFLG_HASCHILDREN OR LBFLG_SHOWCHILDREN, LBNA_USERDATA, 0, LBNA_GENERATION, 4, LBNA_COLUMN,0, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'Menu', LBNA_COLUMN,1, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'System',LBNA_COLUMN,2, LBNCA_COPYTEXT, TRUE, LBNCA_TEXT, 'N/A',TAG_END])) THEN AddTail(list, n) ELSE Raise("MEM")
       ENDSELECT
     ELSE
-      IF i==[ROOT_REXX_ITEM,ROOT_REQUESTER_ITEM, ROOT_SCREEN_ITEM]
+      IF i==[ROOT_REXX_ITEM,ROOT_REQUESTER_ITEM, ROOT_SCREEN_ITEM, ROOT_REQUESTER_ITEM]
         depth:=2
       ELSE
         SELECT Mod(i-ROOT_WINDOW_ITEM,3)
@@ -1929,6 +1929,7 @@ PROC loadStream(fs:PTR TO baseStreamer) HANDLE
     ENDIF
   ENDFOR
 
+  processObjects(objectList.item(ROOT_REQUESTER_ITEM),loadObjectList)
   i:=ROOT_LAYOUT_ITEM
   WHILE i<objectList.count()
     processObjects(objectList.item(i),loadObjectList)
@@ -2024,7 +2025,7 @@ PROC saveStream(fs:PTR TO baseStreamer)
   fs.writeLine('-REBUILD-')
   StringF(tempStr,'VER=\d',FILE_FORMAT_VER)
   fs.writeLine(tempStr)
-  StringF(tempStr,'NEXTID=\d',getObjId())
+  StringF(tempStr,'NEXTID=\d',currObjId())
   fs.writeLine(tempStr)
   IF selectedComp
     StringF(tempStr,'SELECTEDID=\d',selectedComp.id)
@@ -2379,6 +2380,11 @@ PROC doAdd()
   comp:=selectedComp
   IF (comp.type=TYPE_SCREEN) OR (comp.type=TYPE_WINDOW)
     doAddWindow()
+    RETURN
+  ENDIF
+
+  IF (comp.type=TYPE_REQUESTER) OR (comp.type=TYPE_REQUESTER_ITEM)
+    doAddComp(comp,TYPE_REQUESTER_ITEM)
     RETURN
   ENDIF
 
@@ -3235,6 +3241,8 @@ PROC createObjectByType(objType,comp)
       newObj:=createTabsObject(comp)
     CASE TYPE_REQUESTER
       newObj:=createRequesterObject(comp)
+    CASE TYPE_REQUESTER_ITEM
+      newObj:=createRequesterItemObject(comp)
     DEFAULT
       Raise("OBJ")
   ENDSELECT
@@ -3773,7 +3781,10 @@ EXCEPT DO
     clearUndo()
     END undoData
   ENDIF
-  IF codePreviewForm THEN END codePreviewForm
+  IF codePreviewForm 
+    codePreviewForm.close()
+    END codePreviewForm
+  ENDIF
   IF objectList THEN END objectList
   IF bufferList 
     disposeBufferObjects()

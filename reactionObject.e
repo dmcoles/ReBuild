@@ -44,6 +44,7 @@ EXPORT ENUM TYPE_REACTIONLIST,TYPE_SCREEN,TYPE_REXX, TYPE_WINDOW, TYPE_MENU,
             TYPE_LISTVIEW, TYPE_PAGE, TYPE_PROGRESS, TYPE_SKETCH,TYPE_TAPEDECK,
             TYPE_TEXTEDITOR, TYPE_TEXTENTRY, TYPE_VIRTUAL, TYPE_BOINGBALL, TYPE_LED,
             TYPE_PENMAP, TYPE_SMARTBITMAP, TYPE_TITLEBAR, TYPE_TABS, TYPE_REQUESTER,
+            TYPE_REQUESTER_ITEM,
             
             TYPE_MAX
             
@@ -497,9 +498,8 @@ EXPORT PROC create(parent) OF reactionObject
   DEF strlist:PTR TO stringlist
   DEF scr
   self.parent:=parent
-  self.id:=objCount
+  self.id:=getObjId()
   self.errObj:=FALSE
-  objCount:=objCount+1
   StringF(name,'\s_\d',self.getTypeName(),self.id)
   AstrCopy(self.name,name)
   AstrCopy(self.ident,name)
@@ -726,9 +726,9 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
         ENDIF
       ENDIF
     ENDWHILE
-    fser.writeLine('-')
-    self.serialiseChildren(fser)
   ENDIF 
+  fser.writeLine('-')
+  self.serialiseChildren(fser)
 ENDPROC
 
 PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
@@ -804,46 +804,44 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
 
   list:=self.serialiseData()
   count:=ListLen(list)
-  IF count>0
-    done:=FALSE
-    REPEAT
-      IF fser.readLine(tempStr)
-        IF StrCmp('-',tempStr)
-          done:=TRUE
-        ELSE
-          i:=0
-          WHILE i<count
-            fieldname:=list[i++]
-            fieldptr:=list[i++]
-            fieldtype:=list[i++]
-            StrCopy(tempStr2,fieldname)
-            StrAdd(tempStr2,': ')
-            UpperStr(tempStr2)
-            IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
-              SELECT fieldtype
-                CASE FIELDTYPE_CHAR
-                  PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_INT
-                  PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_LONG
-                  PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_STR
-                  AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
-                CASE FIELDTYPE_STRLIST
-                  strlist:=Long(fieldptr)
-                  strlist.add(tempStr+StrLen(tempStr2))
-                CASE FIELDTYPE_INTLIST
-                  intlist:=Long(fieldptr)
-                  intlist.add(Val(tempStr+StrLen(tempStr2)))
-              ENDSELECT
-            ENDIF
-          ENDWHILE
-        ENDIF
-      ELSE
+  done:=FALSE
+  REPEAT
+    IF fser.readLine(tempStr)
+      IF StrCmp('-',tempStr)
         done:=TRUE
+      ELSE
+        i:=0
+        WHILE i<count
+          fieldname:=list[i++]
+          fieldptr:=list[i++]
+          fieldtype:=list[i++]
+          StrCopy(tempStr2,fieldname)
+          StrAdd(tempStr2,': ')
+          UpperStr(tempStr2)
+          IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
+            SELECT fieldtype
+              CASE FIELDTYPE_CHAR
+                PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
+              CASE FIELDTYPE_INT
+                PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
+              CASE FIELDTYPE_LONG
+                PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
+              CASE FIELDTYPE_STR
+                AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
+              CASE FIELDTYPE_STRLIST
+                strlist:=Long(fieldptr)
+                strlist.add(tempStr+StrLen(tempStr2))
+              CASE FIELDTYPE_INTLIST
+                intlist:=Long(fieldptr)
+                intlist.add(Val(tempStr+StrLen(tempStr2)))
+            ENDSELECT
+          ENDIF
+        ENDWHILE
       ENDIF
-    UNTIL done  
-  ENDIF
+    ELSE
+      done:=TRUE
+    ENDIF
+  UNTIL done  
 ENDPROC
 
 PROC serialiseChildren(fser:PTR TO fileStreamer) OF reactionObject
@@ -1010,5 +1008,8 @@ ENDPROC NewObjectA(PenMap_GetClass(),NIL,
                                   PENMAP_PALETTE,[2,-1,-1,-1,0,0,0]:LONG,
                                   TAG_DONE])
 
-EXPORT PROC getObjId() IS objCount
+EXPORT PROC currObjId() IS objCount
 
+EXPORT PROC getObjId()
+  objCount:=objCount+1
+ENDPROC objCount-1

@@ -3,7 +3,7 @@ OPT MODULE,LARGE
   MODULE 'images/drawlist','gadgets/tabs'
   MODULE '*baseStreamer','*sourceGen','*reactionObject','*menuObject','*windowObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*rexxObject','*tabsObject',
-         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject','*requesterObject'
+         '*reactionListObject','*reactionLists','*drawlistObject','*speedBarObject','*listViewObject','*requesterObject','*requesterItemObject'
 
 EXPORT OBJECT eSrcGen OF srcGen
 ENDOBJECT
@@ -62,7 +62,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   DEF windowObject:PTR TO reactionObject
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
-  DEF reqItem:PTR TO requesterItem
+  DEF reqItem:PTR TO requesterItemObject
   DEF bodyText
   
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
@@ -134,7 +134,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
       self.writeLine('      \autility/hooks\a,\atools/installhook\a,')
     ENDIF
   ENDIF
-  IF requesterObject.requesterItems.count()>0
+  IF requesterObject.children.count()>0
     self.writeLine('      \arequester\a,\aclasses/requester\a,')
   ENDIF
   
@@ -323,7 +323,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF (sketchboardbase:=OpenLibrary(\agadgets/sketchboard.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qskch\q)')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF (tabsbase:=OpenLibrary(\agadgets/tabs.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtabs\q)')
-  IF requesterObject.requesterItems.count()>0 THEN self.writeLine('  IF (requesterbase:=OpenLibrary(\aclasses/requester.class\a,0))=NIL THEN Throw(\qLIB\q,\qreqs\q)')
+  IF requesterObject.children.count()>0 THEN self.writeLine('  IF (requesterbase:=OpenLibrary(\aclasses/requester.class\a,0))=NIL THEN Throw(\qLIB\q,\qreqs\q)')
 
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')
@@ -396,7 +396,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF virtualbase THEN CloseLibrary(virtualbase)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF sketchboardbase THEN CloseLibrary(sketchboardbase)')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF tabsbase THEN CloseLibrary(tabsbase)')
-  IF requesterObject.requesterItems.count()>0 THEN self.writeLine('  IF requesterbase THEN CloseLibrary(requesterbase)')
+  IF requesterObject.children.count()>0 THEN self.writeLine('  IF requesterbase THEN CloseLibrary(requesterbase)')
 
   self.writeLine('ENDPROC')
   self.writeLine('')
@@ -617,9 +617,11 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   self.writeLine('  RA_CloseWindow(windowObject)')
   self.writeLine('ENDPROC')
   self.writeLine('')
-  FOR i:=0 TO requesterObject.requesterItems.count()-1
-    reqItem:=requesterObject.requesterItems.item(i)
-    StringF(tempStr,'PROC requester\d(reactionWindow',reqItem.id)
+  FOR i:=0 TO requesterObject.children.count()-1
+    reqItem:=requesterObject.children.item(i)
+    StrCopy(tempStr,reqItem.ident)
+    LowerStr(tempStr)
+    StringF(tempStr,'PROC \s(reactionWindow',tempStr)
     IF reqItem.titleParam
       StrAdd(tempStr,',titleText')
     ENDIF

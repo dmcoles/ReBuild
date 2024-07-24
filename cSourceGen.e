@@ -3,7 +3,7 @@ OPT MODULE,LARGE
   MODULE 'images/drawlist'
   MODULE '*baseStreamer','*sourceGen','*reactionObject','*windowObject','*menuObject','*stringlist','*screenObject'
   MODULE '*chooserObject','*clickTabObject','*radioObject','*listBrowserObject','*tabsObject','*reactionListObject',
-         '*drawListObject','*speedBarObject','*listViewObject','*rexxObject','*requesterObject'
+         '*drawListObject','*speedBarObject','*listViewObject','*rexxObject','*requesterObject','*requesterItemObject'
 
 EXPORT OBJECT cSrcGen OF srcGen
 ENDOBJECT
@@ -81,7 +81,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   DEF layoutObject:PTR TO reactionObject
   DEF listObjects:PTR TO stdlist
   DEF listObject:PTR TO reactionObject
-  DEF reqItem:PTR TO requesterItem
+  DEF reqItem:PTR TO requesterItemObject
   DEF bodyText
 
   hasarexx:=(rexxObject.commands.count()>0) AND (StrLen(rexxObject.hostName)>0)
@@ -152,7 +152,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
 
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('#include <proto/virtual.h>')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('#include <proto/sketchboard.h>')
-  IF requesterObject.requesterItems.count()>0
+  IF requesterObject.children.count()>0
     self.writeLine('#include <proto/requester.h>')
     self.writeLine('#include <classes/requester.h>')
   ENDIF
@@ -487,9 +487,11 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     ENDIF
   ENDIF
 
-  FOR i:=0 TO requesterObject.requesterItems.count()-1
-    reqItem:=requesterObject.requesterItems.item(i)  
-    StringF(tempStr,'int requester\d(Object *reactionWindow',reqItem.id)
+  FOR i:=0 TO requesterObject.children.count()-1
+    reqItem:=requesterObject.children.item(i)  
+    StrCopy(tempStr,reqItem.ident)
+    LowerStr(tempStr)
+    StringF(tempStr,'int \s(Object *reactionWindow',tempStr)
     IF reqItem.titleParam
       StrAdd(tempStr,',STRPTR titleText')
     ENDIF
@@ -579,7 +581,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('               *VirtualBase = NULL,')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('               *SketchBoardBase = NULL,')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('               *TabsBase = NULL,')
-  IF requesterObject.requesterItems.count()>0 THEN self.writeLine('               *RequesterBase = NULL,')
+  IF requesterObject.children.count()>0 THEN self.writeLine('               *RequesterBase = NULL,')
  
   self.writeLine('               *GadToolsBase = NULL,')
   self.writeLine('               *LayoutBase = NULL,')
@@ -768,7 +770,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF self.libsused[TYPE_TABS]
     self.writeLine('  if( !(TabsBase = (struct Library*) OpenLibrary("gadgets/tabs.gadget",0L) ) ) return 0;')
   ENDIF
-  IF requesterObject.requesterItems.count()>0
+  IF requesterObject.children.count()>0
     self.writeLine('  if( !(RequesterBase = (struct Library*) OpenLibrary("classes/requester.class",0L) ) ) return 0;')
   ENDIF
 
@@ -849,7 +851,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF hasarexx
     self.writeLine('  if (ARexxBase) CloseLibrary( (struct Library *)ARexxBase );')
   ENDIF
-  IF requesterObject.requesterItems.count()>0
+  IF requesterObject.children.count()>0
     self.writeLine('  if (RequesterBase) CloseLibrary( (struct Library *)RequesterBase );')
   ENDIF
 

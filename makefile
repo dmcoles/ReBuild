@@ -15,7 +15,7 @@ all:					rebuild
 release:				options=$(releaseoptions)
 release:				rebuild
 
-rebuild:			rebuild.e codePreviewForm.m validator.m dialogs.m libraryVersions.m reactionLists.m tabsObject.m sketchboardObject.m virtualObject.m listViewObject.m ledObject.m textEditorObject.m tapeDeckObject.m gradSliderObject.m getColorObject.m dateBrowserObject.m colorWheelObject.m speedBarObject.m sliderObject.m bitmapObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m drawListObject.m fuelGaugeObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listManagerForm.m codeGenForm.m eSourceGen.m cSourceGen.m sourcegen.m fileStreamer.m stringStreamer.m baseStreamer.m reactionForm.m objectPicker.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m stringlist.m requesterObject.m
+rebuild:			rebuild.e codePreviewForm.m validator.m dialogs.m libraryVersions.m reactionLists.m tabsObject.m sketchboardObject.m virtualObject.m listViewObject.m ledObject.m textEditorObject.m tapeDeckObject.m gradSliderObject.m getColorObject.m dateBrowserObject.m colorWheelObject.m speedBarObject.m sliderObject.m bitmapObject.m penMapObject.m boingBallObject.m getScreenModeObject.m getFontObject.m getFileObject.m textFieldObject.m drawListObject.m fuelGaugeObject.m bevelObject.m listBrowserObject.m clickTabObject.m chooserObject.m radioObject.m menuObject.m rexxObject.m reactionListObject.m listManagerForm.m codeGenForm.m eSourceGen.m cSourceGen.m sourcegen.m fileStreamer.m stringStreamer.m baseStreamer.m reactionForm.m objectPicker.m windowObject.m screenObject.m paletteObject.m scrollerObject.m glyphObject.m spaceObject.m integerObject.m labelObject.m checkboxObject.m stringObject.m buttonObject.m layoutObject.m reactionObject.m stringlist.m requesterObject.m requesterItemObject.m
 							$(compiler) rebuild $(options)
 
 reactionLists.m:			reactionLists.e stringlist.m
@@ -75,10 +75,10 @@ getColorObject.m:			getColorObject.e reactionObject.m reactionForm.m sourceGen.m
 dateBrowserObject.m:			dateBrowserObject.e reactionObject.m reactionForm.m sourceGen.m validator.m
 							$(compiler) dateBrowserObject $(options)
 
-eSourceGen.m:			eSourceGen.e baseStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m rexxObject.m speedBarObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m
+eSourceGen.m:			eSourceGen.e baseStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m screenObject.m rexxObject.m speedBarObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m requesterItemObject.m
 							$(compiler) eSourceGen $(options)
 
-cSourceGen.m:			cSourceGen.e baseStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m rexxObject.m screenObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m
+cSourceGen.m:			cSourceGen.e baseStreamer.m sourceGen.m reactionObject.m stringlist.m menuObject.m windowObject.m reactionListObject.m chooserObject.m clickTabObject.m radioObject.m listBrowserObject.m drawListObject.m speedBarObject.m rexxObject.m screenObject.m listViewObject.m tabsObject.m windowObject.m requesterObject.m requesterItemObject.m
 							$(compiler) cSourceGen $(options)
 
 sourceGen.m:			sourceGen.e baseStreamer.m stringlist.m
@@ -105,8 +105,11 @@ labelObject.m:			labelObject.e reactionObject.m reactionForm.m colourPicker.m so
 rexxObject.m:			rexxObject.e reactionObject.m reactionForm.m stringlist.m
 							$(compiler) rexxObject $(options)
 
-requesterObject.m:			requesterObject.e reactionObject.m reactionForm.m stringlist.m baseStreamer.m
+requesterObject.m:			requesterObject.e reactionObject.m reactionForm.m stringlist.m baseStreamer.m validator.m requesterItemObject.m
 							$(compiler) requesterObject $(options)
+
+requesterItemObject.m:			requesterItemObject.e reactionObject.m reactionForm.m stringlist.m baseStreamer.m validator.m
+							$(compiler) requesterItemObject $(options)
 
 menuObject.m:			menuObject.e reactionObject.m reactionForm.m stringlist.m baseStreamer.m dialogs.m
 							$(compiler) menuObject $(options)

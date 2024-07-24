@@ -7,11 +7,21 @@ OPT MODULE, OSVERSION=37
 //access to main rebuild object list
 EXPORT DEF objectList:PTR TO stdlist
 
+PROC checkDupe(str:PTR TO CHAR,comp:PTR TO reactionObject, form:PTR TO reactionForm, editComp:PTR TO reactionObject,id)
+  DEF i
+  IF comp
+    IF StrCmp(comp.ident,str) AND (editComp<>comp) THEN RETURN TRUE
+    
+    FOR i:=0 TO comp.children.count()-1
+      IF checkDupe(str,comp.children.item(i),form,editComp,id) THEN RETURN TRUE
+    ENDFOR   
+  ENDIF
+ENDPROC
 
 EXPORT PROC checkIdent(form:PTR TO reactionForm, editComp:PTR TO reactionObject, id)
   DEF str:PTR TO CHAR
   DEF comp:PTR TO reactionObject
-  DEF i
+  DEF i,j
   str:=Gets(form.gadgetList[ id ],STRINGA_TEXTVAL)
   
   IF StrLen(str)=0
@@ -29,11 +39,9 @@ EXPORT PROC checkIdent(form:PTR TO reactionForm, editComp:PTR TO reactionObject,
   IF objectList
     FOR i:=0 TO objectList.count()-1
       comp:=objectList.item(i)
-      IF comp
-        IF StrCmp(comp.ident,str) AND (editComp<>comp)
-          errorRequest(form.windowObj,'Error','The identifer is already used')
-          RETURN FALSE
-        ENDIF
+      IF checkDupe(str,comp,form,editComp,id)
+        errorRequest(form.windowObj,'Error','The identifer is already used')
+        RETURN FALSE
       ENDIF
     ENDFOR
   ENDIF
