@@ -7,6 +7,7 @@ OPT MODULE, OSVERSION=37
         'button','gadgets/button',
         'images/bevel',
         'string','gadgets/string',
+        'integer','gadgets/integer',
         'texteditor','gadgets/texteditor',
         '*textfield',
         'chooser','gadgets/chooser',
@@ -32,7 +33,8 @@ CONST TEXTFIELD_READONLY=$8400001F
 
 EXPORT DEF texteditorbase
 
-EXPORT ENUM REQITEMGAD_TYPE, REQITEMGAD_IDENT, REQITEMGAD_TITLEPARAM, REQITEMGAD_TITLE,REQITEMGAD_GADTEXTPARAM, REQITEMGAD_GADTEXT,REQITEMGAD_IMAGE,REQITEMGAD_BODYPARAM, REQITEMGAD_BODY,
+EXPORT ENUM REQITEMGAD_TYPE, REQITEMGAD_IDENT, REQITEMGAD_TITLEPARAM, REQITEMGAD_TITLE,REQITEMGAD_GADTEXTPARAM, REQITEMGAD_GADTEXT,
+      REQITEMGAD_INVISIBLE, REQITEMGAD_MAXCHARS, REQITEMGAD_IMAGE,REQITEMGAD_BODYPARAM, REQITEMGAD_BODY,
       REQITEMGAD_OK, REQITEMGAD_TEST, REQITEMGAD_CANCEL 
 
 CONST NUM_REQITEM_GADS=REQITEMGAD_CANCEL+1
@@ -46,6 +48,8 @@ EXPORT OBJECT requesterItemObject OF reactionObject
   gadgetsText[80]:ARRAY OF CHAR
   image:CHAR
   bodyText:PTR TO stringlist
+  invisible:CHAR
+  maxChars:CHAR
 ENDOBJECT
 
 EXPORT OBJECT requesterItemSettingsForm OF reactionForm
@@ -68,6 +72,8 @@ PROC create(parent) OF requesterItemObject
   self.titleParam:=0
   self.gadgetsParam:=0
   self.bodyParam:=0
+  self.invisible:=FALSE
+  self.maxChars:=10
   NEW strlist.stringlist(10)
   self.bodyText:=strlist
 ENDPROC
@@ -158,9 +164,49 @@ PROC create() OF requesterItemSettingsForm
           LABEL_TEXT, 'Identifier',
         LabelEnd,
       LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_INVISIBLE ]:=CheckBoxObject,
+          GA_ID, REQITEMGAD_INVISIBLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Invisible',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+        
+        LAYOUT_ADDCHILD,  self.gadgetList[ REQITEMGAD_MAXCHARS ]:=IntegerObject,
+          GA_ID, REQITEMGAD_MAXCHARS,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 10,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 999,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'MaxCha_rs',
+        LabelEnd,
+        LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_IMAGE]:=ChooserObject,
+          GA_ID, REQITEMGAD_IMAGE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          CHOOSER_POPUP, TRUE,
+          CHOOSER_SELECTED, 0,
+          CHOOSER_LABELS, self.imageLabels,
+        ChooserEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Image',
+        LabelEnd,
+
+      LayoutEnd,
+      CHILD_WEIGHTEDHEIGHT,0,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ REQITEMGAD_TITLEPARAM ]:=CheckBoxObject,
           GA_ID, REQITEMGAD_TITLEPARAM,
@@ -187,7 +233,7 @@ PROC create() OF requesterItemSettingsForm
         CheckBoxEnd,
       LayoutEnd,
       CHILD_WEIGHTEDHEIGHT,0,
-
+      
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
@@ -211,17 +257,6 @@ PROC create() OF requesterItemSettingsForm
         LabelEnd,
       LayoutEnd,
       CHILD_WEIGHTEDHEIGHT,0,
-      LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_IMAGE]:=ChooserObject,
-        GA_ID, REQITEMGAD_IMAGE,
-        GA_RELVERIFY, TRUE,
-        GA_TABCYCLE, TRUE,
-        CHOOSER_POPUP, TRUE,
-        CHOOSER_SELECTED, 0,
-        CHOOSER_LABELS, self.imageLabels,
-      ChooserEnd,
-      CHILD_LABEL, LabelObject,
-        LABEL_TEXT, 'Image',
-      LabelEnd,
       LAYOUT_ADDCHILD, self.gadgetList[REQITEMGAD_BODY],
       CHILD_LABEL, LabelObject,
         LABEL_TEXT, 'Body Text',
@@ -287,15 +322,43 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
   DEF reqobj,win
   DEF res=0,strval,vallen
   DEF type,titleText,gadText,bodyText,image
+  DEF invtag,maxcharstag,buftag
+  DEF buffer,maxchars
 
   SUBA.L #$100,A7
   self:=nself
 
   win:=Gets(self.windowObj,WINDOW_WINDOW)
   
+  buffer:=New(100)
+  
   type:=Gets(self.gadgetList[ REQITEMGAD_TYPE ],CHOOSER_SELECTED)
   titleText:=Gets(self.gadgetList[ REQITEMGAD_TITLE ],STRINGA_TEXTVAL)
   gadText:=Gets(self.gadgetList[ REQITEMGAD_GADTEXT ],STRINGA_TEXTVAL)
+  
+  invtag:=TAG_IGNORE
+  buftag:=TAG_IGNORE
+  maxcharstag:=TAG_IGNORE
+  IF type=2 THEN buftag:=REQS_BUFFER
+
+
+  IF Gets(self.gadgetList[ REQITEMGAD_INVISIBLE ],CHECKBOX_CHECKED)
+    SELECT type
+      CASE 1
+        invtag:=REQI_INVISIBLE
+      CASE 2
+        invtag:=REQS_INVISIBLE
+    ENDSELECT
+  ENDIF
+
+  maxchars:=Gets(self.gadgetList[ REQITEMGAD_MAXCHARS ],INTEGER_NUMBER)
+  SELECT type
+    CASE 1
+      maxcharstag:=REQI_MAXCHARS
+      IF maxchars>10 THEN maxchars:=10
+    CASE 2
+      maxcharstag:=REQS_MAXCHARS
+  ENDSELECT
 
   IF texteditorbase
     bodyText:=DoMethod(self.gadgetList[ REQITEMGAD_BODY ], GM_TEXTEDITOR_EXPORTTEXT)
@@ -330,7 +393,8 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
   NEW reqmsg
   reqmsg.methodid:=RM_OPENREQ
   reqmsg.window:=win
-  reqmsg.attrs:=[REQ_TYPE, type, REQ_IMAGE, image, REQ_TITLETEXT,titleText,REQ_BODYTEXT,bodyText,REQ_GADGETTEXT,gadText,TAG_END]
+  reqmsg.attrs:=[REQ_TYPE, type, REQ_IMAGE, image, REQ_TITLETEXT,titleText,REQ_BODYTEXT,bodyText,REQ_GADGETTEXT,gadText,invtag,TRUE,
+                    maxcharstag,maxchars,buftag,buffer,TAG_END]
   reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])
   IF reqobj
     res:=DoMethodA(reqobj, reqmsg)
@@ -340,6 +404,7 @@ PROC testRequester(nself,gadget,id,code) OF requesterItemSettingsForm
   IF Gets(self.gadgetList[ REQITEMGAD_BODYPARAM ],CHECKBOX_CHECKED)=FALSE
     FreeVec(bodyText)
   ENDIF
+  Dispose(buffer)
   ADD.L #$100,A7
   
 ENDPROC
@@ -377,6 +442,8 @@ PROC editSettings(reqItem:PTR TO requesterItemObject) OF requesterItemSettingsFo
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_TITLEPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.titleParam,0])
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_GADTEXTPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.gadgetsParam,0])
   SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_BODYPARAM ],0,0,[CHECKBOX_CHECKED,reqItem.bodyParam,0])
+  SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_INVISIBLE ],0,0,[CHECKBOX_CHECKED,reqItem.invisible,0])
+  SetGadgetAttrsA(self.gadgetList[ REQITEMGAD_MAXCHARS ],0,0,[INTEGER_NUMBER,reqItem.maxChars,0])
   
   bodyText:=reqItem.bodyText.makeTextString()
 
@@ -398,6 +465,8 @@ PROC editSettings(reqItem:PTR TO requesterItemObject) OF requesterItemSettingsFo
     reqItem.titleParam:=Gets(self.gadgetList[ REQITEMGAD_TITLEPARAM ],CHECKBOX_CHECKED)
     reqItem.gadgetsParam:=Gets(self.gadgetList[ REQITEMGAD_GADTEXTPARAM ],CHECKBOX_CHECKED)
     reqItem.bodyParam:=Gets(self.gadgetList[ REQITEMGAD_BODYPARAM ],CHECKBOX_CHECKED)
+    reqItem.invisible:=Gets(self.gadgetList[ REQITEMGAD_INVISIBLE ],CHECKBOX_CHECKED)
+    reqItem.maxChars:=Gets(self.gadgetList[ REQITEMGAD_MAXCHARS ],INTEGER_NUMBER)
 
     IF texteditorbase   
       bodyText:=DoMethod(self.gadgetList[ REQITEMGAD_BODY ], GM_TEXTEDITOR_EXPORTTEXT)
@@ -435,7 +504,9 @@ EXPORT PROC serialiseData() OF requesterItemObject IS
   makeProp(titleText,FIELDTYPE_STR),
   makeProp(gadgetsText,FIELDTYPE_STR),
   makeProp(image,FIELDTYPE_CHAR),
-  makeProp(bodyText,FIELDTYPE_STRLIST)
+  makeProp(bodyText,FIELDTYPE_STRLIST),
+  makeProp(invisible,FIELDTYPE_CHAR),
+  makeProp(maxChars,FIELDTYPE_CHAR)
 ]
 
 EXPORT PROC editSettings() OF requesterItemObject

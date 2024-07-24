@@ -645,20 +645,46 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     self.writeLine('  reqmsg.methodid:=RM_OPENREQ')
     self.writeLine('  reqmsg.window:=win')
     bodyText:=reqItem.bodyText.makeTextString('\\n')
-    StringF(tempStr,'  reqmsg.attrs:=[REQ_TYPE, \s, REQ_IMAGE, \s, REQ_TITLETEXT,\s\s\s,REQ_BODYTEXT,\s\s\s,REQ_GADGETTEXT,\s\s\s,TAG_END]',
-                            ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
-                            ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image),
-                            IF reqItem.titleParam THEN '' ELSE '\a',
-                            IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
-                            IF reqItem.titleParam THEN '' ELSE '\a',
-                            IF reqItem.bodyParam  THEN '' ELSE '\a',
-                            IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
-                            IF reqItem.bodyParam THEN '' ELSE '\a',
-                            IF reqItem.gadgetsParam THEN '' ELSE '\a',
-                            IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
-                            IF reqItem.gadgetsParam THEN '' ELSE '\a')
-    DisposeLink(bodyText)
+    StringF(tempStr,'  reqmsg.attrs:=[REQ_TYPE, \s, REQ_IMAGE, \s,',
+        ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
+        ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image))
     self.writeLine(tempStr)
+    StringF(tempStr,'      REQ_TITLETEXT,\s\s\s,',
+        IF reqItem.titleParam THEN '' ELSE '\a',
+        IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
+        IF reqItem.titleParam THEN '' ELSE '\a')
+    self.writeLine(tempStr)   
+    StringF(tempStr,'      REQ_BODYTEXT,\s\s\s,',
+        IF reqItem.bodyParam  THEN '' ELSE '\a',
+        IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
+        IF reqItem.bodyParam THEN '' ELSE '\a')
+    self.writeLine(tempStr)
+    StringF(tempStr,'      REQ_GADGETTEXT,\s\s\s,',
+        IF reqItem.gadgetsParam THEN '' ELSE '\a',
+        IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
+        IF reqItem.gadgetsParam THEN '' ELSE '\a')
+    self.writeLine(tempStr)
+
+    IF reqItem.invisible
+      SELECT reqItem.reqType
+        CASE 1
+          self.writeLine('      REQI_INVISIBLE, TRUE,')
+        CASE 2
+          self.writeLine('      REQS_INVISIBLE, TRUE,')
+      ENDSELECT
+    ENDIF
+    SELECT reqItem.reqType
+      CASE 1
+        StringF(tempStr,'      REQI_MAXCHARS, \d,',IF reqItem.maxChars>10 THEN 10 ELSE reqItem.maxChars)
+        self.writeLine(tempStr)   
+      CASE 2
+        StringF(tempStr,'      REQS_MAXCHARS, \d,',reqItem.maxChars)
+        self.writeLine(tempStr)   
+    ENDSELECT
+    
+    self.writeLine('      TAG_END]')
+    DisposeLink(bodyText)
+
     self.writeLine('  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])')
     self.writeLine('  IF reqobj')
     self.writeLine('    res:=DoMethodA(reqobj, reqmsg)')

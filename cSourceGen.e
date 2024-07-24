@@ -71,7 +71,7 @@ ENDPROC
 
 PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, requesterObject:PTR TO requesterObject, 
                 windowItems:PTR TO stdlist, windowLayouts:PTR TO stdlist, sharedPort) OF cSrcGen
-  DEF tempStr[200]:STRING
+  DEF tempStr[400]:STRING
   DEF menuItem:PTR TO menuItem
   DEF itemName[200]:STRING
   DEF commKey[10]:STRING
@@ -514,20 +514,45 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
 
     self.writeLine('  GetAttr(WINDOW_Window, reactionWindow, &win);')
     bodyText:=reqItem.bodyText.makeTextString('\\n')
-	  StringF(tempStr,'  reqobj = NewObject(REQUESTER_GetClass(), NULL, REQ_Type, \s, REQ_Image, \s, REQ_TitleText, \s\s\s, REQ_BodyText,\s\s\s, REQ_GadgetText, \s\s\s, TAG_DONE);',
-                            ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
-                            ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image),
-                            IF reqItem.titleParam THEN '' ELSE '\q',
-                            IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
-                            IF reqItem.titleParam THEN '' ELSE '\q',
-                            IF reqItem.bodyParam  THEN '' ELSE '\q',
-                            IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
-                            IF reqItem.bodyParam THEN '' ELSE '\q',
-                            IF reqItem.gadgetsParam THEN '' ELSE '\q',
-                            IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
-                            IF reqItem.gadgetsParam THEN '' ELSE '\q')
+      
+	  StringF(tempStr,'  reqobj = NewObject(REQUESTER_GetClass(), NULL, REQ_Type, \s, REQ_Image, \s,',
+                              ListItem(['REQTYPE_INFO','REQTYPE_INTEGER','REQTYPE_STRING'],reqItem.reqType),
+                              ListItem(['REQIMAGE_DEFAULT', 'REQIMAGE_INFO', 'REQIMAGE_WARNING', 'REQIMAGE_ERROR', 'REQIMAGE_QUESTION', 'REQIMAGE_INSERTDISK'],reqItem.image))
+    self.writeLine(tempStr)   
+	  StringF(tempStr,'       REQ_TitleText, \s\s\s,',
+                      IF reqItem.titleParam THEN '' ELSE '\q',
+                      IF reqItem.titleParam THEN 'titleText' ELSE reqItem.titleText,
+                      IF reqItem.titleParam THEN '' ELSE '\q')
+    self.writeLine(tempStr)   
+    StringF(tempStr,'       REQ_BodyText,\s\s\s,',
+                      IF reqItem.bodyParam  THEN '' ELSE '\q',
+                      IF reqItem.bodyParam THEN 'bodyText' ELSE bodyText,
+                      IF reqItem.bodyParam THEN '' ELSE '\q')
+    self.writeLine(tempStr)   
+    
+    StringF(tempStr,'       REQ_GadgetText, \s\s\s,',
+                      IF reqItem.gadgetsParam THEN '' ELSE '\q',
+                      IF reqItem.gadgetsParam THEN 'gadgetsText' ELSE reqItem.gadgetsText,
+                      IF reqItem.gadgetsParam THEN '' ELSE '\q')
+    self.writeLine(tempStr)   
+    IF reqItem.invisible
+      SELECT reqItem.reqType
+        CASE 1
+          self.writeLine('       REQI_Invisible, TRUE,')
+        CASE 2
+          self.writeLine('       REQS_Invisible, TRUE,')
+      ENDSELECT
+    ENDIF
+    SELECT reqItem.reqType
+      CASE 1
+        StringF(tempStr,'       REQI_MaxChars, \d,',IF reqItem.maxChars>10 THEN 10 ELSE reqItem.maxChars)
+        self.writeLine(tempStr)   
+      CASE 2
+        StringF(tempStr,'       REQS_MaxChars, \d,',reqItem.maxChars)
+        self.writeLine(tempStr)   
+    ENDSELECT
+    self.writeLine('       TAG_DONE);')
     DisposeLink(bodyText)
-    self.writeLine(tempStr)
     self.writeLine('  if (reqobj)')
     self.writeLine('  {')
     self.writeLine('    res=DoMethod(reqobj, RM_OPENREQ, NULL, win, NULL);')
