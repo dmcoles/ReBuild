@@ -363,7 +363,7 @@ PROC editCommands(commands:PTR TO stringlist) OF rexxCommandSettingsForm
   IF res=MR_OK
     commands.clear()
     node:=self.browserlist.head
-    WHILE (node)
+    WHILE (node.succ)
       GetListBrowserNodeAttrsA(node,[LBNCA_TEXT,{strval},TAG_END])
       IF strval
         IF StrLen(strval)

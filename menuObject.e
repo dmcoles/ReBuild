@@ -320,7 +320,7 @@ ENDPROC
 PROC findNode(n) OF menuSettingsForm
   DEF node:PTR TO ln
   node:=self.browserlist.head
-  WHILE (node)
+  WHILE (node.succ)
     IF n=0 THEN RETURN node
     n--
     node:=node.succ
