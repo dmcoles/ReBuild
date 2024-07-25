@@ -3502,11 +3502,11 @@ PROC main() HANDLE
   createForm()
   Sets(mainWindow,WINDOW_HINTINFO,hintInfo)
   Sets(mainWindow,WINDOW_GADGETHELP, TRUE)
- 
+
   IF (win:=RA_OpenWindow(mainWindow))
 
-    IF systemOptions.showBuffer=FALSE THEN toggleBuffer()
     SetMenuStrip(win,menus)
+    IF systemOptions.showBuffer=FALSE THEN toggleBuffer()
     newProject()
     openPreviews()
     updateBufferSel(win,0)
