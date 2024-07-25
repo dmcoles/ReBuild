@@ -404,7 +404,7 @@ PROC editSettings(comp:PTR TO textEditorObject) OF textEditorSettingsForm
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF textEditorObject
-  DEF tempbase
+  DEF tempbase=0
   self.previewObject:=0
   IF (texteditorbase)
     tempbase:=textfieldbase
@@ -426,7 +426,7 @@ EXPORT PROC createPreviewObject(scr) OF textEditorObject
       TAG_END])
   ENDIF
   IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
-  textfieldbase:=tempbase
+  IF tempbase THEN textfieldbase:=tempbase
 
   self.makePreviewChildAttrs(0)  
 ENDPROC

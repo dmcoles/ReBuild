@@ -106,7 +106,7 @@ PROC create() OF requesterItemSettingsForm
         GA_ID, REQITEMGAD_BODY,
         GA_RELVERIFY, TRUE,
         GA_TABCYCLE, TRUE,
-        GA_READONLY, FALSE,
+        TEXTFIELD_READONLY, FALSE,
         TEXTFIELD_BORDER, TEXTFIELD_BORDER_BEVEL,
       TAG_END])
   ENDIF
