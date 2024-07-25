@@ -1770,7 +1770,7 @@ ENDPROC
 
 PROC loadStream(fs:PTR TO baseStreamer) HANDLE
   DEF newObj:PTR TO reactionObject
-  DEF tmpObj:PTR TO reactionObject
+  DEF tmpObj:PTR TO windowObject
   DEF tempStr[300]:STRING
   DEF loadObjectList=0:PTR TO stdlist
   DEF reactionLists:PTR TO stdlist
@@ -2778,17 +2778,9 @@ PROC togglePreview(subitem)
   pwin:=Gets(previewWin,WINDOW_WINDOW)
   IF pwin
     winObj.previewOpen:=FALSE
-    winObj.previewLeft:=Gets(previewWin,WA_LEFT)
-    winObj.previewTop:=Gets(previewWin,WA_TOP)
-    winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
-    winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
     RA_CloseWindow(previewWin)
   ELSE
     winObj.previewOpen:=TRUE
-    Sets(previewWin,WA_LEFT,winObj.previewLeft)
-    Sets(previewWin,WA_TOP,winObj.previewTop)
-    Sets(previewWin,WA_WIDTH,winObj.previewWidth)
-    Sets(previewWin,WA_HEIGHT,winObj.previewHeight)
     menu:=objectList.item(idx-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
     pwin:=RA_OpenWindow(previewWin)
     IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)
@@ -2820,7 +2812,7 @@ ENDPROC
 PROC handlePreviewInputs()
   DEF pwin:PTR TO window,previewWin,i,code=0
   DEF winObj:PTR TO windowObject
-  DEF result,tmp
+  DEF result,tmp,newval
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
@@ -2831,15 +2823,23 @@ PROC handlePreviewInputs()
       tmp:=(result AND WMHI_CLASSMASK)
       SELECT tmp
         CASE WMHI_CHANGEWINDOW
-          winObj.previewLeft:=Gets(previewWin,WA_LEFT)
-          winObj.previewTop:=Gets(previewWin,WA_TOP)
-          winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
-          winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
+          newval:=Gets(previewWin,WA_LEFT)
+          winObj.previewLeft:=IF winObj.leftEdge<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_TOP)
+          winObj.previewTop:=IF winObj.topEdge<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_INNERWIDTH)
+          winObj.previewWidth:=IF winObj.width<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_INNERHEIGHT)
+          winObj.previewHeight:=IF winObj.height<>newval THEN newval ELSE -1
         CASE WMHI_CLOSEWINDOW
-          winObj.previewLeft:=Gets(previewWin,WA_LEFT)
-          winObj.previewTop:=Gets(previewWin,WA_TOP)
-          winObj.previewWidth:=Gets(previewWin,WA_INNERWIDTH)
-          winObj.previewHeight:=Gets(previewWin,WA_INNERHEIGHT)
+          newval:=Gets(previewWin,WA_LEFT)
+          winObj.previewLeft:=IF winObj.leftEdge<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_TOP)
+          winObj.previewTop:=IF winObj.topEdge<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_INNERWIDTH)
+          winObj.previewWidth:=IF winObj.width<>newval THEN newval ELSE -1
+          newval:=Gets(previewWin,WA_INNERHEIGHT)
+          winObj.previewHeight:=IF winObj.height<>newval THEN newval ELSE -1
           winObj.previewOpen:=FALSE
           RA_CloseWindow(previewWin)
           remakePreviewMenus()
@@ -3105,17 +3105,22 @@ ENDPROC
 PROC restorePreviews()
   DEF previewWin,i
   DEF winObj:PTR TO windowObject
-  DEF pwin,menu
+  DEF pwin,menu,left,top,width,height
   
   i:=ROOT_WINDOW_ITEM
   WHILE (i<objectList.count())
     winObj:=objectList.item(i)
     previewWin:=winObj.previewObject
     IF winObj.previewOpen     
-      Sets(previewWin,WA_LEFT,winObj.previewLeft)
-      Sets(previewWin,WA_TOP,winObj.previewTop)
-      Sets(previewWin,WA_WIDTH,winObj.previewWidth)
-      Sets(previewWin,WA_HEIGHT,winObj.previewHeight)
+      left:=IF winObj.previewLeft=-1 THEN winObj.leftEdge ELSE winObj.previewLeft
+      top:=IF winObj.previewTop=-1 THEN winObj.topEdge ELSE winObj.previewTop
+      width:=IF winObj.previewWidth=-1 THEN winObj.width ELSE winObj.previewWidth
+      height:=IF winObj.previewHeight=-1 THEN winObj.height ELSE winObj.previewHeight
+
+      Sets(previewWin,WA_LEFT,left)
+      Sets(previewWin,WA_TOP,top)
+      Sets(previewWin,WA_WIDTH,width)
+      Sets(previewWin,WA_HEIGHT,height)
       menu:=objectList.item(i-ROOT_WINDOW_ITEM+ROOT_MENU_ITEM)::menuObject.previewObject
       pwin:=RA_OpenWindow(previewWin)
       IF menu THEN SetMenuStrip(pwin,menu) ELSE ClearMenuStrip(pwin)

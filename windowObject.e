@@ -1109,23 +1109,29 @@ PROC editSettings(comp:PTR TO windowObject) OF windowSettingsForm
     comp.flags:=self.tmpFlags
     comp.idcmp:=self.tmpIDCMP
     
-    comp.previewLeft:=comp.leftEdge
-    comp.previewTop:=comp.topEdge
-    comp.previewWidth:=comp.width
-    comp.previewHeight:=comp.height
+    comp.previewLeft:=-1
+    comp.previewTop:=-1
+    comp.previewWidth:=-1
+    comp.previewHeight:=-1
   ENDIF
 ENDPROC res=MR_OK
 
 EXPORT PROC createPreviewObject(scr) OF windowObject
+  DEF left,top,width,height
   IF self.previewObject THEN DisposeObject(self.previewObject)
+  
+  left:=IF self.previewLeft=-1 THEN self.leftEdge ELSE self.previewLeft
+  top:=IF self.previewTop=-1 THEN self.topEdge ELSE self.previewTop
+  width:=IF self.previewWidth=-1 THEN self.width ELSE self.previewWidth
+  height:=IF self.previewHeight=-1 THEN self.height ELSE self.previewHeight
   
   self.previewObject:=WindowObject,
     WA_TITLE, self.title,
     IF StrLen(self.screentitle) THEN WA_SCREENTITLE ELSE TAG_IGNORE, self.screentitle,
-    WA_LEFT, self.leftEdge,
-    WA_TOP, self.topEdge,
-    WA_HEIGHT,self.height,
-    WA_WIDTH,self.width,
+    WA_LEFT, left,
+    WA_TOP, top,
+    WA_WIDTH, width,
+    WA_HEIGHT,height,
     WA_MINWIDTH,self.minWidth,
     WA_MAXWIDTH,self.maxWidth,
     WA_MINHEIGHT,self.minHeight,
@@ -1189,13 +1195,13 @@ EXPORT PROC create(parent) OF windowObject
   
   self.appPort:=CreateMsgPort()
   self.previewObject:=0
-  self.createPreviewObject(0)
   self.previewChildAttrs:=0
   self.previewOpen:=TRUE
-  self.previewLeft:=self.leftEdge
-  self.previewTop:=self.topEdge
-  self.previewWidth:=self.width
-  self.previewHeight:=self.height
+  self.previewLeft:=-1
+  self.previewTop:=-1
+  self.previewWidth:=-1
+  self.previewHeight:=-1
+  self.createPreviewObject(0)
 ENDPROC
 
 PROC end() OF windowObject
