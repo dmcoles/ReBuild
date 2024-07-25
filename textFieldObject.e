@@ -213,6 +213,7 @@ PROC create() OF textFieldSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
         
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_DELIM ]:=StringObject,
           GA_ID, TEXTFIELDGAD_DELIM,
@@ -250,6 +251,7 @@ PROC create() OF textFieldSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_BLINKRATE ]:=IntegerObject,
           GA_ID, TEXTFIELDGAD_BLINKRATE,
@@ -273,6 +275,35 @@ PROC create() OF textFieldSettingsForm
           LABEL_TEXT, 'MaxSize',
         LabelEnd,
 
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_DISABLED ]:=CheckBoxObject,
+          GA_ID, TEXTFIELDGAD_DISABLED,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Disabled',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_TABCYCLE ]:=CheckBoxObject,
+          GA_ID, TEXTFIELDGAD_TABCYCLE,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'TabCycle',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_PARTIAL ]:=CheckBoxObject,
+          GA_ID, TEXTFIELDGAD_PARTIAL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          GA_TEXT, 'Partial',
+          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
+        CheckBoxEnd,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
+
         LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_SPACING ]:=IntegerObject,
           GA_ID, TEXTFIELDGAD_SPACING,
           GA_RELVERIFY, TRUE,
@@ -294,24 +325,13 @@ PROC create() OF textFieldSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'TabSpaces',
         LabelEnd,
-      LayoutEnd,
 
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_DISABLED ]:=CheckBoxObject,
-          GA_ID, TEXTFIELDGAD_DISABLED,
+        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_MAXSIZEBEEP ]:=CheckBoxObject,
+          GA_ID, TEXTFIELDGAD_MAXSIZEBEEP,
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
-          GA_TEXT, 'Disabled',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_TABCYCLE ]:=CheckBoxObject,
-          GA_ID, TEXTFIELDGAD_TABCYCLE,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'TabCycle',
+          GA_TEXT, 'MaxSizeBeep',
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
 
@@ -322,26 +342,11 @@ PROC create() OF textFieldSettingsForm
           GA_TEXT, 'BlockCursor',
           CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
         CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_MAXSIZEBEEP ]:=CheckBoxObject,
-          GA_ID, TEXTFIELDGAD_MAXSIZEBEEP,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'MaxSizeBeep',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
-
-        LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_PARTIAL ]:=CheckBoxObject,
-          GA_ID, TEXTFIELDGAD_PARTIAL,
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-          GA_TEXT, 'Partial',
-          CHECKBOX_TEXTPLACE, PLACETEXT_LEFT,
-        CheckBoxEnd,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_NOGHOST ]:=CheckBoxObject,
           GA_ID, TEXTFIELDGAD_NOGHOST,
@@ -386,6 +391,7 @@ PROC create() OF textFieldSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_USERALIGN ]:=CheckBoxObject,
           GA_ID, TEXTFIELDGAD_USERALIGN,
@@ -421,31 +427,6 @@ PROC create() OF textFieldSettingsForm
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
-        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_PAPERPEN ]:=ButtonObject,
-          GA_ID, TEXTFIELDGAD_PAPERPEN,
-          GA_TEXT, 'PaperPen',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_INKPEN ]:=ButtonObject,
-          GA_ID, TEXTFIELDGAD_INKPEN,
-          GA_TEXT, 'InkPen',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_LINEPEN ]:=ButtonObject,
-          GA_ID, TEXTFIELDGAD_LINEPEN,
-          GA_TEXT, 'LinePen',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-      LayoutEnd,
-
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_BORDER ]:=ChooserObject,
           GA_ID, TEXTFIELDGAD_BORDER,
           GA_RELVERIFY, TRUE,
@@ -460,6 +441,24 @@ PROC create() OF textFieldSettingsForm
           LABEL_TEXT, '_Border',
         LabelEnd,
 
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_PAPERPEN ]:=ButtonObject,
+          GA_ID, TEXTFIELDGAD_PAPERPEN,
+          GA_TEXT, 'PaperPen',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_INKPEN ]:=ButtonObject,
+          GA_ID, TEXTFIELDGAD_INKPEN,
+          GA_TEXT, 'InkPen',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
         LAYOUT_ADDCHILD, self.gadgetList[ TEXTFIELDGAD_ALIGN ]:=ChooserObject,
           GA_ID, TEXTFIELDGAD_ALIGN,
           GA_RELVERIFY, TRUE,
@@ -473,6 +472,12 @@ PROC create() OF textFieldSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, '_Justification',
         LabelEnd,
+        LAYOUT_ADDCHILD,  self.gadgetList[ TEXTFIELDGAD_LINEPEN ]:=ButtonObject,
+          GA_ID, TEXTFIELDGAD_LINEPEN,
+          GA_TEXT, 'LinePen',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,

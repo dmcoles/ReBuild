@@ -210,7 +210,7 @@ PROC create() OF getFileSettingsForm
           INTEGER_MAXCHARS, 4,
         IntegerEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Left Edge',
+          LABEL_TEXT, IF arrows THEN 'Left Edge' ELSE 'Left',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ GETFILEGAD_TOP ]:=IntegerObject,
@@ -222,7 +222,7 @@ PROC create() OF getFileSettingsForm
           INTEGER_MAXCHARS, 4,
         IntegerEnd,
         CHILD_LABEL, LabelObject,
-          LABEL_TEXT, 'Top Edge',
+          LABEL_TEXT, IF arrows THEN 'Top Edge' ELSE 'Top',
         LabelEnd,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ GETFILEGAD_WIDTH ]:=IntegerObject,

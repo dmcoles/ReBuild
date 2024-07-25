@@ -160,6 +160,10 @@ PROC create() OF getFontSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Top Edge',
         LabelEnd,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_WIDTH ]:=IntegerObject,
           GA_ID, GETFONTGAD_WIDTH,
@@ -188,7 +192,6 @@ PROC create() OF getFontSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-        LAYOUT_SHRINKWRAP, TRUE,
       
         LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_MINHEIGHT ]:=IntegerObject,
           GA_ID, GETFONTGAD_MINHEIGHT,
@@ -213,6 +216,10 @@ PROC create() OF getFontSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'MaxHeight',
         LabelEnd,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ GETFONTGAD_MAXFRONT ]:=IntegerObject,
           GA_ID, GETFONTGAD_MAXFRONT,

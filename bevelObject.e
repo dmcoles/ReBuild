@@ -139,6 +139,8 @@ PROC create() OF bevelSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
+        LAYOUT_SHRINKWRAP, TRUE,
 
         LAYOUT_ADDCHILD,  self.gadgetList[ BEVELGAD_LEFT ]:=IntegerObject,
           GA_ID, BEVELGAD_LEFT,
@@ -187,11 +189,6 @@ PROC create() OF bevelSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Hei_ght',
         LabelEnd,
-      LayoutEnd,
-
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-
         LAYOUT_ADDCHILD,  self.gadgetList[ BEVELGAD_FILLPEN ]:=ButtonObject,
           GA_ID, BEVELGAD_FILLPEN,
           GA_TEXT, 'FillPen',
@@ -207,6 +204,10 @@ PROC create() OF bevelSettingsForm
           GA_TABCYCLE, TRUE,
         ButtonEnd,
         CHILD_WEIGHTEDWIDTH, 0,
+      LayoutEnd,
+
+      LAYOUT_ADDCHILD, LayoutObject,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
 
         LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_STYLE ]:=ChooserObject,
           GA_ID, BEVELGAD_STYLE,
@@ -254,7 +255,6 @@ PROC create() OF bevelSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'HighlightPen',
         LabelEnd,
-
         LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_FOREGROUNDPEN ]:=ChooserObject,
           GA_ID, BEVELGAD_FOREGROUNDPEN,
           GA_RELVERIFY, TRUE,
@@ -268,6 +268,7 @@ PROC create() OF bevelSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'ForegroundPen',
         LabelEnd,
+
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -286,7 +287,6 @@ PROC create() OF bevelSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'BackgroundPen',
         LabelEnd,
-
         LAYOUT_ADDCHILD, self.gadgetList[ BEVELGAD_SHADOWPEN ]:=ChooserObject,
           GA_ID, BEVELGAD_SHADOWPEN,
           GA_RELVERIFY, TRUE,
