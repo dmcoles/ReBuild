@@ -61,7 +61,7 @@ OPT OSVERSION=37,LARGE
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
 #endif
 
-  CONST MAX_UNDO_COUNT=20
+  CONST MAX_UNDO_COUNT=50
 
   CONST ROOT_APPLICATION_ITEM=0
   CONST ROOT_REXX_ITEM=1
@@ -71,7 +71,7 @@ OPT OSVERSION=37,LARGE
   CONST ROOT_MENU_ITEM=5
   CONST ROOT_LAYOUT_ITEM=6
 
-  ENUM GAD_COMPONENTLIST,GAD_TEMP_COPYTO, GAD_TEMP_COPYFROM, GAD_TEMP_MOVETO, GAD_TEMP_MOVEFROM, GAD_TEMP_REMOVE, GAD_TEMPLIST, GAD_ADD, GAD_GENMINUS, GAD_GENPLUS, GAD_DELETE, GAD_MOVEUP, GAD_MOVEDOWN, 
+  ENUM GAD_COMPONENTLIST,GAD_TEMP_COPYTO, GAD_TEMP_COPYFROM, GAD_TEMP_MOVETO, GAD_TEMP_MOVEFROM, GAD_TEMP_REMOVE, GAD_TEMPLIST, GAD_ADD, GAD_EDIT, GAD_GENMINUS, GAD_GENPLUS, GAD_DELETE, GAD_MOVEUP, GAD_MOVEDOWN, 
        GAD_LISTS, GAD_CODE, GAD_LOAD, GAD_SAVE, GAD_NEW
 
   CONST GAD_COUNT=GAD_NEW+1
@@ -439,9 +439,11 @@ PROC updateSel(node)
   
   menuDisable(win,MENU_EDIT,MENU_EDIT_UNDO,0,undoPos=0)
   menuDisable(win,MENU_EDIT,MENU_EDIT_REDO,0,undoPos>=(undoData.count()-1))
-  
+
   IF node THEN GetListBrowserNodeAttrsA(node,[LBNA_USERDATA,{comp},LBNA_FLAGS,{flags},TAG_END])
   IF comp
+    SetGadgetAttrsA(gMain_Gadgets[GAD_EDIT],win,0,[GA_DISABLED,comp=objectList.item(ROOT_REQUESTER_ITEM),TAG_END])
+
     IF flags AND LBFLG_SHOWCHILDREN THEN comp.expanded ELSE comp.expanded:=FALSE
     allowchildren:=(comp.allowChildren()=TRUE) ORELSE ((comp.allowChildren()>0) ANDALSO (comp.children.count()<comp.allowChildren()))
     selectedComp:=comp
@@ -572,6 +574,7 @@ PROC updateSel(node)
     menuDisable(win,MENU_PROJECT,MENU_PROJECT_REOPEN,0,recentFiles.count()=0)
 
     SetGadgetAttrsA(gMain_Gadgets[GAD_ADD],win,0,[GA_DISABLED,TRUE,TAG_END])
+    SetGadgetAttrsA(gMain_Gadgets[GAD_EDIT],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENMINUS],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_GENPLUS],win,0,[GA_DISABLED,TRUE,TAG_END])
     SetGadgetAttrsA(gMain_Gadgets[GAD_DELETE],win,0,[GA_DISABLED,TRUE,TAG_END])
@@ -853,6 +856,13 @@ PROC createForm()
         LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_ADD]:=ButtonObject,
           GA_ID, GAD_ADD,
           GA_TEXT, '_Add',
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+        ButtonEnd,
+
+        LAYOUT_ADDCHILD,  gMain_Gadgets[GAD_EDIT]:=ButtonObject,
+          GA_ID, GAD_EDIT,
+          GA_TEXT, '_Edit',
           GA_RELVERIFY, TRUE,
           GA_TABCYCLE, TRUE,
         ButtonEnd,
@@ -3390,86 +3400,91 @@ PROC main() HANDLE
 
   NEW undoData.stdlist(MAX_UNDO_COUNT)
  
-  hintInfo:=New(SIZEOF hintinfo*17)
+  hintInfo:=New(SIZEOF hintinfo*18)
   hintInfo[0].gadgetid:=GAD_ADD
   hintInfo[0].code:=-1
   hintInfo[0].flags:=0
   hintInfo[0].text:='Add a new gadget'
 
-  hintInfo[1].gadgetid:=GAD_GENMINUS
-  hintInfo[1].code:=-1
-  hintInfo[1].flags:=0
-  hintInfo[1].text:='Move the current gadget up to the parent hierarchy'
+  hintInfo[0].gadgetid:=GAD_EDIT
+  hintInfo[0].code:=-1
+  hintInfo[0].flags:=0
+  hintInfo[0].text:='Edit item properties'
 
-  hintInfo[2].gadgetid:=GAD_GENPLUS
+  hintInfo[2].gadgetid:=GAD_GENMINUS
   hintInfo[2].code:=-1
   hintInfo[2].flags:=0
-  hintInfo[2].text:='Move the current gadget down to the child hierarchy'
+  hintInfo[2].text:='Move the current gadget up to the parent hierarchy'
 
-  hintInfo[3].gadgetid:=GAD_DELETE
+  hintInfo[3].gadgetid:=GAD_GENPLUS
   hintInfo[3].code:=-1
   hintInfo[3].flags:=0
-  hintInfo[3].text:='Delete the currently selected gadget/window'
+  hintInfo[3].text:='Move the current gadget down to the child hierarchy'
 
-  hintInfo[4].gadgetid:=GAD_MOVEUP
+  hintInfo[4].gadgetid:=GAD_DELETE
   hintInfo[4].code:=-1
   hintInfo[4].flags:=0
-  hintInfo[4].text:='Move the currently selected gadget/window up'
+  hintInfo[4].text:='Delete the currently selected gadget/window'
 
-  hintInfo[5].gadgetid:=GAD_MOVEDOWN
+  hintInfo[5].gadgetid:=GAD_MOVEUP
   hintInfo[5].code:=-1
   hintInfo[5].flags:=0
-  hintInfo[5].text:='Move the currently selected gadget/window down'
+  hintInfo[5].text:='Move the currently selected gadget/window up'
 
-  hintInfo[6].gadgetid:=GAD_LISTS
+  hintInfo[6].gadgetid:=GAD_MOVEDOWN
   hintInfo[6].code:=-1
   hintInfo[6].flags:=0
-  hintInfo[6].text:='Open the list editor'
+  hintInfo[6].text:='Move the currently selected gadget/window down'
 
-  hintInfo[7].gadgetid:=GAD_CODE
+  hintInfo[7].gadgetid:=GAD_LISTS
   hintInfo[7].code:=-1
   hintInfo[7].flags:=0
-  hintInfo[7].text:='Open the code generator'
+  hintInfo[7].text:='Open the list editor'
 
-  hintInfo[8].gadgetid:=GAD_LOAD
+  hintInfo[8].gadgetid:=GAD_CODE
   hintInfo[8].code:=-1
   hintInfo[8].flags:=0
-  hintInfo[8].text:='Load a rebuild project file'
+  hintInfo[8].text:='Open the code generator'
 
-  hintInfo[9].gadgetid:=GAD_SAVE
+  hintInfo[9].gadgetid:=GAD_LOAD
   hintInfo[9].code:=-1
   hintInfo[9].flags:=0
-  hintInfo[9].text:='Save current rebuild project file'
+  hintInfo[9].text:='Load a rebuild project file'
 
-  hintInfo[10].gadgetid:=GAD_NEW
+  hintInfo[10].gadgetid:=GAD_SAVE
   hintInfo[10].code:=-1
   hintInfo[10].flags:=0
-  hintInfo[10].text:='Start a new rebuild project'
-  
-  hintInfo[11].gadgetid:=GAD_TEMP_COPYTO
+  hintInfo[10].text:='Save current rebuild project file'
+
+  hintInfo[11].gadgetid:=GAD_NEW
   hintInfo[11].code:=-1
   hintInfo[11].flags:=0
-  hintInfo[11].text:='Copy the currently selected gadget to the buffer'
-
-  hintInfo[12].gadgetid:=GAD_TEMP_MOVETO
+  hintInfo[11].text:='Start a new rebuild project'
+  
+  hintInfo[12].gadgetid:=GAD_TEMP_COPYTO
   hintInfo[12].code:=-1
   hintInfo[12].flags:=0
-  hintInfo[12].text:='Move the currently selected gadget to the buffer'
+  hintInfo[12].text:='Copy the currently selected gadget to the buffer'
 
-  hintInfo[13].gadgetid:=GAD_TEMP_COPYFROM
+  hintInfo[13].gadgetid:=GAD_TEMP_MOVETO
   hintInfo[13].code:=-1
   hintInfo[13].flags:=0
-  hintInfo[13].text:='Copy the buffered gadget to the elements area'
+  hintInfo[13].text:='Move the currently selected gadget to the buffer'
 
-  hintInfo[14].gadgetid:=GAD_TEMP_MOVEFROM
+  hintInfo[14].gadgetid:=GAD_TEMP_COPYFROM
   hintInfo[14].code:=-1
   hintInfo[14].flags:=0
-  hintInfo[14].text:='Move the buffered gadget to the elements area'
+  hintInfo[14].text:='Copy the buffered gadget to the elements area'
 
-  hintInfo[15].gadgetid:=GAD_TEMP_REMOVE
+  hintInfo[15].gadgetid:=GAD_TEMP_MOVEFROM
   hintInfo[15].code:=-1
   hintInfo[15].flags:=0
-  hintInfo[15].text:='Delete the buffered gadget'
+  hintInfo[15].text:='Move the buffered gadget to the elements area'
+
+  hintInfo[16].gadgetid:=GAD_TEMP_REMOVE
+  hintInfo[16].code:=-1
+  hintInfo[16].flags:=0
+  hintInfo[16].text:='Delete the buffered gadget'
 
   codeOptions.langid:=0
   codeOptions.useids:=TRUE
@@ -3636,6 +3651,8 @@ PROC main() HANDLE
                   updateBufferSel(win,Gets(gMain_Gadgets[GAD_TEMPLIST],LISTBROWSER_SELECTEDNODE))
                 CASE GAD_ADD  ->Add
                   doAdd()
+                CASE GAD_EDIT  ->Edit
+                  doEdit()
                 CASE GAD_GENMINUS  ->Gen-
                   doGenUp(selectedComp.parent,selectedComp)
                 CASE GAD_GENPLUS  ->Gen+

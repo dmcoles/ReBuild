@@ -532,7 +532,7 @@ EXPORT PROC create(parent) OF reactionObject
   scr:=LockPubScreen(NIL)
   self.drawInfo:=GetScreenDrawInfo(scr)
   self.visInfo:=GetVisualInfoA(scr,[TAG_END])
-  self.expanded:=self.allowChildren()<>0
+  self.expanded:=(self.allowChildren()<>0) OR (self.type==[TYPE_SCREEN,TYPE_WINDOW])
   UnlockPubScreen(NIL,scr)
 ENDPROC
 
@@ -686,7 +686,7 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
   
   list:=self.serialiseData()
   count:=ListLen(list)
-  IF count>0
+  IF (count>0)
     i:=0
     WHILE i<count
       fieldname:=list[i++]
@@ -726,9 +726,9 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
         ENDIF
       ENDIF
     ENDWHILE
+    fser.writeLine('-')
+    self.serialiseChildren(fser)
   ENDIF 
-  fser.writeLine('-')
-  self.serialiseChildren(fser)
 ENDPROC
 
 PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
@@ -804,44 +804,46 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
 
   list:=self.serialiseData()
   count:=ListLen(list)
-  done:=FALSE
-  REPEAT
-    IF fser.readLine(tempStr)
-      IF StrCmp('-',tempStr)
-        done:=TRUE
+  IF count>0
+    done:=FALSE
+    REPEAT
+      IF fser.readLine(tempStr)
+        IF StrCmp('-',tempStr)
+          done:=TRUE
+        ELSE
+          i:=0
+          WHILE i<count
+            fieldname:=list[i++]
+            fieldptr:=list[i++]
+            fieldtype:=list[i++]
+            StrCopy(tempStr2,fieldname)
+            StrAdd(tempStr2,': ')
+            UpperStr(tempStr2)
+            IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
+              SELECT fieldtype
+                CASE FIELDTYPE_CHAR
+                  PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                CASE FIELDTYPE_INT
+                  PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                CASE FIELDTYPE_LONG
+                  PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                CASE FIELDTYPE_STR
+                  AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
+                CASE FIELDTYPE_STRLIST
+                  strlist:=Long(fieldptr)
+                  strlist.add(tempStr+StrLen(tempStr2))
+                CASE FIELDTYPE_INTLIST
+                  intlist:=Long(fieldptr)
+                  intlist.add(Val(tempStr+StrLen(tempStr2)))
+              ENDSELECT
+            ENDIF
+          ENDWHILE
+        ENDIF
       ELSE
-        i:=0
-        WHILE i<count
-          fieldname:=list[i++]
-          fieldptr:=list[i++]
-          fieldtype:=list[i++]
-          StrCopy(tempStr2,fieldname)
-          StrAdd(tempStr2,': ')
-          UpperStr(tempStr2)
-          IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
-            SELECT fieldtype
-              CASE FIELDTYPE_CHAR
-                PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
-              CASE FIELDTYPE_INT
-                PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
-              CASE FIELDTYPE_LONG
-                PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
-              CASE FIELDTYPE_STR
-                AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
-              CASE FIELDTYPE_STRLIST
-                strlist:=Long(fieldptr)
-                strlist.add(tempStr+StrLen(tempStr2))
-              CASE FIELDTYPE_INTLIST
-                intlist:=Long(fieldptr)
-                intlist.add(Val(tempStr+StrLen(tempStr2)))
-            ENDSELECT
-          ENDIF
-        ENDWHILE
+        done:=TRUE
       ENDIF
-    ELSE
-      done:=TRUE
-    ENDIF
-  UNTIL done  
+    UNTIL done  
+  ENDIF
 ENDPROC
 
 PROC serialiseChildren(fser:PTR TO fileStreamer) OF reactionObject
