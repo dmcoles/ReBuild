@@ -816,26 +816,28 @@ PROC deserialise(fser:PTR TO fileStreamer) OF reactionObject
             fieldname:=list[i++]
             fieldptr:=list[i++]
             fieldtype:=list[i++]
-            StrCopy(tempStr2,fieldname)
-            StrAdd(tempStr2,': ')
-            UpperStr(tempStr2)
-            IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
-              SELECT fieldtype
-                CASE FIELDTYPE_CHAR
-                  PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_INT
-                  PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_LONG
-                  PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
-                CASE FIELDTYPE_STR
-                  AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
-                CASE FIELDTYPE_STRLIST
-                  strlist:=Long(fieldptr)
-                  strlist.add(tempStr+StrLen(tempStr2))
-                CASE FIELDTYPE_INTLIST
-                  intlist:=Long(fieldptr)
-                  intlist.add(Val(tempStr+StrLen(tempStr2)))
-              ENDSELECT
+            IF fieldname
+              StrCopy(tempStr2,fieldname)
+              StrAdd(tempStr2,': ')
+              UpperStr(tempStr2)
+              IF StrCmp(tempStr2,tempStr,EstrLen(tempStr2))
+                SELECT fieldtype
+                  CASE FIELDTYPE_CHAR
+                    PutChar(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                  CASE FIELDTYPE_INT
+                    PutInt(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                  CASE FIELDTYPE_LONG
+                    PutLong(fieldptr,Val(tempStr+StrLen(tempStr2)))
+                  CASE FIELDTYPE_STR
+                    AstrCopy(fieldptr,tempStr+StrLen(tempStr2))
+                  CASE FIELDTYPE_STRLIST
+                    strlist:=Long(fieldptr)
+                    strlist.add(tempStr+StrLen(tempStr2))
+                  CASE FIELDTYPE_INTLIST
+                    intlist:=Long(fieldptr)
+                    intlist.add(Val(tempStr+StrLen(tempStr2)))
+                ENDSELECT
+              ENDIF
             ENDIF
           ENDWHILE
         ENDIF

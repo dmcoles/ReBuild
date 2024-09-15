@@ -26,7 +26,6 @@ EXPORT ENUM REQGAD_LIST, REQGAD_ADD, REQGAD_EDIT, REQGAD_DELETE, REQGAD_OK, REQG
 CONST NUM_REQ_GADS=REQGAD_CANCEL+1
 
 EXPORT OBJECT requesterObject OF reactionObject
-  dummy:CHAR
 ENDOBJECT
 
 EXPORT PROC create(parent) OF requesterObject
@@ -35,7 +34,6 @@ EXPORT PROC create(parent) OF requesterObject
   SUPER self.create(parent)
   AstrCopy(self.name,'')
   AstrCopy(self.ident,'Requesters')
-  self.dummy:=0
 ENDPROC
 
 EXPORT PROC getTypeName() OF requesterObject
@@ -44,11 +42,9 @@ ENDPROC
 
 EXPORT PROC allowChildren() OF requesterObject IS -1
 
-
-#define makeProp(a,b) 'a',{self.a},b
 EXPORT PROC serialiseData() OF requesterObject IS
 [
-  makeProp(dummy,FIELDTYPE_CHAR)
+  0,0,FIELDTYPE_CHAR    //dummy field since we dont have any
 ]
 
 EXPORT PROC createRequesterObject(parent)
