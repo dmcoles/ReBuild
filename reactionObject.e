@@ -690,13 +690,13 @@ EXPORT PROC serialise(fser:PTR TO fileStreamer) OF reactionObject
     i:=0
     WHILE i<count
       fieldname:=list[i++]
+      fieldptr:=list[i++]
+      fieldtype:=list[i++]
       IF fieldname
         StrCopy(tempStr,fieldname)
         StrAdd(tempStr,': ')
         UpperStr(tempStr)
-        fieldptr:=list[i++]
         IF fieldptr
-          fieldtype:=list[i++]
           SELECT fieldtype
             CASE FIELDTYPE_CHAR
               StringF(tempStr2,'\s\d',tempStr,Char(fieldptr))
