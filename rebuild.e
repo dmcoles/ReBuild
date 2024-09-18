@@ -54,7 +54,7 @@ OPT OSVERSION=37,LARGE
          '*virtualObject','*sketchboardObject','*tabsObject','*requesterObject',
          '*requesterItemObject','*codePreviewForm'
 
-#define vernum '1.2.0-dev'
+#define vernum '1.2.0'
 #date verstring '$VER:Rebuild 1.2.0-%Y%m%d%h%n%s'
 
 #ifndef EVO_3_7_0
