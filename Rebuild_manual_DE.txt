@@ -1,0 +1,834 @@
+
+---------------------------------------------------------------------------
+
+                      Rebuild - Reaction GUI Builder
+                               Version 1.2.0
+
+---------------------------------------------------------------------------
+
+1. Einfuehrung
+
+Rebuild ist ein GUI-Builder fuer das Reaction User Interface System. Reaction ist
+Teil des Amiga OS fuer alle Versionen ab 3.2 und hoeher. Reaction begann
+mit einem Produkt namens ClassAct, das spaeter erweitert und in Reaction umgewandelt wurde.
+
+ClassAct hatte ein GUI-Builder-Programm namens ClassMate (entwickelt im Jahr 1997),
+das Shareware war und nur in einer Demo-Version mit stark eingeschraenktem Funktionsumfang frei
+verfuegbar war. Ich verwendete ClassMate als Designvorlage, als ich Rebuild entwickelt habe. 
+Es hat ein aehnliches Aussehen, aber der Code ist voellig neu.
+
+Rebuild unterstuetzt viel mehr Gadgettypen als ClassMate und wurde
+in vielerlei Hinsicht verbessert, um die Benutzung zu erleichtern.
+
+Nur einige der Verbesserungen sind:
+1) Unterstuetzung fuer die Sprachen E und C
+2) Das Menuedesign wird im Vorschaufenster angezeigt
+3) Unterstuetzung fuer mehrere Fenster in einem einzigen Projekt
+4) Kopierpuffer, der das Verschieben oder Duplizieren von Gadgets erleichtert 
+5) Flexibleres System zum Anordnen von Gadgets und Layouts
+6) Mehrstufiges Rueckgaengigmachen/Wiederherstellen
+7) Code-Vorschau in Echtzeit
+
+2. Lizenz
+
+Ich freue mich, dieses Programm fuer die Oeffentlichkeit freizugeben, damit es jeder nach Belieben 
+verwenden kann! Es gibt nur ein paar kleine Einschraenkungen: Das Programm darf nicht zu 
+Gewinnzwecken verkauft werden, und Sie duerfen es ohne Einschraenkung zur Unterstuetzung bei der 
+Entwicklung einer beliebigen Anwendung verwenden.
+
+Ich bin fuer Sie da, wenn Sie Fragen haben oder Unterstuetzung brauchen!
+
+3. Arbeiten mit Rebuild
+
+Nach dem Laden von Rebuild sehen Sie das Hauptarbeitsfenster des
+des GUI-Designers. GUI-Designs in Rebuild werden mit Hilfe einer hierarchischen Struktur erstellt,
+die als Baumstruktur im Hauptfenster dargestellt wird. Ausserdem sehen Sie ein Vorschaufenster, 
+in dem Sie eine genaue Darstellung Ihres aktuellen GUI-Entwurfs betrachten koennen.
+
+Zu Beginn wird Ihnen ein Standardentwurf mit einem einzigen Fenster und ein Root-Layout-Gadget
+angezeigt. Sie koennen ueber die Schaltflaechen in der Symbolleiste am unteren Rand oder ueber die Menues
+Fenster, Layouts und Gadgets hinzufuegen oder entfernen.
+
+Die Schaltflaechen in der Symbolleiste sind kontextsensitiv, d. h. wenn Sie z. B. den Fensterknoten in 
+der Strukturansicht auswaehlen und die Schaltflaeche „Hinzufuegen“ druecken, wird ein neues Fenster hinzugefuegt.
+Wenn Sie ein Layout oder ein anderes Gadget ausgewaehlt haben, koennen Sie ueber die Schaltflaeche 
+„Hinzufuegen" weitere Gadgets zu Ihrem Entwurf hinzufuegen.
+
+Das Standard-Fensterlayout beginnt mit einem vertikalen Layout-Gadget. Alle hinzugefuegte Gadgets 
+werden vertikal gestapelt angezeigt. Sie koennen dies in den Gadget-Eigenschaften aendern (Doppelklick 
+auf das Layout in der Baumstruktur).
+
+Sie koennen komplizierte Layout-Designs erstellen, indem Sie ein Gesamt-Layout in kleinere Teile aufteilen 
+und Layouts innerhalb von Layouts verwenden, um die Anordnung der Horizontalen oder Vertikalen in diesem 
+Layoutbereich zu arrangieren.
+
+Wenn Sie z. B. einen aehnlichen Bildschirm wie diesen erstellen moechten,
+
+.--------------------.  .-------.
+|                    |  |  Ok   |
+|    ListView        |  '-------'
+|                    |  .-------.
+|                    |  | Canel |
+`--------------------'  `-------'
+.-----. .------. .----. .-------.
+| Add | | Edit | | Up | |  Down |
+`------ `------  `----' `-------'
+
+dann koennten Sie das mit einer Layout-Anordnung wie dieser umsetzen:
+
+        Layout - Vert
+          Layout - Horiz
+            ListBrowser Object
+            Layout - Vert
+              Button Object
+              Button Object
+          Layout - Horiz
+            Buton Object
+            Buton Object
+            Buton Object
+            Buton Object
+						
+Es gibt einige Beispieldateien, die im Ordner 'examples' enthalten sind.
+
+Neben dem Layout-Steuerelement gibt es zwei weitere Gadget-Typen, die als
+Kind-Steuerelemente hinzugefuegt werden koennen: Das ClickTab Gadget und das Virtual
+Gadget.
+
+Das ClickTab-Gadget zeigt Registerkarten entsprechend seiner Liste an (siehe Abschnitt Listenmanager
+Abschnitt unten). Darueber hinaus kann es auch verschiedene Seiten von Steuerelementen fuer jede 
+Registerkarte unterstuetzen. Untergeordnete Gadgets werden zu einem ClickTab-Steuerelement auf genau die
+gleichen Weise wie einem Layout-Steuerelement hinzugefuegt. Jedes untergeordnete Steuerelement wird
+in einer anderen Registerkarte angezeigt. Normalerweise wuerden Sie ein Layout-Steuerelement zum ClickTab 
+fuer jede Registerkarte hinzufuegen. Dann koennen Sie ein UI-Design fuer diese Registerkarte aufbauen, indem 
+Sie weitere untergeordnete Steuerelemente zu jedem Layout hinzufuegen.
+
+Das Virtual Gadget zeigt eine Gruppe von Gadgets in einem scrollbaren Bereich an. Sie koennen eine groessere 
+Anzahl von Gadgets anzeigen, als normalerweise im Fenster sichtbar waeren, indem Sie dem Benutzer erlauben, 
+im virtuellen Bereich zu blaettern. Das Virtual Gadget erlaubt nur ein einziges untergeordnetes Kind-Steuerelement 
+Das waere typischerweise ein Layout-Steuerelement, damit weitere Gadgets innerhalb des virtuellen Bildlaufbereichs 
+angezeigt werden koennen.
+
+Sie koennen auch die Bildschirmeinstellungen steuern, die fuer Ihr GUI-Design verwendet werden und Menuedefinitionen 
+fuer jedes Fenster hinzufuegen. Weiterhin koennen Sie auch eine Reihe von Arexx-Befehle festlegen. 
+Die Bildschirmeinstellungen und Arexx-Befehle haben keinen Einfluss darauf, wie der Entwurf in Rebuild funktioniert, 
+aber sie werden in den Quellcode uebernommen, den Sie erzeugen.
+
+Anmerkung:
+
+Das TextField-Gadget ist kein Reaction-Gadget und ist standardmaessig nicht in OS 3.2 enthalten. Sie sollten dieses 
+Gadget unter AmigaOS 3.2 nicht verwenden. Es war in der urspruenglichen ClassAct-Bibliothek enthalten, wurde aber 
+nicht in die Reaction Implementierung uebernommen, da OS 3.2 stattdessen ueber ein eigenes TextEditor-Gadget verfuegt.
+Unter AmigaOS < 3.2 kann es zusammen mit ClassAct nachinstalliert werden. Das eigenstaendige Textfeld-Gadget kann 
+vom Aminet hier heruntergeladen werden:
+
+http://aminet.net/package/dev/gui/textfield
+
+Wenn Sie dieses Gadget in Ihrem GUI-Design verwenden und es nicht auf Ihrem System nicht installiert ist, sehen 
+Sie im Vorschaufenster nur eine Platzhaltergrafik.
+Wenn Sie Code generieren und versuchen, diesen Code auf einem System auszufuehren, auf dem das TextField-Gadget nicht 
+installiert ist, schlaegt es beim Starten des compilierten Programms fehl.
+
+4. Der Listenmanager
+
+Einige der Gadgettypen (List Browser, Chooser, RadioButton und ClickTab)
+benoetigen eine Liste von Elementen, um zu funktionieren. Sie koennen eine beliebige Anzahl von Listen
+im Listenmanager einrichten und diesen Listen Elemente hinzufuegen. Sobald dies geschehen ist, koennen Sie
+sie zu einem Gadget hinzufuegen. Sie koennen die gleiche Liste zu mehreren Gadgets hinzufuegen.
+
+Wenn Sie die Liste zu einem spaeteren Zeitpunkt aendern moechten, koennen Sie sie auch nach dem Hinzufuegen zu einem Gadget 
+nachtraeglich im Listenmanager bearbeiten.
+
+5. Der Kopierpuffer
+
+Auf der rechten Seite des Hauptfensters sehen Sie den Kopierpuffer. Mit den unten stehenden Schaltflaechen koennen Sie 
+Elemente aus dem Hauptfenster in den Kopierpuffer verschieben. Dies ist sehr nuetzlich, wenn Sie ein Gadget mehrmals 
+mit denselben Einstellungen duplizieren oder ein Gadget von einem Fenster zu einem anderen in Ihrem Entwurf verschieben 
+moechten. Bitte achten Sie in solchen Faellen darauf, dem kopierten Gadget ueber dessen Eigenschaftendialog eine neue ID
+zu geben!
+
+6. Das Code-Fenster
+
+Rebuild ist dazu in der Lage, voll funktionsfaehigen Code fuer SAS/C, VBCC, GCC und Amiga E fuer die GUI-Designs, die 
+Sie erstellen, zu erzeugen. Das Code-Vorschaufenster zeigt den Quellcode fuer den aktuellen Entwurf. Der Quellcode 
+wird in Echtzeit aktualisiert, wenn Sie aenderungen vornehmen. Wenn Sie den Quellcode speichern moechten, gibt es hierfuer 
+eine Option im im Menue 'Datei'. Sie koennen das Quellcode-Fenster auch schliessen, wenn Sie es nicht
+sehen moechten. Auch wenn das Quellcode-Fenster geschlossen ist, koennen Sie den Quellcode speichern.
+
+Der Quellcode basiert auf den Optionen zur Codegenerierung, wie sie im naechsten Abschnitt erlaeutert werden.
+
+Um den Quellcode zu kompilieren, benoetigen Sie das Amiga OS 3.2 NDK. Der E-VO E-Compiler hat dieses standardmaessig, so 
+dass ich diesen empfehle, wenn Sie planen, den Generator fuer E-Quellcode zu verwenden.
+
+Wenn Sie stattdessen C verwenden, koennen Sie das NDK aus dem Aminet herunterladen:
+
+http://aminet.net/package/dev/misc/NDK3.2
+
+Die Kompilierung der E- oder C-Quellen sollte keine zusaetzlichen Bibliotheken oder Include-Dateien als die, die im NDK 
+und als Teil des Betriebssystems bereits vorhanden sind, benoetigen.
+
+Moeglicherweise koennen Sie den resultierenden Code auch mit aelteren Versionen des Betriebssystems verwenden, wenn Sie 
+ClassAct installiert haben - obwohl zu beachten ist, dass obwohl die ClassAct-Dokumentation angibt, dass es mit OS2.0 
+und hoeher funktioniert, ClassAct meiner Erfahrung nach nicht mit Betriebssystemen unter 3.0 funktioniert.
+
+7. Optionen fuer die Erstellung des Quellcodes
+
+Wenn Sie auf die Schaltflaeche „Code“ klicken, werden Ihnen 4 Optionen angezeigt:
+
+   1. E or C source (E- oder C-Quellcode)
+   2. Use ids for GA_ID / Use array index for GA_ID (Ids fuer GA_ID verwenden / Array-Index fuer GA_ID verwenden)
+   3. Generate full code / Generate definitions only (Vollstaendigen Code generieren / Nur Definitionen generieren)
+   4. Use NDK Macros in definitions (NDK-Makros in Definitionen verwenden)
+
+Die erste Option ist ziemlich selbsterklaerend. Sie koennen zwischen den Programmiersprachen  E oder C  waehlen und das 
+GUI-Design wird dem entsprechend in eine Codedatei in dieser Sprache exportiert.
+
+Die zweite Option steuert, wie der GUI-Code aufgebaut ist und wirkt sich auf den Wert, der fuer die GA_ID-Eigenschaft 
+fuer jedes Gadget verwendet wird, aus. Wenn Sie die Nachrichtenverarbeitungsschleife (Event Loop) fuer Ihre Anwendung 
+kodieren, sind die GA_ID-Werte wichtig, um das Gadget zu identifizieren, das die Nachricht sendet.
+
+Wenn Sie die Option „Use ids for GA_ID“ waehlen, dann hat jedes Gadget einen GA_ID Wert, der auf seiner eindeutigen, von 
+Rebuild zugewiesenen ID basiert. Jedes Element im GUI Design erhaelt eine eindeutige ID und diese wird sich nie aendern 
+(ausser, wenn Sie das Gadget loeschen). Auch wenn Sie ein Gadget loeschen, wird die alte ID nicht mehr wieder verwendet.
+Das bedeutet, dass Sie diese IDs in Ihrem eigenen Code referenzieren koennen, ohne befuerchten zu muessen, dass Sie Ihren 
+Code neu schreiben muessen, wenn Sie das GUI-Design aendern und den Code neu generieren.
+
+Wenn Sie die Option 'Use array index for GA_ID' waehlen, wird die GA_ID fuer jedes Gadget von 0 an fortlaufend fuer jedes 
+Fenster nummeriert. Dies bedeutet, dass es einfacher ist, die Programmierung zur Verwaltung der GUI zu handhaben, weil 
+man die ID immer als Index fuer das im generierten Gadget-Array verwenden kann - aber es bedeutet auch, dass die 
+GA_ID-Werte sich aendern, wenn Sie das GUI-Design veraendern! Falls Sie einen dieser Werte in Ihrem benutzerdefinierten 
+Code fest codiert haben, so muss dieser neu codiert werden.
+
+Weitere Informationen hierzu finden Sie im naechsten Abschnitt.
+
+Die dritte Option bestimmt, ob der resultierende Code ein vollstaendiges Programm sein wird, das kompiliert und ausgefuehrt
+werden kann. 
+Wenn Sie den Code kompilieren und ausfuehren werden Sie ein Fenster sehen, das dem Vorschaufenster in Rebuild entspricht.
+Der generierte Code kann dann um die Programm-Logik erweitert werden, die Sie fuer Ihre Anwendung benoetigen.
+
+Wenn Sie 'Generate definitions only' waehlen, ist der resultierende Code nicht vollstaendig und nur dafuer gedacht, dass Sie 
+die GUI-Definitionen kopieren und in eine selbstgeschriebene Quelldatei fuer die Anwendung einfuegen.
+
+Schliesslich veraendert die 4. Option, NDK-Makros zu verwenden oder nicht, den Codegenerator.
+Wenn die Option aktiviert ist, sehen Sie im Code etwas wie folgt:
+
+         LAYOUT_AddChild, main_gadgets[button_10] = ButtonObject,
+           ...
+           ...
+         ButtonEnd,
+				 
+ButtonObject und ButtonEnd sind im NDK definierte Makros. Viele derGadgets haben solche Makros definiert, aber sie 
+funktionieren nicht gut mit dem GCC Compiler. Daher wurde die Moeglichkeit gegeben, Code zu erzeugen, der diese Makros nicht 
+verwendet. Auch der VBCC Compiler hat bei einigen Gadgets mit dieser Einstellung Probleme, so dass sie eigentlich nur fuer
+den SAS/C Compiler taugt.
+
+Wenn die Makros deaktiviert sind, sehen Sie stattdessen Code, der wie folgt aussieht:
+
+        LAYOUT_AddChild, main_gadgets[button_10] = NewObject(BUTTON_GetClass(),NULL,
+          ...
+          ...
+        TAG_END),
+
+Diese Option wurde teilweise hinzugefuegt, um Benutzerpraeferenzen im generierten Code zu ermoeglichen, aber auch, weil der GCC 
+Compiler diese Makros nicht korrekt behandelt, wenn nicht zusaetzliche Kompilieroptionen angegeben werden. Dies gibt dem Benutzer 
+also die Moeglichkeit Code zu erzeugen, der diese Makros nicht verwendet. Eine weitere Alternative fuer GCC ist die Verwendung des 
+Parameters -DNO_INLINE_STDARG beim Kompilieren. Tatsaechlich funktioniert die Option, auf Macros zu verzichten, sehr gut mit den
+SAS/C-, VBCC-, und GCC C-Compilern.
+
+8. Tipps zur Arbeit mit dem von Rebuild generierten Quellcode
+
+Hier ist ein Beispiel fuer einen von Rebuild generierten C-Code. Ich habe es mit Kommentaren versehen, um den Verwendungszweck 
+einiger Teile des Codes zu erklaeren (Alle Kommentare in englischer Sprache). Der generierte Code ist nur als moeglicher Startpunkt 
+fuer die Anwendung. Um die Anwendung voll funktionsfaehig zu machen, wird noch eine Menge zusaetzlicher Code benoetigt, um die GUI zu 
+steuern.
+
+Merke: Rebuild ist nicht als voll funktionsfaehige Entwicklungsumgebung konzipiert, es ist ein reines GUI-Design-Tool. Wenn Sie 
+diese Codestruktur als Grundlage fuer Ihre Anwendung verwenden, sollten Sie versuchen, Ihren eigenen Code von dem automatisch 
+generierten Code so weit wie moeglich zu trennen, um den Nachbearbeitungsaufwand zu reduzieren, falls Sie das GUI-Design aendern
+und den Code neu generieren muessen!
+
+#include <clib/macros.h>
+#include <clib/alib_protos.h>
+#include <clib/compiler-specific.h>
+
+#include <proto/exec.h>
+#include <proto/dos.h>
+#include <proto/utility.h>
+#include <proto/graphics.h>
+#include <proto/intuition.h>
+#include <proto/gadtools.h>
+#include <proto/icon.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <proto/window.h>
+#include <proto/layout.h>
+#include <proto/button.h>
+#include <proto/string.h>
+#include <proto/label.h>
+
+#include <libraries/gadtools.h>
+#include <reaction/reaction.h>
+#include <intuition/gadgetclass.h>
+#include <reaction/reaction_macros.h>
+#include <classes/window.h>
+#include <exec/memory.h>
+
+void window_3( void );
+
+struct Screen	*gScreen = NULL;
+struct DrawInfo	*gDrawInfo = NULL;
+APTR gVisinfo = NULL;
+struct MsgPort	*gAppPort = NULL;
+
+struct Library *WindowBase = NULL,
+               *ButtonBase = NULL,
+               *StringBase = NULL,
+               *LabelBase = NULL,
+               *GadToolsBase = NULL,
+               *LayoutBase = NULL,
+               *IconBase = NULL;
+struct IntuitionBase *IntuitionBase = NULL;
+
+//window ids
+//this enumeration will contain all of the window ids contained in the
+//rebuild project.
+enum win { window_3_id = 3 };
+
+//Window_3 gadgets
+//this enumeration should be used to access the main_gadgets array. the names
+//of the enumerations have the reaction gadget id's on the end so these names
+//will never change even if the design is update (eg another gadget added).
+//If the code is regenerated then the positions will change but the names
+//will not. This means its safe to use these enumeration names in any custom
+//code you may write.
+enum window_3_idx { layout_5, string_6, string_7, layout_8, button_9, button_10 };
+
+//this enumeration should be used when you need to check the GA_ID values
+//against a particular gadget (eg when writing your message handling code
+//the enumeration names will be in the same order as those in the enum
+//above and the names will be the same as those above with _id appended.
+enum window_3_id { layout_5_id = 5, string_6_id = 6, string_7_id = 7, layout_8_id = 8, 
+  button_9_id = 9, button_10_id = 10 };
+
+int setup( void )
+{
+  if( !(IntuitionBase = (struct IntuitionBase*) OpenLibrary("intuition.library",0L)) ) return 0;
+  if( !(GadToolsBase = (struct Library*) OpenLibrary("gadtools.library",0L) ) ) return 0;
+  if( !(WindowBase = (struct Library*) OpenLibrary("window.class",0L) ) ) return 0;
+  if( !(IconBase = (struct Library*) OpenLibrary("icon.library",0L) ) ) return 0;
+  if( !(LayoutBase = (struct Library*) OpenLibrary("gadgets/layout.gadget",0L) ) ) return 0;
+  if( !(ButtonBase = (struct Library*) OpenLibrary("gadgets/button.gadget",0L) ) ) return 0;
+  if( !(StringBase = (struct Library*) OpenLibrary("gadgets/string.gadget",0L) ) ) return 0;
+  if( !(LabelBase = (struct Library*) OpenLibrary("images/label.image",0L) ) ) return 0;
+  if( !(gScreen = LockPubScreen( 0 ) ) ) return 0;
+  if( !(gVisinfo = GetVisualInfo( gScreen, TAG_DONE ) ) ) return 0;
+  if( !(gDrawInfo = GetScreenDrawInfo ( gScreen ) ) ) return 0;
+  if( !(gAppPort = CreateMsgPort() ) ) return 0;
+
+  return -1;
+}
+
+void cleanup( void )
+{
+  if ( gDrawInfo ) FreeScreenDrawInfo( gScreen, gDrawInfo);
+  if ( gVisinfo ) FreeVisualInfo( gVisinfo );
+  if ( gAppPort ) DeleteMsgPort( gAppPort );
+  if ( gScreen ) UnlockPubScreen( 0, gScreen );
+
+  if (GadToolsBase) CloseLibrary( (struct Library *)GadToolsBase );
+  if (IconBase) CloseLibrary( (struct Library *)IconBase );
+  if (IntuitionBase) CloseLibrary( (struct Library *)IntuitionBase );
+  if (ButtonBase) CloseLibrary( (struct Library *)ButtonBase );
+  if (StringBase) CloseLibrary( (struct Library *)StringBase );
+  if (LabelBase) CloseLibrary( (struct Library *)LabelBase );
+  if (LayoutBase) CloseLibrary( (struct Library *)LayoutBase );
+  if (WindowBase) CloseLibrary( (struct Library *)WindowBase );
+}
+
+//this is a generic routine that will be used to run the message loop
+//for all windows in this project. You should use the window id to determine
+//which window is being displayed. In order to avoid a huge message
+//processing loop with many different windows and gadgets being handled
+//I would recommend creating a function for each window and calling that
+//according to the window id.
+//
+//Currently this code structure is designed for projects with modal windows.
+//If you wanted to display a settings page for example you would call the
+//window function in the gadget press handling code you have written.
+//This would create the window object and call runWindow. Once that
+//window is closed control would return to the calling window.
+//
+//If this structure does not suit your application then you can code the
+//message handling from scratch and just use the window definitions that
+//can be generated using Rebuild.
+//
+void runWindow( Object *window_object, int window_id, struct Menu *menu_strip, struct Gadget *win_gadgets[] )
+{
+  struct Window	*main_window = NULL;
+
+  if ( window_object )
+  {
+    if ( main_window = (struct Window *) RA_OpenWindow( window_object ))
+    {
+      WORD Code;
+      ULONG wait = 0, signal = 0, result = 0, done = FALSE;
+      GetAttr( WINDOW_SigMask, window_object, &signal );
+      if ( menu_strip)  SetMenuStrip( main_window, menu_strip );
+      while ( !done)
+      {
+        wait = Wait( signal | SIGBREAKF_CTRL_C );
+
+        if ( wait & SIGBREAKF_CTRL_C )
+          done = TRUE;
+        else
+          while (( result = RA_HandleInput( window_object, &Code )) != WMHI_LASTMSG)
+          {
+            switch ( result & WMHI_CLASSMASK )
+            {
+              case WMHI_CLOSEWINDOW:
+                done = TRUE;
+                break;
+
+              case WMHI_MENUPICK:
+              //put your menu handling code here
+              //it is advised that you call a separate function for this
+                puts("menu pick");
+                break;
+
+              case WMHI_GADGETUP:
+              //put your gadget handling code here
+              //it is advised that you call a separate function for this
+                puts("gadget press");
+                break;
+
+              case WMHI_ICONIFY:
+                if ( RA_Iconify( window_object ) )
+                  main_window = NULL;
+                break;
+
+              case WMHI_UNICONIFY:
+                main_window = RA_OpenWindow( window_object );
+                if ( menu_strip)  SetMenuStrip( main_window, menu_strip );
+              break;
+
+            }
+          }
+      }
+    }
+  }
+}
+
+
+//this is the window function, it creates the window and displays it
+//it will return once the window is closed
+//
+void window_3( void )
+{
+  struct Gadget	*main_gadgets[ 7 ];
+  Object *window_object = NULL;
+
+  window_object = WindowObject,
+    WA_Title, "Please log in...",
+    WA_Left, 5,
+    WA_Top, 20,
+    WA_Width, 250,
+    WA_Height, 80,
+    WA_MinWidth, 150,
+    WA_MinHeight, 80,
+    WA_MaxWidth, 8192,
+    WA_MaxHeight, 8192,
+    WINDOW_AppPort, gAppPort,
+    WA_CloseGadget, TRUE,
+    WA_DepthGadget, TRUE,
+    WA_SizeGadget, TRUE,
+    WA_DragBar, TRUE,
+    WINDOW_Position, WPOS_CENTERSCREEN,
+    WINDOW_IconTitle, "MyApp",
+    WA_NoCareRefresh, TRUE,
+    WA_IDCMP, IDCMP_GADGETDOWN | IDCMP_GADGETUP | IDCMP_CLOSEWINDOW,
+    WINDOW_ParentGroup, VLayoutObject,
+    LAYOUT_SpaceOuter, TRUE,
+    LAYOUT_DeferLayout, TRUE,
+      LAYOUT_AddChild, main_gadgets[layout_5] = LayoutObject,
+        GA_ID, layout_5_id,
+        LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
+        LAYOUT_AddChild, main_gadgets[string_6] = StringObject,
+          GA_ID, string_6_id,
+          GA_RelVerify, TRUE,
+          GA_TabCycle, TRUE,
+          STRINGA_MaxChars, 80,
+        StringEnd,
+        CHILD_Label, LabelObject,
+          LABEL_Text, "User name",
+        LabelEnd,
+        LAYOUT_AddChild, main_gadgets[string_7] = StringObject,
+          GA_ID, string_7_id,
+          GA_RelVerify, TRUE,
+          GA_TabCycle, TRUE,
+          STRINGA_MaxChars, 80,
+        StringEnd,
+        CHILD_Label, LabelObject,
+          LABEL_Text, "Password",
+        LabelEnd,
+        LAYOUT_AddChild, main_gadgets[layout_8] = LayoutObject,
+          GA_ID, layout_8_id,
+          LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_AddChild, main_gadgets[button_9] = ButtonObject,
+            GA_ID, button_9_id,
+            GA_Text, "OK",
+            GA_RelVerify, TRUE,
+            GA_TabCycle, TRUE,
+            BUTTON_TextPen, 1,
+            BUTTON_BackgroundPen, 0,
+            BUTTON_FillTextPen, 1,
+            BUTTON_FillPen, 3,
+          ButtonEnd,
+          LAYOUT_AddChild, main_gadgets[button_10] = ButtonObject,
+            GA_ID, button_10_id,
+            GA_Text, "Cancel",
+            GA_RelVerify, TRUE,
+            GA_TabCycle, TRUE,
+            BUTTON_TextPen, 1,
+            BUTTON_BackgroundPen, 0,
+            BUTTON_FillTextPen, 1,
+            BUTTON_FillPen, 3,
+          ButtonEnd,
+        LayoutEnd,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd;  
+  //a blank entry at the end in case you need to loop through the
+  //array and know where the end of the data is
+  main_gadgets[6] = 0;
+
+  //call the code to display the window
+  //the window id is window_3_id from the window ids enumeration and
+  //it has no menu structure.
+  runWindow( window_object, window_3_id, 0, main_gadgets );
+
+  if ( window_object ) DisposeObject( window_object );
+}
+
+int main( int argc, char **argv )
+{
+  if ( setup() )
+  {
+    window_3();
+  }
+  cleanup();
+}
+
+Hier ist das gleiche GUI-Beispiel in der Sprache E:
+
+OPT OSVERSION=37
+
+  MODULE 'reaction/reaction_macros',
+      'reaction/reaction_lib',
+      'window','classes/window',
+      'gadgets/layout','layout',
+      'libraries/gadtools','gadtools',
+      'icon',
+      'button','gadgets/button',
+      'string','gadgets/string',
+      'label','images/label',
+      'images/bevel',
+      'amigalib/boopsi',
+      'exec',
+      'intuition/intuition',
+      'intuition/imageclass',
+      'intuition/screens',
+      'intuition/gadgetclass'
+
+
+->window ids
+ENUM WINLOGON_ID = 3
+
+->winLogon gadgets
+ENUM LAYOUT_5, STRING_6, STRING_7, LAYOUT_8, BUTTON_9, BUTTON_10
+ENUM LAYOUT_5_ID = 5, STRING_6_ID = 6, STRING_7_ID = 7, LAYOUT_8_ID = 8, 
+  BUTTON_9_ID = 9, BUTTON_10_ID = 10
+
+DEF gScreen=0,gVisInfo=0,gDrawInfo=0,gAppPort=0
+
+PROC setup()
+  IF (windowbase:=OpenLibrary('window.class',0))=NIL THEN Throw("LIB","win")
+  IF (layoutbase:=OpenLibrary('gadgets/layout.gadget',0))=NIL THEN Throw("LIB","layo")
+  IF (gadtoolsbase:=OpenLibrary('gadtools.library',0))=NIL THEN Throw("LIB","gadt")
+  IF (iconbase:=OpenLibrary('icon.library',0))=NIL THEN Throw("LIB","icon")
+  IF (buttonbase:=OpenLibrary('gadgets/button.gadget',0))=NIL THEN Throw("LIB","btn")
+  IF (stringbase:=OpenLibrary('gadgets/string.gadget',0))=NIL THEN Throw("LIB","strn")
+  IF (labelbase:=OpenLibrary('images/label.image',0))=NIL THEN Throw("LIB","labl")
+  IF (gScreen:=LockPubScreen(NIL))=NIL THEN Raise("pub")
+  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise("visi")
+  IF (gDrawInfo:=GetScreenDrawInfo(gScreen))=NIL THEN Raise("dinf")
+  IF (gAppPort:=CreateMsgPort())=NIL THEN Raise("port")
+ENDPROC
+
+PROC cleanup()
+  IF gVisInfo THEN FreeVisualInfo(gVisInfo)
+  IF gDrawInfo THEN FreeScreenDrawInfo(gScreen,gDrawInfo)
+  IF gAppPort THEN DeleteMsgPort(gAppPort)
+  IF gScreen THEN UnlockPubScreen(NIL,gScreen)
+
+  IF gadtoolsbase THEN CloseLibrary(gadtoolsbase)
+  IF iconbase THEN CloseLibrary(iconbase)
+  IF windowbase THEN CloseLibrary(windowbase)
+  IF layoutbase THEN CloseLibrary(layoutbase)
+  IF buttonbase THEN CloseLibrary(buttonbase)
+  IF stringbase THEN CloseLibrary(stringbase)
+  IF labelbase THEN CloseLibrary(labelbase)
+ENDPROC
+
+PROC runWindow(windowObject,windowId, menuStrip, winGadgets:PTR TO LONG) HANDLE
+  DEF running=TRUE
+  DEF win:PTR TO window,wsig,code,msg,sig,result
+
+  IF (win:=RA_OpenWindow(windowObject))
+    GetAttr( WINDOW_SIGMASK, windowObject, {wsig} )
+    IF menuStrip THEN SetMenuStrip( win, menuStrip )
+
+    WHILE running
+      sig:=Wait(wsig)
+      IF (sig AND (wsig))
+        WHILE ((result:=RA_HandleInput(windowObject,{code}+2)) <> WMHI_LASTMSG)
+          msg:=(result AND WMHI_CLASSMASK)
+          SELECT msg
+            CASE WMHI_CLOSEWINDOW
+              running:=FALSE
+            CASE WMHI_GADGETUP
+              WriteF('gadget press\n')
+            CASE WMHI_MENUPICK
+              WriteF('menu pick\n')
+            CASE WMHI_ICONIFY
+              RA_Iconify(windowObject)
+            CASE WMHI_UNICONIFY
+              win:=RA_OpenWindow(windowObject)
+              IF menuStrip THEN SetMenuStrip( win, menuStrip )
+          ENDSELECT
+        ENDWHILE
+      ENDIF
+    ENDWHILE
+  ENDIF
+EXCEPT DO
+  RA_CloseWindow(windowObject)
+ENDPROC
+
+PROC winlogon() HANDLE
+  DEF windowObject
+  DEF mainGadgets[7]:ARRAY OF LONG
+
+
+  windowObject:=WindowObject,
+    WA_TITLE, 'Please log in...',
+    WA_LEFT, 5,
+    WA_TOP, 20,
+    WA_WIDTH, 250,
+    WA_HEIGHT, 80,
+    WA_MINWIDTH, 150,
+    WA_MINHEIGHT, 80,
+    WA_MAXWIDTH, 8192,
+    WA_MAXHEIGHT, 8192,
+    WINDOW_APPPORT, gAppPort,
+    WA_CLOSEGADGET, TRUE,
+    WA_DEPTHGADGET, TRUE,
+    WA_SIZEGADGET, TRUE,
+    WA_DRAGBAR, TRUE,
+    WINDOW_POSITION, WPOS_CENTERSCREEN,
+    WINDOW_ICONTITLE, 'MyApp',
+    WA_NOCAREREFRESH, TRUE,
+    WA_IDCMP, IDCMP_GADGETDOWN OR IDCMP_GADGETUP OR IDCMP_CLOSEWINDOW,
+    WINDOW_PARENTGROUP, VLayoutObject,
+    LAYOUT_SPACEOUTER, TRUE,
+    LAYOUT_DEFERLAYOUT, TRUE,
+      LAYOUT_ADDCHILD, mainGadgets[LAYOUT_5]:=LayoutObject,
+        GA_ID, LAYOUT_5_ID,
+        LAYOUT_ORIENTATION, LAYOUT_ORIENT_VERT,
+        LAYOUT_ADDCHILD, mainGadgets[STRING_6]:=StringObject,
+          GA_ID, STRING_6_ID,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'User name',
+        LabelEnd,
+        LAYOUT_ADDCHILD, mainGadgets[STRING_7]:=StringObject,
+          GA_ID, STRING_7_ID,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Password',
+        LabelEnd,
+        LAYOUT_ADDCHILD, mainGadgets[LAYOUT_8]:=LayoutObject,
+          GA_ID, LAYOUT_8_ID,
+          LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+          LAYOUT_ADDCHILD, mainGadgets[BUTTON_9]:=ButtonObject,
+            GA_ID, BUTTON_9_ID,
+            GA_TEXT, 'OK',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+          ButtonEnd,
+          LAYOUT_ADDCHILD, mainGadgets[BUTTON_10]:=ButtonObject,
+            GA_ID, BUTTON_10_ID,
+            GA_TEXT, 'Cancel',
+            GA_RELVERIFY, TRUE,
+            GA_TABCYCLE, TRUE,
+            BUTTON_TEXTPEN, 1,
+            BUTTON_BACKGROUNDPEN, 0,
+            BUTTON_FILLTEXTPEN, 1,
+            BUTTON_FILLPEN, 3,
+          ButtonEnd,
+        LayoutEnd,
+      LayoutEnd,
+    LayoutEnd,
+  WindowEnd  
+  mainGadgets[6]:=0
+
+  runWindow(windowObject,WINLOGON_ID,NIL,mainGadgets)
+
+EXCEPT DO
+  IF windowObject THEN DisposeObject(windowObject);
+ENDPROC
+
+PROC main() HANDLE
+  setup()
+
+  winlogon()
+
+EXCEPT DO
+  cleanup()
+ENDPROC
+
+9. Tooltype-Einstellungen
+
+Einige der Standardeinstellungen fuer die Rebuild-Anwendung koennen konfiguriert werden, indem Sie
+die Datei Rebuild.info bearbeiten.
+
+Viele dieser Einstellungen werden auch in Ihrer Projektdatei gespeichert, so dass, wenn Sie also diese Datei 
+neu laden, auch der Zustand der zuletzt verwendeten Einstellungen wieder hergestellt wird.
+
+Hier ist eine Liste der Tooltypen, die definiert werden koennen:
+
+   LANG=E / C (steuert die angezeigte Standardsprache)
+   USEIDS=YES / NO (Standardeinstellung fuer den Code-Export)
+   FULLCODE=YES / NO (Standardeinstellung fuer den Code-Export)
+   USEMACROS=YES / NO (Standardeinstellung fuer den Code-Export)
+   CODEPATH= (waehlen Sie den Standardpfad fuer die Codespeicherung)
+   SAVEPATH= (Waehlen Sie den Standardpfad fuer die Projektspeicherung)
+   SHOWBUFFER=YES / NO (zeigt den Kopierpuffer beim Starten an)
+   SHOWSETTINGS=YES / NO (Einstellungen beim Hinzufuegen neuer Gadgets anzeigen)
+   PROJECTICONS=YES / NO (erstellt ein Symbol fuer Projektdateien)
+   WARNONDELETE=YES / NO (warnen, wenn ein Element geloescht wird)
+   PREVIEWCODE=YES / NO (Code-Vorschaufenster beim Starten anzeigen)
+   WINDOWTOP = 
+   WINDOWLEFT =
+   WINDOWWIDTH = (BREITE DES FENSTERS)
+   WINDOWHEIGHT = (ueberschreibt die Groesse und Position des Hauptfensters)
+
+   CODEWINDOWTOP = 
+   CODEWINDOWLEFT =
+   CODEWINDOWWIDTH =
+   CODEWINDOWHEIGHT = (ueberschreibt die Groesse und Position des Code-Vorschaufensters)
+	 
+10. Weitere Informationen
+
+ReBuild ist mit meinem eigenen E-VO-Compiler geschrieben. Der vollstaendige Quellcode ist auf gitgub 
+verfuegbar: https://github.com/dmcoles/ReBuild
+
+Wenn Sie irgendwelche Probleme mit diesem Produkt finden, koennen Sie gerne einen Report
+im gitgub Repositorium eroeffnen. Falls Sie mich aus irgendeinem Grund bezueglich dieses Projekts kontaktieren 
+moechten, tun Sie dies bitte.
+
+Michael Bergmann hat viel Zeit und Muehe in das Testen von Rebuild gesteckt und
+hat auch ein Tutorial fuer Rebuild entwickelt. Dieses Tutorial geht in die Tiefe
+ueber die Verwendung von Rebuild und die einzelnen Gadgettypen.
+
+Seit der Erstellung des Tutorials hat es einige aenderungen an diesem Tool gegeben
+daher kann es sein, dass das Tutorial nicht vollstaendig die aktuelle Funktionsweise der aktuellen
+Version widerspiegelt. Ein neues Tutorial ist aber bereits in Arbeit und erscheint voraussichtlich
+im Maerz 2025.
+
+Das Tutorial ist separat im gitub Repository verfuegbar: https://github.com/dmcoles/ReBuild/tree/main/tutorial
+
+Mein Dank geht an Michael fuer diese grossartige Arbeit.
+
+11. Zukuenftige (moegliche) Erweiterungen
+
+Ich habe viele Ideen fuer zukuenftige Erweiterungen dieses Projekts. Mein Plan war es etwas zu veroeffentlichen, 
+das zumindest die gesamte Funktionalitaet des alten ClassMate-Tools fuer die erste Version von Rebuild abdeckt.
+
+Nur einige meiner Ideen (von denen einige moeglich sein koennten oder auch nicht) sind:
+
+   * Hinzufuegen weiterer Sprachen zum Codegenerator
+   * Option zur Erzeugung von Codecraft-Projektdateien
+   * Hinzufuegung von Hinweistexten zu den Einstellungsseiten, um den Benutzern zu helfen
+	 
+12. Versionsgeschichte
+
+  1.0.0
+    - Erste Veroeffentlichung
+  
+  1.1.0
+    - Das Erstellen eines virtuellen Gadgets konnte zu Abstuerzen fuehren (aufgrund eines Fehlers
+      in der Version von E-VO, die zum Kompilieren von 1.0.0 verwendet wurde)
+    - ueber-Dialog geaendert von 'Rebuilder' zu 'Rebuild'
+    - Beim Laden einer Bitmap ohne ausgewaehltes Bild wurde ein falscher Fehler gemeldet
+    - Option hinzugefuegt, um Code zu erzeugen, der keine Makros in den Objektdefinitionen verwendet
+      Definitionen (fuer bessere GCC-Kompatibilitaet).
+    - GA_TabCycle-Eigenschaft zu Klick-Tab hinzufuegen
+    - Der fuer die Tankanzeige generierte Code verwendet nun GA_Text anstelle des Child-Labels
+    - Tankanzeige verwendet falsche Standardanzahl von Ticks
+    - GetScreenMode enthielt kein Child-Label im generierten Code
+    - Glyph enthielt keine untergeordnete Beschriftung im generierten Code
+    - Glyphe verwendet falschen Standardtyp
+    - USEMACROS-Werkzeugtyp hinzugefuegt
+    - Bei Sketchboard fehlten viele der Einstellungen im generierten Code
+    - SizeBRight und SizeBBottom funktionierten im Vorschaufenster nicht korrekt
+		
+	1.2.0
+    - getfile readonly Code wurde nicht generiert, wenn TRUE
+    - Makro-Einstellung wurde nicht vollstaendig auf alle Objektdefinitionen angewendet
+    - behebt os4-Probleme mit Penmap- und Bitmap-Gadgets
+    - Umbenennen von 'name'-Feldern in 'label'
+    - Bezeichnerfeld fuer alle Gadgets hinzugefuegt
+    - Child-Labels fuer Farbverlaufsschieber und Paletten-Gadgets hinzugefuegt
+    - Unterstuetzung fuer abhakbare/umschaltbare/wechselbare Menuepunkte hinzufuegen
+    - Hinzufuegen der Menueoptionen „In V-Layout verschieben“ und „In H-Layout verschieben
+    - Funktion zum erneuten Oeffnen implementiert
+    - Hinzufuegung der Option „Hinweistext“ fuer alle Gadgets
+    - Umbenennung der fehlerhaften Fenster-Gadget-Hilfebezeichnung
+    - Fenstergadget-Hilfe standardmaessig auf true setzen
+    - Fensteraktivierungsflagge standardmaessig auf wahr setzen
+    - Neues Gadget wird nun nach dem aktuell ausgewaehlten Gadget eingefuegt, anstatt
+      statt am Ende
+    - Menue-Tastaturkuerzel hinzufuegen
+    - Rueckgaengig/Wiederherstellen-Funktion hinzufuegen
+    - Speichern der Positionen der Codevorschau und des Vorschaufensters in der Projektdatei
+    - Aktualisierung des Projektdateiformats auf v2
+    - Hinzufuegen von Tooltype-Optionen fuer die Codevorschau und die Position des Codevorschaufensters
+    - Speichern der Einstellungen in envarc:
+		- Echtzeit-Codevorschaufenster hinzufuegen
+    - Ausgewaehltes Element auf Stammlayout fuer neues Projekt setzen
+    - Hauptfenster und Code-Vorschaufenster speichern ihre letzte Position
+    - Eigenschaften fuer Breite und Hoehe des Vorschaufensters hinzufuegen
+    - Link zu vscroll zum Textfeld-Gadget hinzufuegen
+    - Link zu hscroll und Link zu vscroll zum Texteditor-Gadget hinzufuegen
+    - Link zu Schieberegler-Gadget fuer Ganzzahl-Gadget hinzufuegen
+    - Flagge fuer horizontales Scrollen zum Texteditor hinzufuegen
+    - beim Start einen Fehler ausgeben, wenn weder Textfeld- noch Texteditor-Gadgets
+      vorhanden sind
+    - alle Gadget-Typen haben jetzt eine Label-Eigenschaft
+    - Einstellungen fuer das Vorschaufenster basierend auf der Fensterdefinition festlegen
+    - einige Gadget-Einstellungsseiten neu angeordnet, um sie besser einzupassen
+      640*256
+    - Hinzufuegen einer Bearbeitungsschaltflaeche im Hauptfenster
+
+(C) Darren Coles 2024
