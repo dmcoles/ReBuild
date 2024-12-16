@@ -76,13 +76,25 @@ PROC componentLibtypeCreate(libname:PTR TO CHAR) OF srcGen
 ENDPROC
 
 PROC componentProperty(propName:PTR TO CHAR, propValue:PTR TO CHAR, isString) OF srcGen
-  DEF str
-  str:=String(StrLen(propName)+StrLen(propValue)+5)
+  DEF str,count=0,i
+  FOR i:=0 TO StrLen(propValue)-1 DO IF propValue[i]=self.stringDelimiter THEN count++
+
+  str:=String(StrLen(propName)+StrLen(propValue)+5+count)
   StrCopy(str,propName)
   IF self.upperCaseProperties THEN UpperStr(str)
   StrAdd(str,', ')
   IF isString THEN StrAddChar(str,self.stringDelimiter)
-  StrAdd(str,propValue)
+  FOR i :=0 TO StrLen(propValue)-1
+    IF (propValue[i]=self.stringDelimiter) AND isString
+      IF self.type=ESOURCE_GEN
+        StrAdd(str,'\\a')
+      ELSEIF self.type=CSOURCE_GEN
+        StrAdd(str,'\\"')
+      ENDIF
+    ELSE
+      StrAddChar(str,propValue[i])
+    ENDIF
+  ENDFOR
   IF isString THEN StrAddChar(str,self.stringDelimiter)
   StrAdd(str,',')
   self.writeLine(str)

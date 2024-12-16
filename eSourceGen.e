@@ -633,6 +633,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     IF reqItem.bodyParam
       StrAdd(tempStr,',bodyText')
     ENDIF
+    SELECT reqItem.reqType
+      CASE 1
+        StrAdd(tempStr,',initialValue')
+      CASE 2
+        StrAdd(tempStr,',buffer')
+    ENDSELECT
     StrAdd(tempStr,')')
     
     self.writeLine(tempStr)
@@ -677,8 +683,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
       CASE 1
         StringF(tempStr,'      REQI_MAXCHARS, \d,',IF reqItem.maxChars>10 THEN 10 ELSE reqItem.maxChars)
         self.writeLine(tempStr)   
+        StrCopy(tempStr,'      REQI_NUMBER, initialValue,')
+        self.writeLine(tempStr)   
       CASE 2
         StringF(tempStr,'      REQS_MAXCHARS, \d,',reqItem.maxChars)
+        self.writeLine(tempStr)   
+        StrCopy(tempStr,'      REQS_BUFFER, buffer,')
         self.writeLine(tempStr)   
     ENDSELECT
     
@@ -688,11 +698,18 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     self.writeLine('  reqobj:=NewObjectA(Requester_GetClass(),0,[TAG_END])')
     self.writeLine('  IF reqobj')
     self.writeLine('    res:=DoMethodA(reqobj, reqmsg)')
+    IF reqItem.reqType=1
+      self.writeLine('    initialValue:=Gets(reqobj, REQI_NUMBER)')
+    ENDIF
     self.writeLine('    DisposeObject(reqobj)')
     self.writeLine('  ENDIF')
     self.writeLine('  END reqmsg')
     self.writeLine('  ADD.L #$100,A7')   
-    self.writeLine('ENDPROC res')
+    IF reqItem.reqType=1
+      self.writeLine('ENDPROC res,initialValue')
+    ELSE
+      self.writeLine('ENDPROC res')
+    ENDIF
     self.writeLine('')
   ENDFOR
 ENDPROC

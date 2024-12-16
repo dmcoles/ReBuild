@@ -503,6 +503,14 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     IF reqItem.bodyParam
       StrAdd(tempStr,',STRPTR bodyText')
     ENDIF
+
+    SELECT reqItem.reqType
+      CASE 1
+        StrAdd(tempStr,',ULONG *numberValue')
+      CASE 2
+        StrAdd(tempStr,',STRPTR buffer')
+    ENDSELECT
+    
     StrAdd(tempStr,')')
     
     self.writeLine(tempStr)
@@ -547,8 +555,12 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
       CASE 1
         StringF(tempStr,'       REQI_MaxChars, \d,',IF reqItem.maxChars>10 THEN 10 ELSE reqItem.maxChars)
         self.writeLine(tempStr)   
+        StrCopy(tempStr,'       REQI_Number, *numberValue,')
+        self.writeLine(tempStr)   
       CASE 2
         StringF(tempStr,'       REQS_MaxChars, \d,',reqItem.maxChars)
+        self.writeLine(tempStr)   
+        StrCopy(tempStr,'       REQS_Buffer, buffer,')
         self.writeLine(tempStr)   
     ENDSELECT
     self.writeLine('       TAG_DONE);')
@@ -556,6 +568,9 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     self.writeLine('  if (reqobj)')
     self.writeLine('  {')
     self.writeLine('    res=DoMethod(reqobj, RM_OPENREQ, NULL, win, NULL);')
+    IF reqItem.reqType=1
+      self.writeLine('    GetAttr(REQI_Number, reqobj, numberValue);')
+    ENDIF
     self.writeLine('    DisposeObject(reqobj);')
     self.writeLine('  }')
     self.writeLine('  return res;')   

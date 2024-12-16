@@ -54,8 +54,8 @@ OPT OSVERSION=37,LARGE
          '*virtualObject','*sketchboardObject','*tabsObject','*requesterObject',
          '*requesterItemObject','*codePreviewForm'
 
-#define vernum '1.2.0'
-#date verstring '$VER:Rebuild 1.2.0-%Y%m%d%h%n%s'
+#define vernum '1.3.0-dev'
+#date verstring '$VER:Rebuild 1.3.0-%Y%m%d%h%n%s'
 
 #ifndef EVO_3_7_0
   FATAL 'Rebuild should only be compiled with E-VO Amiga E Compiler v3.7.0 or higher'
@@ -2416,25 +2416,29 @@ PROC doEdit()
     updateUndo()
     IF selectedComp.editSettings()
       changes:=TRUE
-      idx:=findWindowIndex(selectedComp)
-      IF idx<>-1
-        mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
-        winObj:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
-        removeMembers(mainRootLayout,winObj)
-        IF selectedComp.type=TYPE_WINDOW
-          RA_CloseWindow(selectedComp.previewObject)
-          selectedComp.createPreviewObject(win.wscreen)
-          RA_OpenWindow(selectedComp.previewObject)
-        ENDIF
+      IF selectedComp.type=TYPE_REQUESTER_ITEM
         makeList(selectedComp)
-        addMembers(mainRootLayout,winObj)
+      ELSE     
+        idx:=findWindowIndex(selectedComp)
+        IF idx<>-1
+          mainRootLayout:=objectList.item(ROOT_LAYOUT_ITEM+(idx*3))
+          winObj:=objectList.item(ROOT_WINDOW_ITEM+(idx*3))
+          removeMembers(mainRootLayout,winObj)
+          IF selectedComp.type=TYPE_WINDOW
+            RA_CloseWindow(selectedComp.previewObject)
+            selectedComp.createPreviewObject(win.wscreen)
+            RA_OpenWindow(selectedComp.previewObject)
+          ENDIF
+          makeList(selectedComp)
+          addMembers(mainRootLayout,winObj)
 
-        IF selectedComp.type=TYPE_MENU
-          pwin:=Gets(winObj.previewObject,WINDOW_WINDOW)
-          IF pwin THEN ClearMenuStrip(pwin)
-          selectedComp.createPreviewObject(win.wscreen)
+          IF selectedComp.type=TYPE_MENU
+            pwin:=Gets(winObj.previewObject,WINDOW_WINDOW)
+            IF pwin THEN ClearMenuStrip(pwin)
+            selectedComp.createPreviewObject(win.wscreen)
+          ENDIF
+          rethinkPreviews()
         ENDIF
-        rethinkPreviews()
       ENDIF
       addUndo()
       genCodePreview()

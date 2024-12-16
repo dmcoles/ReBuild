@@ -7,6 +7,7 @@ OPT MODULE, OSVERSION=37
         'button','gadgets/button',
         'images/bevel',
         'string',
+        'gadgets/integer','integer',
         'gadgets/chooser','chooser',
         'gadgets/checkbox','checkbox',
         'images/label','label',
@@ -19,7 +20,7 @@ OPT MODULE, OSVERSION=37
   MODULE '*reactionObject','*reactionForm','*colourPicker','*sourceGen','*validator'
 
 EXPORT ENUM LBLGAD_IDENT, LBLGAD_LABEL, LBLGAD_NAME, LBLGAD_FGPEN, LBLGAD_BGPEN, LBLGAD_DISPOSE, LBLGAD_JUSTIFICATION,
-      LBLGAD_OK, LBLGAD_CHILD, LBLGAD_CANCEL
+      LBLGAD_VERTSPACING, LBLGAD_OK, LBLGAD_CHILD, LBLGAD_CANCEL
 
 CONST NUM_LBL_GADS=LBLGAD_CANCEL+1
 
@@ -28,6 +29,7 @@ EXPORT OBJECT labelObject OF reactionObject
   bgPen:INT
   dispose:CHAR
   justify:CHAR
+  vertSpacing:INT
 ENDOBJECT
 
 OBJECT labelSettingsForm OF reactionForm
@@ -143,6 +145,19 @@ PROC create() OF labelSettingsForm
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Justification',
         LabelEnd,
+
+        LAYOUT_ADDCHILD,  self.gadgetList[ LBLGAD_VERTSPACING ]:=IntegerObject,
+          GA_ID, LBLGAD_VERTSPACING,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          INTEGER_MAXCHARS, 5,
+          INTEGER_MINIMUM, 0,
+          INTEGER_MAXIMUM, 65535,
+        IntegerEnd,
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Vertical Spacing',
+        LabelEnd,
+
       LayoutEnd,
 
       LAYOUT_ADDCHILD, LayoutObject,
@@ -237,6 +252,7 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_NAME ],0,0,[STRINGA_TEXTVAL,comp.name,0])
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_DISPOSE  ],0,0,[CHECKBOX_CHECKED,comp.dispose,0]) 
   SetGadgetAttrsA(self.gadgetList[ LBLGAD_JUSTIFICATION  ],0,0,[CHOOSER_SELECTED,comp.justify,0]) 
+  SetGadgetAttrsA(self.gadgetList[ LBLGAD_VERTSPACING ],0,0,[INTEGER_NUMBER,comp.vertSpacing,0])
 
   res:=self.showModal()
   IF res=MR_OK
@@ -247,6 +263,7 @@ PROC editSettings(comp:PTR TO labelObject) OF labelSettingsForm
     comp.bgPen:=self.tempBgPen
     comp.dispose:=Gets(self.gadgetList[ LBLGAD_DISPOSE ],CHECKBOX_CHECKED)
     comp.justify:=Gets(self.gadgetList[ LBLGAD_JUSTIFICATION ],CHOOSER_SELECTED)
+    comp.vertSpacing:=Gets(self.gadgetList[ LBLGAD_VERTSPACING ],INTEGER_NUMBER)
   ENDIF
 ENDPROC res=MR_OK
 
@@ -290,6 +307,7 @@ EXPORT PROC serialiseData() OF labelObject IS
   makeProp(fgPen,FIELDTYPE_INT),
   makeProp(bgPen,FIELDTYPE_INT),
   makeProp(dispose,FIELDTYPE_CHAR),
+  makeProp(vertSpacing,FIELDTYPE_INT),
   makeProp(justify,FIELDTYPE_CHAR)
 ]
 
@@ -300,6 +318,7 @@ EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF labelObject
   IF self.bgPen<>0 THEN srcGen.componentPropertyInt('IA_BGPen',self.bgPen)
   IF self.dispose THEN srcGen.componentProperty('LABEL_DisposeImage','TRUE',FALSE)
   IF self.justify<>0 THEN srcGen.componentProperty('LABEL_Justification',ListItem(['LJ_LEFT','LJ_CENTER','LJ_RIGHT'],self.justify),FALSE)
+  IF self.vertSpacing<>0 THEN srcGen.componentPropertyInt('LABEL_VerticalSpacing ',self.vertSpacing)
 ENDPROC
 
 EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF labelObject

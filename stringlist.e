@@ -133,12 +133,14 @@ EXPORT PROC setFromTextString(newText:PTR TO CHAR) OF stringlist
   self.clear()
   pos:=0
   WHILE (n:=InStr(newText+pos,'\n'))>=0
-    str:=AstrClone(newText+pos,n)
+    IF n THEN str:=AstrClone(newText+pos,n) ELSE str:=String(0)
     self.add(str)
     DisposeLink(str)
     pos:=pos+n+1
   ENDWHILE
-  IF StrLen(newText+pos) THEN self.add(newText+pos)
+  IF StrLen(newText+pos) 
+    self.add(newText+pos)
+  ENDIF
 ENDPROC
 
 EXPORT PROC count() OF stringlist IS ListLen(self.items)
