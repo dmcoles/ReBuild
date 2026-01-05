@@ -811,7 +811,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
     self.writeLine('  if( !(TabsBase = (struct Library*) OpenLibrary("gadgets/tabs.gadget",0L) ) ) return 0;')
   ENDIF
   IF requesterObject.children.count()>0
-    self.writeLine('  if( !(RequesterBase = (struct Library*) OpenLibrary("classes/requester.class",0L) ) ) return 0;')
+    self.writeLine('  if( !(RequesterBase = (struct Library*) OpenLibrary("requester.class",0L) ) ) return 0;')
   ENDIF
 
   self.genScreenCreate(screenObject)

@@ -323,7 +323,7 @@ PROC genHeader(screenObject:PTR TO screenObject,rexxObject:PTR TO rexxObject, re
   IF self.libsused[TYPE_VIRTUAL] THEN self.writeLine('  IF (virtualbase:=OpenLibrary(\agadgets/virtual.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qvirt\q)')
   IF self.libsused[TYPE_SKETCH] THEN self.writeLine('  IF (sketchboardbase:=OpenLibrary(\agadgets/sketchboard.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qskch\q)')
   IF self.libsused[TYPE_TABS] THEN self.writeLine('  IF (tabsbase:=OpenLibrary(\agadgets/tabs.gadget\a,0))=NIL THEN Throw(\qLIB\q,\qtabs\q)')
-  IF requesterObject.children.count()>0 THEN self.writeLine('  IF (requesterbase:=OpenLibrary(\aclasses/requester.class\a,0))=NIL THEN Throw(\qLIB\q,\qreqs\q)')
+  IF requesterObject.children.count()>0 THEN self.writeLine('  IF (requesterbase:=OpenLibrary(\arequester.class\a,0))=NIL THEN Throw(\qLIB\q,\qreqs\q)')
 
   self.genScreenCreate(screenObject)
   self.writeLine('  IF (gVisInfo:=GetVisualInfoA(gScreen, [TAG_END]))=NIL THEN Raise(\qvisi\q)')

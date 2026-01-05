@@ -2022,6 +2022,8 @@ EXCEPT DO
       errorRequest(mainWindow,'Error','This file is not a valid rebuild file.')
     CASE "VERS"
       errorRequest(mainWindow,'Error','This file is too new for this version of ReBuild.')     
+    DEFAULT
+     ReThrow()
   ENDSELECT
 
   END fs
