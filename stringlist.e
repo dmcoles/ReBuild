@@ -179,6 +179,20 @@ EXPORT PROC sort() OF stringlist
   self. quicksort(0,ListLen(self.items)-1)
 ENDPROC
 
+EXPORT PROC reverse() OF stringlist
+  DEF i,j,v
+  i:=0
+  j:=ListLen(self.items)-1
+  WHILE i<j
+    v:=self.items[j]
+    self.items[j]:=self.items[i]
+    self.items[i]:=v
+    i++
+    j--
+  ENDWHILE
+ENDPROC
+
+
 /*
 
  list class that holds long values

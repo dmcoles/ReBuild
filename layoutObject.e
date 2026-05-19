@@ -20,7 +20,7 @@ OPT MODULE, OSVERSION=37
 
   MODULE '*reactionObject','*reactionForm','*sourceGen','*validator'
 
-EXPORT ENUM LAYOUTGAD_IDENT, LAYOUTGAD_ORIENTATION, LAYOUTGAD_HORZALIGN, LAYOUTGAD_VERTALIGN,
+EXPORT ENUM LAYOUTGAD_IDENT,LAYOUTGAD_CHILDLABEL,LAYOUTGAD_ORIENTATION, LAYOUTGAD_HORZALIGN, LAYOUTGAD_VERTALIGN,
       LAYOUTGAD_EVENSIZE,LAYOUTGAD_SPACEOUTER, LAYOUTGAD_SPACEINNER, LAYOUTGAD_DEFERLAYOUT,
       LAYOUTGAD_BEVELSTYLE,LAYOUTGAD_BEVELSTATE,
       LAYOUTGAD_LEFTSPACING,LAYOUTGAD_RIGHTSPACING,LAYOUTGAD_TOPSPACING,LAYOUTGAD_BOTTOMSPACING,
@@ -49,6 +49,7 @@ EXPORT OBJECT layoutObject OF reactionObject
   spaceOuter:CHAR
   spaceInner:CHAR
   deferLayout:CHAR
+  childLabel[80]:ARRAY OF CHAR
 ENDOBJECT
 
 EXPORT PROC createPreviewObject(scr) OF layoutObject
@@ -75,7 +76,7 @@ EXPORT PROC createPreviewObject(scr) OF layoutObject
       LayoutEnd
     IF self.previewObject=0 THEN self.previewObject:=self.createErrorObject(scr)
 
-    self.makePreviewChildAttrs(-1)
+    self.makePreviewChildAttrs(self.childLabel)
 ENDPROC
 
 EXPORT PROC create(parent) OF layoutObject
@@ -102,6 +103,8 @@ EXPORT PROC create(parent) OF layoutObject
   self.spaceOuter:=0
   self.spaceInner:=TRUE
   self.deferLayout:=0
+  AstrCopy(self.childLabel,'')
+  self.libsused:=[TYPE_LAYOUT]
 ENDPROC
 
 OBJECT layoutSettingsForm OF reactionForm
@@ -154,6 +157,7 @@ PROC create() OF layoutSettingsForm
 
       LAYOUT_ADDCHILD, LayoutObject,
         LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+        LAYOUT_FIXEDHORIZ, FALSE,
 
         LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_IDENT ]:=StringObject,
           GA_ID, LAYOUTGAD_IDENT,
@@ -163,6 +167,17 @@ PROC create() OF layoutSettingsForm
         StringEnd,
         CHILD_LABEL, LabelObject,
           LABEL_TEXT, 'Identifier',
+        LabelEnd,
+
+        LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_CHILDLABEL ]:=StringObject,
+          GA_ID, LAYOUTGAD_CHILDLABEL,
+          GA_RELVERIFY, TRUE,
+          GA_TABCYCLE, TRUE,
+          STRINGA_MAXCHARS, 80,
+        StringEnd,
+
+        CHILD_LABEL, LabelObject,
+          LABEL_TEXT, 'Label',
         LabelEnd,
 
         LAYOUT_ADDCHILD, self.gadgetList[ LAYOUTGAD_ORIENTATION ]:=ChooserObject,
@@ -506,6 +521,8 @@ PROC editSettings(comp:PTR TO layoutObject) OF layoutSettingsForm
   SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_SPACEINNER  ],0,0,[CHECKBOX_CHECKED,comp.spaceInner,0]) 
   SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_DEFERLAYOUT  ],0,0,[CHECKBOX_CHECKED,comp.deferLayout,0]) 
 
+  SetGadgetAttrsA(self.gadgetList[ LAYOUTGAD_CHILDLABEL ],0,0,[STRINGA_TEXTVAL,comp.childLabel,0])
+
   res:=self.showModal()
   IF res=MR_OK
 
@@ -534,6 +551,8 @@ PROC editSettings(comp:PTR TO layoutObject) OF layoutSettingsForm
     comp.deferLayout:=Gets(self.gadgetList[ LAYOUTGAD_DEFERLAYOUT ],CHECKBOX_CHECKED)
     StringF(tempStr,'\s_\d',IF comp.orientation THEN 'Vert' ELSE 'Horiz',comp.id)
     AstrCopy(comp.name,tempStr,80)
+
+    AstrCopy(comp.childLabel,Gets(self.gadgetList[ LAYOUTGAD_CHILDLABEL ],STRINGA_TEXTVAL))
 
   ENDIF
 ENDPROC res=MR_OK
@@ -571,7 +590,8 @@ EXPORT PROC serialiseData() OF layoutObject IS
   makeProp(evenSize,FIELDTYPE_CHAR),
   makeProp(spaceOuter,FIELDTYPE_CHAR),
   makeProp(spaceInner,FIELDTYPE_CHAR),
-  makeProp(deferLayout,FIELDTYPE_CHAR)
+  makeProp(deferLayout,FIELDTYPE_CHAR),
+  makeProp(childLabel,FIELDTYPE_STR)
 ]
 
 EXPORT PROC genCodeProperties(srcGen:PTR TO srcGen) OF layoutObject
@@ -649,6 +669,11 @@ EXPORT PROC removeChildTag() OF layoutObject IS LAYOUT_REMOVECHILD
 EXPORT PROC addImageTag() OF layoutObject IS LAYOUT_ADDIMAGE
 
 EXPORT PROC addChildTo() OF layoutObject IS self.previewObject
+
+EXPORT PROC genCodeChildProperties(srcGen:PTR TO srcGen) OF layoutObject
+  srcGen.componentAddChildLabel(self.childLabel)
+  SUPER self.genCodeChildProperties(srcGen)
+ENDPROC
 
 EXPORT PROC createLayoutObject(parent)
   DEF layout:PTR TO layoutObject

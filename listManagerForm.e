@@ -20,8 +20,9 @@ OPT MODULE, OSVERSION=37
   MODULE '*reactionForm','*stringlist','*reactionListObject','*reactionLists'
 
 EXPORT ENUM LISTMANAGER_LISTLIST, LISTMANAGER_LISTNAME, LISTMANAGER_ITEMLIST, LISTMANAGER_ITEMNAME, 
-    LISTMANAGER_OK, LISTMANAGER_ADD, LISTMANAGER_MODIFYNAME, LISTMANAGER_DELNAME, LISTMANAGER_DELITEM,
-    LISTMANAGER_SORTITEM
+    LISTMANAGER_OK, LISTMANAGER_ADD, LISTMANAGER_MODIFYNAME, LISTMANAGER_DELNAME, 
+    LISTMANAGER_ADDITEM, LISTMANAGER_INSERTITEM, LISTMANAGER_MODIFYITEM, LISTMANAGER_DELITEM,
+    LISTMANAGER_MOVEUP, LISTMANAGER_MOVEDOWN,LISTMANAGER_SORTITEM
 
 CONST NUMGADS=LISTMANAGER_SORTITEM+1
 
@@ -54,20 +55,35 @@ PROC makeItemsList(list:PTR TO reactionListObject) OF listManagerForm
         Raise("MEM")    
       ENDIF
     ENDFOR
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, GA_DISABLED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2,LISTBROWSER_SELECTED, -1,GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL, list.name, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', GA_DISABLED, FALSE, TAG_END])
 
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYNAME],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELNAME],win,0,[GA_DISABLED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ADD],win,0,[GA_DISABLED, FALSE, TAG_END])
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ADDITEM],win,0,[GA_DISABLED, FALSE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_INSERTITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEUP],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEDOWN],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_SORTITEM],win,0,[GA_DISABLED, FALSE, TAG_END])
   ELSE
-    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, self.browserlist2, LISTBROWSER_SELECTED, -1, GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTNAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', GA_DISABLED, TRUE, TAG_END])
 
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYNAME],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELNAME],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ADD],win,0,[GA_DISABLED, FALSE, TAG_END])
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ADDITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_INSERTITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEUP],win,0,[GA_DISABLED, TRUE, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEDOWN],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[LISTMANAGER_SORTITEM],win,0,[GA_DISABLED, TRUE, TAG_END])
   ENDIF
@@ -155,6 +171,106 @@ PROC delName(nself,gadget,id,code) OF listManagerForm
   ENDIF
 ENDPROC
 
+PROC insertItem(nself,gadget,id,code) OF listManagerForm
+  DEF win,itemName,n
+  DEF reactionList:PTR TO reactionListObject
+  self:=nself
+
+  IF self.selectedList>=0
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    reactionList:=self.lists.item(self.selectedList)
+    itemName:=Gets(self.gadgetList[LISTMANAGER_ITEMNAME],STRINGA_TEXTVAL)
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+
+    n:=self.selectedItem
+    reactionList.items.insert(n,itemName)
+    self.makeItemsList(self.lists.item(self.selectedList))
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_SELECTED,n,TAG_END])
+    
+    IF gadget=self.gadgetList[LISTMANAGER_ITEMNAME] THEN ActivateLayoutGadget(self.rootLayout, win, 0, gadget)
+  ENDIF
+ENDPROC
+
+PROC modifyItem(nself,gadget,id,code) OF listManagerForm
+  DEF win,itemName,n
+  DEF reactionList:PTR TO reactionListObject
+  self:=nself
+
+  IF self.selectedList>=0
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    reactionList:=self.lists.item(self.selectedList)
+    itemName:=Gets(self.gadgetList[LISTMANAGER_ITEMNAME],STRINGA_TEXTVAL)
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_LABELS, Not(0), TAG_END])
+
+    n:=self.selectedItem
+    reactionList.items.setItem(n,itemName)
+    self.makeItemsList(self.lists.item(self.selectedList))
+
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMNAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_SELECTED,n,TAG_END])
+    self.selItem(nself,self.gadgetList[LISTMANAGER_ITEMLIST],LISTMANAGER_ITEMLIST,n)
+  ENDIF
+ENDPROC
+
+PROC moveItemUp(nself,gadget,id,code) OF listManagerForm
+  DEF win,n
+  DEF reactionList:PTR TO reactionListObject
+  DEF item1,item2
+  self:=nself
+
+  IF self.selectedList>=0
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    reactionList:=self.lists.item(self.selectedList)
+
+    n:=self.selectedItem
+    item1:=StrClone(reactionList.items.item(n-1))
+    item2:=StrClone(reactionList.items.item(n))
+
+    reactionList.items.setItem(n-1,item2)
+    reactionList.items.setItem(n,item1)
+    DisposeLink(item1)
+    DisposeLink(item2)
+    
+    self.makeItemsList(self.lists.item(self.selectedList))
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_SELECTED,n-1,TAG_END])
+    self.selItem(nself,self.gadgetList[LISTMANAGER_ITEMLIST],LISTMANAGER_ITEMLIST,n-1)
+  ENDIF
+ENDPROC
+
+PROC moveItemDown(nself,gadget,id,code) OF listManagerForm
+  DEF win,n
+  DEF reactionList:PTR TO reactionListObject
+  DEF item1,item2
+  self:=nself
+
+  IF self.selectedList>=0
+    win:=Gets(self.windowObj,WINDOW_WINDOW)
+
+    reactionList:=self.lists.item(self.selectedList)
+
+    n:=self.selectedItem
+    item1:=StrClone(reactionList.items.item(n))
+    item2:=StrClone(reactionList.items.item(n+1))
+
+    reactionList.items.setItem(n,item2)
+    reactionList.items.setItem(n+1,item1)
+    DisposeLink(item1)
+    DisposeLink(item2)
+    
+    self.makeItemsList(self.lists.item(self.selectedList))
+    SetGadgetAttrsA(self.gadgetList[LISTMANAGER_ITEMLIST],win,0,[LISTBROWSER_SELECTED,n+1,TAG_END])
+    self.selItem(nself,self.gadgetList[LISTMANAGER_ITEMLIST],LISTMANAGER_ITEMLIST,n+1)
+  ENDIF
+ENDPROC
+
+
 PROC newItem(nself,gadget,id,code) OF listManagerForm
   DEF win,itemName,n
   DEF reactionList:PTR TO reactionListObject
@@ -184,8 +300,14 @@ PROC selItem(nself,gadget,id,code) OF listManagerForm
   DEF reactionList:PTR TO reactionListObject
   self:=nself
   
+  reactionList:=self.lists.item(self.selectedList)
+  
   win:=Gets(self.windowObj,WINDOW_WINDOW)
   SetGadgetAttrsA(self.gadgetList[LISTMANAGER_DELITEM],win,0,[GA_DISABLED, code<0, TAG_END])
+  SetGadgetAttrsA(self.gadgetList[LISTMANAGER_INSERTITEM],win,0,[GA_DISABLED, code<0, TAG_END])
+  SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MODIFYITEM],win,0,[GA_DISABLED, code<0, TAG_END])
+  SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEUP],win,0,[GA_DISABLED, code<1, TAG_END])
+  SetGadgetAttrsA(self.gadgetList[LISTMANAGER_MOVEDOWN],win,0,[GA_DISABLED, code>=(reactionList.items.count()-1), TAG_END])
   self.selectedItem:=code
 ENDPROC
 
@@ -212,13 +334,24 @@ PROC delItem(nself,gadget,id,code) OF listManagerForm
   ENDIF
 ENDPROC
 
+PROC sorted(items:PTR TO stringlist) OF listManagerForm
+  DEF i
+  FOR i:=1 TO items.count()-1
+    IF StrCompare(items.item(i-1),items.item(i))>0 THEN RETURN FALSE
+  ENDFOR
+ENDPROC TRUE
+
 PROC sortItems(nself,gadget,id,code) OF listManagerForm
   DEF reactionList:PTR TO reactionListObject
   self:=nself
 
   IF (self.selectedList>=0)
     reactionList:=self.lists.item(self.selectedList)
-    reactionList.items.sort()
+    IF self.sorted(reactionList.items)
+      reactionList.items.reverse()
+    ELSE
+      reactionList.items.sort()
+    ENDIF
     self.makeItemsList(reactionList)
   ENDIF
 ENDPROC
@@ -259,7 +392,7 @@ EXPORT PROC create() OF listManagerForm
     WA_TITLE, 'Lists Manager',
     WA_LEFT, 0,
     WA_TOP, 0,
-    WA_HEIGHT, 80,
+    WA_HEIGHT, 180,
     WA_WIDTH, 150,
     WA_MINWIDTH, 150,
     WA_MAXWIDTH, 8192,
@@ -307,6 +440,32 @@ EXPORT PROC create() OF listManagerForm
             LABEL_TEXT, '_Name',
           LabelEnd,
 
+          LAYOUT_ADDCHILD, LayoutObject,
+            LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_ADD ] := ButtonObject,
+              GA_ID, LISTMANAGER_ADD,
+              GA_TEXT, 'Add',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_MODIFYNAME ] := ButtonObject,
+              GA_ID, LISTMANAGER_MODIFYNAME,
+              GA_TEXT, '_Modify',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_DELNAME ] := ButtonObject,
+              GA_ID, LISTMANAGER_DELNAME,
+              GA_TEXT, '_Delete',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+          LayoutEnd,
+          CHILD_WEIGHTEDHEIGHT, 0,
+      
         LayoutEnd,
 
         LAYOUT_ADDCHILD, LayoutObject,
@@ -335,56 +494,68 @@ EXPORT PROC create() OF listManagerForm
           CHILD_LABEL, LabelObject,
             LABEL_TEXT, 'Item',
           LabelEnd,
+
+          LAYOUT_ADDCHILD, LayoutObject,
+            LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+            LAYOUT_FIXEDVERT, FALSE,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_ADDITEM ] := ButtonObject,
+              GA_ID, LISTMANAGER_ADDITEM,
+              GA_TEXT, 'Add',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_INSERTITEM ] := ButtonObject,
+              GA_ID, LISTMANAGER_INSERTITEM,
+              GA_TEXT, 'Insert',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_MODIFYITEM ] := ButtonObject,
+              GA_ID, LISTMANAGER_MODIFYITEM,
+              GA_TEXT, 'Modify',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_DELITEM ] := ButtonObject,
+              GA_ID, LISTMANAGER_DELITEM,
+              GA_TEXT, '_Delete',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+          LayoutEnd,
+          LAYOUT_ADDCHILD, LayoutObject,
+            LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
+            LAYOUT_FIXEDVERT, FALSE,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_MOVEUP ] := ButtonObject,
+              GA_ID, LISTMANAGER_MOVEUP,
+              GA_TEXT, 'Up',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_MOVEDOWN ] := ButtonObject,
+              GA_ID, LISTMANAGER_MOVEDOWN,
+              GA_TEXT, 'Down',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+
+            LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_SORTITEM ] := ButtonObject,
+              GA_ID, LISTMANAGER_SORTITEM,
+              GA_TEXT, '_Sort',
+              GA_RELVERIFY, TRUE,
+              GA_TABCYCLE, TRUE,
+            ButtonEnd,
+          LayoutEnd,
+
         LayoutEnd,
-      LayoutEnd,
-      
-      LAYOUT_ADDCHILD, LayoutObject,
-        LAYOUT_ORIENTATION, LAYOUT_ORIENT_HORIZ,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_OK ] := ButtonObject,
-          GA_ID, LISTMANAGER_OK,
-          GA_TEXT, '_Ok',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_ADD ] := ButtonObject,
-          GA_ID, LISTMANAGER_ADD,
-          GA_TEXT, 'Add',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_MODIFYNAME ] := ButtonObject,
-          GA_ID, LISTMANAGER_MODIFYNAME,
-          GA_TEXT, '_Modify Name',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_DELNAME ] := ButtonObject,
-          GA_ID, LISTMANAGER_DELNAME,
-          GA_TEXT, '_Del Name',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_DELITEM ] := ButtonObject,
-          GA_ID, LISTMANAGER_DELITEM,
-          GA_TEXT, '_Del Item',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-
-        LAYOUT_ADDCHILD,  self.gadgetList[ LISTMANAGER_SORTITEM ] := ButtonObject,
-          GA_ID, LISTMANAGER_SORTITEM,
-          GA_TEXT, '_Sort Item',
-          GA_RELVERIFY, TRUE,
-          GA_TABCYCLE, TRUE,
-        ButtonEnd,
-      LayoutEnd,
-      CHILD_WEIGHTEDHEIGHT, 0,
-      
+      LayoutEnd,    
     LayoutEnd,
   WindowEnd
   self.gadgetActions[LISTMANAGER_LISTLIST]:={selectList}
@@ -393,7 +564,12 @@ EXPORT PROC create() OF listManagerForm
   self.gadgetActions[LISTMANAGER_DELNAME]:={delName}
   self.gadgetActions[LISTMANAGER_LISTNAME]:={addList}
   self.gadgetActions[LISTMANAGER_ITEMNAME]:={newItem}
+  self.gadgetActions[LISTMANAGER_ADDITEM]:={newItem}
+  self.gadgetActions[LISTMANAGER_INSERTITEM]:={insertItem}
+  self.gadgetActions[LISTMANAGER_MODIFYITEM]:={modifyItem}
   self.gadgetActions[LISTMANAGER_ITEMLIST]:={selItem}
+  self.gadgetActions[LISTMANAGER_MOVEUP]:={moveItemUp}
+  self.gadgetActions[LISTMANAGER_MOVEDOWN]:={moveItemDown}
   self.gadgetActions[LISTMANAGER_SORTITEM]:={sortItems}
   self.gadgetActions[LISTMANAGER_DELITEM]:={delItem}
   self.gadgetActions[LISTMANAGER_OK]:=MR_OK
@@ -419,7 +595,7 @@ EXPORT PROC manageLists() OF listManagerForm
 
   self.makeItemsList(0)
 
-  hintInfo:=New(SIZEOF hintinfo*9)
+  hintInfo:=New(SIZEOF hintinfo*13)
   hintInfo[0].gadgetid:=LISTMANAGER_ADD
   hintInfo[0].code:=-1
   hintInfo[0].flags:=0
@@ -435,30 +611,51 @@ EXPORT PROC manageLists() OF listManagerForm
   hintInfo[2].flags:=0
   hintInfo[2].text:='Remove the selected list entirely'
 
-  hintInfo[3].gadgetid:=LISTMANAGER_DELITEM
+  hintInfo[3].gadgetid:=LISTMANAGER_ADDITEM
   hintInfo[3].code:=-1
   hintInfo[3].flags:=0
-  hintInfo[3].text:='Delete the currently selected list item'
+  hintInfo[3].text:='Add a new list item'
 
-  hintInfo[4].gadgetid:=LISTMANAGER_SORTITEM
+  hintInfo[4].gadgetid:=LISTMANAGER_INSERTITEM
   hintInfo[4].code:=-1
   hintInfo[4].flags:=0
-  hintInfo[4].text:='Sort the currently selected list'
+  hintInfo[4].text:='Insert a new list item'
 
-  hintInfo[5].gadgetid:=LISTMANAGER_OK
+  hintInfo[5].gadgetid:=LISTMANAGER_MODIFYITEM
   hintInfo[5].code:=-1
   hintInfo[5].flags:=0
-  hintInfo[5].text:='Close the list editor and save changes'
+  hintInfo[5].text:='Update currently selected list item'
 
-  hintInfo[6].gadgetid:=LISTMANAGER_LISTNAME
+  hintInfo[6].gadgetid:=LISTMANAGER_DELITEM
   hintInfo[6].code:=-1
   hintInfo[6].flags:=0
-  hintInfo[6].text:='Enter the list name here'
+  hintInfo[6].text:='Delete the currently selected list item'
 
-  hintInfo[7].gadgetid:=LISTMANAGER_ITEMNAME
+  hintInfo[7].gadgetid:=LISTMANAGER_DELITEM
   hintInfo[7].code:=-1
   hintInfo[7].flags:=0
-  hintInfo[7].text:='Enter the list item name here'
+  hintInfo[7].text:='Move the currently selected list item up'
+
+  hintInfo[8].gadgetid:=LISTMANAGER_DELITEM
+  hintInfo[8].code:=-1
+  hintInfo[8].flags:=0
+  hintInfo[8].text:='Move the currently selected list item down'
+
+  hintInfo[10].gadgetid:=LISTMANAGER_SORTITEM
+  hintInfo[10].code:=-1
+  hintInfo[10].flags:=0
+  hintInfo[10].text:='Sort the currently selected list'
+
+
+  hintInfo[11].gadgetid:=LISTMANAGER_LISTNAME
+  hintInfo[11].code:=-1
+  hintInfo[11].flags:=0
+  hintInfo[11].text:='Enter the list name here'
+
+  hintInfo[12].gadgetid:=LISTMANAGER_ITEMNAME
+  hintInfo[12].code:=-1
+  hintInfo[12].flags:=0
+  hintInfo[12].text:='Enter the list item name here'
   
   Sets(self.windowObj,WINDOW_HINTINFO,hintInfo)
   Sets(self.windowObj,WINDOW_GADGETHELP, TRUE)
@@ -478,7 +675,6 @@ EXPORT PROC manageLists() OF listManagerForm
   ENDFOR
   SetGadgetAttrsA(self.gadgetList[LISTMANAGER_LISTLIST],0,0,[LISTBROWSER_LABELS, self.browserlist1, TAG_END])
 
-  IF self.showModal()=MR_OK
-  ENDIF
+  self.showModal()
   Dispose(hintInfo)
 ENDPROC -1
