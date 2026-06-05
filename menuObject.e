@@ -221,7 +221,6 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
   self:=nself
   win:=Gets(self.windowObj,WINDOW_WINDOW)
   self.selectedItem:=code
-  menuItem:=self.tempMenuItems.item(code)
   IF code=-1
     SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, TRUE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, TRUE, TAG_END])
@@ -230,7 +229,7 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
 
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_NAME],win,0,[STRINGA_TEXTVAL, '', TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_COMMKEY],win,0,[STRINGA_TEXTVAL, '', TAG_END])
-    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, -1, TAG_END])
+    SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TYPE],win,0,[CHOOSER_SELECTED, 0, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MENUBAR],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_CHECK],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_TOGGLE],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
@@ -238,6 +237,7 @@ PROC selectItem(nself,gadget,id,code) OF menuSettingsForm
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_DISABLED],win,0,[CHECKBOX_CHECKED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_ITEM_MUTUALGROUP],0,0,[INTEGER_NUMBER,0,0])
   ELSE
+    menuItem:=self.tempMenuItems.item(code)
     SetGadgetAttrsA(self.gadgetList[MENUGAD_DELETE],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_MODIFY],win,0,[GA_DISABLED, FALSE, TAG_END])
     SetGadgetAttrsA(self.gadgetList[MENUGAD_MOVEUP],win,0,[GA_DISABLED, code=0, TAG_END])

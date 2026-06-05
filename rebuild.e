@@ -2748,6 +2748,7 @@ PROC updateSettings()
     a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_SHOW_ADD_SETTINGS,0))
     IF a
       systemOptions.showSettingsOnAdd:=IF (a.flags AND CHECKED) THEN TRUE ELSE FALSE
+      remakePreviewMenus()
     ENDIF
 
     a:=ItemAddress(win.menustrip,menuCode(MENU_EDIT,MENU_EDIT_BUFFER,0))
@@ -2873,6 +2874,172 @@ PROC clearBusy()
   Sets(mainWindow,WA_BUSYPOINTER,FALSE)
 ENDPROC
 
+PROC getMenuText(objType)
+  IF systemOptions.showSettingsOnAdd
+    SELECT objType
+      CASE TYPE_BUTTON
+        RETURN 'Button...'
+      CASE TYPE_CHECKBOX
+        RETURN 'CheckBox...'
+      CASE TYPE_CHOOSER
+        RETURN 'Chooser...'
+      CASE TYPE_CLICKTAB
+        RETURN 'ClickTab...'
+      CASE TYPE_COLORWHEEL
+        RETURN 'ColorWheel...'
+      CASE TYPE_DATEBROWSER
+        RETURN 'DateBrowser...'
+      CASE TYPE_FUELGAUGE
+        RETURN 'FuelGauge...'
+      CASE TYPE_GETCOLOR
+        RETURN 'GetColor...'
+      CASE TYPE_GETFILE
+        RETURN 'GetFile...'
+      CASE TYPE_GETFONT
+        RETURN 'GetFont...'
+      CASE TYPE_GETSCREENMODE
+        RETURN 'GetScreenMode...'
+      CASE TYPE_GRADSLIDER
+        RETURN 'GradientSlider...'
+      CASE TYPE_INTEGER
+        RETURN 'Integer...'
+      CASE TYPE_LAYOUT
+        RETURN 'Layout...'
+      CASE TYPE_LISTBROWSER
+        RETURN 'ListBrowser...'
+      CASE TYPE_LISTVIEW
+        RETURN 'ListView...'
+      CASE TYPE_PALETTE
+        RETURN 'Palette...'
+      CASE TYPE_RADIO
+        RETURN 'RadioButton...'
+      CASE TYPE_SCROLLER
+        RETURN 'Scroller...'
+      CASE TYPE_SKETCH
+        RETURN 'SketchBoard...'
+      CASE TYPE_SLIDER
+        RETURN 'Slider...'
+      CASE TYPE_SPACE
+        RETURN 'Space'
+      CASE TYPE_SPEEDBAR
+        RETURN 'SpeedBar...'
+      CASE TYPE_STRING
+        RETURN 'String...'
+      CASE TYPE_TABS
+        RETURN 'Tabs...'
+      CASE TYPE_TAPEDECK
+        RETURN 'TapeDeck...'
+      CASE TYPE_TEXTEDITOR
+        RETURN 'TextEditor...'
+      CASE TYPE_TEXTFIELD
+        RETURN 'TextField...'
+      CASE TYPE_VIRTUAL
+        RETURN 'Virtual...'
+      CASE TYPE_BEVEL
+        RETURN 'Bevel...'
+      CASE TYPE_BITMAP
+        RETURN 'BitMap...'
+      CASE TYPE_BOINGBALL
+        RETURN 'BoingBall...'
+      CASE TYPE_DRAWLIST
+        RETURN 'DrawList...'
+      CASE TYPE_GLYPH
+        RETURN 'Glyph...'
+      CASE TYPE_LABEL
+        RETURN 'Label...'
+      CASE TYPE_LED
+        RETURN 'LED...'
+      CASE TYPE_PENMAP
+        RETURN 'PenMap...'
+      CASE TYPE_WINDOW
+        RETURN 'Add Window...'
+      DEFAULT
+        Raise("OBJ")
+    ENDSELECT
+  ELSE
+    SELECT objType
+      CASE TYPE_BUTTON
+        RETURN 'Button'
+      CASE TYPE_CHECKBOX
+        RETURN 'CheckBox'
+      CASE TYPE_CHOOSER
+        RETURN 'Chooser'
+      CASE TYPE_CLICKTAB
+        RETURN 'ClickTab'
+      CASE TYPE_COLORWHEEL
+        RETURN 'ColorWheel'
+      CASE TYPE_DATEBROWSER
+        RETURN 'DateBrowser'
+      CASE TYPE_FUELGAUGE
+        RETURN 'FuelGauge'
+      CASE TYPE_GETCOLOR
+        RETURN 'GetColor'
+      CASE TYPE_GETFILE
+        RETURN 'GetFile'
+      CASE TYPE_GETFONT
+        RETURN 'GetFont'
+      CASE TYPE_GETSCREENMODE
+        RETURN 'GetScreenMode'
+      CASE TYPE_GRADSLIDER
+        RETURN 'GradientSlider'
+      CASE TYPE_INTEGER
+        RETURN 'Integer'
+      CASE TYPE_LAYOUT
+        RETURN 'Layout'
+      CASE TYPE_LISTBROWSER
+        RETURN 'ListBrowser'
+      CASE TYPE_LISTVIEW
+        RETURN 'ListView'
+      CASE TYPE_PALETTE
+        RETURN 'Palette'
+      CASE TYPE_RADIO
+        RETURN 'RadioButton'
+      CASE TYPE_SCROLLER
+        RETURN 'Scroller'
+      CASE TYPE_SKETCH
+        RETURN 'SketchBoard'
+      CASE TYPE_SLIDER
+        RETURN 'Slider'
+      CASE TYPE_SPACE
+        RETURN 'Space'
+      CASE TYPE_SPEEDBAR
+        RETURN 'SpeedBar'
+      CASE TYPE_STRING
+        RETURN 'String'
+      CASE TYPE_TABS
+        RETURN 'Tabs'
+      CASE TYPE_TAPEDECK
+        RETURN 'TapeDeck'
+      CASE TYPE_TEXTEDITOR
+        RETURN 'TextEditor'
+      CASE TYPE_TEXTFIELD
+        RETURN 'TextField'
+      CASE TYPE_VIRTUAL
+        RETURN 'Virtual'
+      CASE TYPE_BEVEL
+        RETURN 'Bevel'
+      CASE TYPE_BITMAP
+        RETURN 'BitMap'
+      CASE TYPE_BOINGBALL
+        RETURN 'BoingBall'
+      CASE TYPE_DRAWLIST
+        RETURN 'DrawList'
+      CASE TYPE_GLYPH
+        RETURN 'Glyph'
+      CASE TYPE_LABEL
+        RETURN 'Label'
+      CASE TYPE_LED
+        RETURN 'LED'
+      CASE TYPE_PENMAP
+        RETURN 'PenMap'
+      CASE TYPE_WINDOW
+        RETURN 'Add Window'
+      DEFAULT
+        Raise("OBJ")
+    ENDSELECT
+  ENDIF
+ENDPROC
+
 PROC remakePreviewMenus()
   DEF menuData:PTR TO newmenu,scr,visInfo
   DEF winObj:PTR TO windowObject
@@ -2889,9 +3056,9 @@ PROC remakePreviewMenus()
   menuSetup:=[
   NM_TITLE,'Project',0,0,0,
   NM_ITEM,'New',0,0,'N',
-  NM_ITEM,'Open',0,0,'O',
-  NM_ITEM,'Save',0,0,'S',
-  NM_ITEM,'Save As',0,MIF_SHIFTCOMMSEQ,'S',
+  NM_ITEM,'Open...',0,0,'O',
+  NM_ITEM,'Save...',0,0,'S',
+  NM_ITEM,'Save As...',0,MIF_SHIFTCOMMSEQ,'S',
   NM_ITEM,'Reopen',0,0,0,
   NM_SUB,IF recentFiles.count()>0 THEN recentFiles.item(0) ELSE 0,0,0,0,
   NM_SUB,IF recentFiles.count()>1 THEN recentFiles.item(1) ELSE 0,0,0,0,
@@ -2899,12 +3066,12 @@ PROC remakePreviewMenus()
   NM_SUB,IF recentFiles.count()>3 THEN recentFiles.item(3) ELSE 0,0,0,0,
   NM_SUB,IF recentFiles.count()>4 THEN recentFiles.item(4) ELSE 0,0,0,0,
   NM_ITEM,NM_BARLABEL,0,0,0,
-  NM_ITEM,'Code Options',0,0,'C',
+  NM_ITEM,'Code Options...',0,0,'C',
   NM_ITEM,'Save Code',0,MIF_SHIFTCOMMSEQ,'C',
   NM_ITEM,NM_BARLABEL,0,0,0,
-  NM_ITEM,'Show Libraries',0,0,0,
+  NM_ITEM,'Show Libraries...',0,0,0,
   NM_ITEM,NM_BARLABEL,0,0,0,
-  NM_ITEM,'About',0,0,0,
+  NM_ITEM,'About...',0,0,0,
   NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Quit',0,0,'Q',
   NM_TITLE,'Edit',0,0,0,
@@ -2912,49 +3079,49 @@ PROC remakePreviewMenus()
   NM_ITEM,'Redo',0,MIF_SHIFTCOMMSEQ,'Z',
   NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Add Gadget',-1,0,0,
-  NM_SUB,'Button',TYPE_BUTTON,0,0,
-  NM_SUB,'CheckBox',TYPE_CHECKBOX,0,0,
-  NM_SUB,'Chooser',TYPE_CHOOSER,0,0,
-  NM_SUB,'ClickTab',TYPE_CLICKTAB,0,0,
-  NM_SUB,'ColorWheel',TYPE_COLORWHEEL,0,0,
-  NM_SUB,'DateBrowser',TYPE_DATEBROWSER,0,0,
-  NM_SUB,'FuelGauge',TYPE_FUELGAUGE,0,0,
-  NM_SUB,'GetColor',TYPE_GETCOLOR,0,0,
-  NM_SUB,'GetFile',TYPE_GETFILE,0,0,
-  NM_SUB,'GetFont',TYPE_GETFONT,0,0,
-  NM_SUB,'GetScreenMode',TYPE_GETSCREENMODE,0,0,
-  NM_SUB,'GradientSlider',TYPE_GRADSLIDER,0,0,
-  NM_SUB,'Integer',TYPE_INTEGER,0,0,
-  NM_SUB,'Layout',TYPE_LAYOUT,0,0,
-  NM_SUB,'ListBrowser',TYPE_LISTBROWSER,0,0,
-  NM_SUB,'ListView',TYPE_LISTVIEW,0,0,
-  NM_SUB,'Palette',TYPE_PALETTE,0,0,
-  NM_SUB,'RadioButton',TYPE_RADIO,0,0,
-  NM_SUB,'Scroller',TYPE_SCROLLER,0,0,
-  NM_SUB,'SketchBoard',TYPE_SKETCH,0,0,
-  NM_SUB,'Slider',TYPE_SLIDER,0,0,
-  NM_SUB,'Space',TYPE_SPACE,0,0,
-  NM_SUB,'SpeedBar',TYPE_SPEEDBAR,0,0,
-  NM_SUB,'String',TYPE_STRING,0,0,
-  NM_SUB,'Tabs',TYPE_TABS,0,0,
-  NM_SUB,'TapeDeck',TYPE_TAPEDECK,0,0,
-  NM_SUB,'TextEditor',TYPE_TEXTEDITOR,0,0,
-  NM_SUB,'TextField',TYPE_TEXTFIELD,0,0,
-  NM_SUB,'Virtual',TYPE_VIRTUAL,0,0,
+  NM_SUB,getMenuText(TYPE_BUTTON),TYPE_BUTTON,0,0,
+  NM_SUB,getMenuText(TYPE_CHECKBOX),TYPE_CHECKBOX,0,0,
+  NM_SUB,getMenuText(TYPE_CHOOSER),TYPE_CHOOSER,0,0,
+  NM_SUB,getMenuText(TYPE_CLICKTAB),TYPE_CLICKTAB,0,0,
+  NM_SUB,getMenuText(TYPE_COLORWHEEL),TYPE_COLORWHEEL,0,0,
+  NM_SUB,getMenuText(TYPE_DATEBROWSER),TYPE_DATEBROWSER,0,0,
+  NM_SUB,getMenuText(TYPE_FUELGAUGE),TYPE_FUELGAUGE,0,0,
+  NM_SUB,getMenuText(TYPE_GETCOLOR),TYPE_GETCOLOR,0,0,
+  NM_SUB,getMenuText(TYPE_GETFILE),TYPE_GETFILE,0,0,
+  NM_SUB,getMenuText(TYPE_GETFONT),TYPE_GETFONT,0,0,
+  NM_SUB,getMenuText(TYPE_GETSCREENMODE),TYPE_GETSCREENMODE,0,0,
+  NM_SUB,getMenuText(TYPE_GRADSLIDER),TYPE_GRADSLIDER,0,0,
+  NM_SUB,getMenuText(TYPE_INTEGER),TYPE_INTEGER,0,0,
+  NM_SUB,getMenuText(TYPE_LAYOUT),TYPE_LAYOUT,0,0,
+  NM_SUB,getMenuText(TYPE_LISTBROWSER),TYPE_LISTBROWSER,0,0,
+  NM_SUB,getMenuText(TYPE_LISTVIEW),TYPE_LISTVIEW,0,0,
+  NM_SUB,getMenuText(TYPE_PALETTE),TYPE_PALETTE,0,0,
+  NM_SUB,getMenuText(TYPE_RADIO),TYPE_RADIO,0,0,
+  NM_SUB,getMenuText(TYPE_SCROLLER),TYPE_SCROLLER,0,0,
+  NM_SUB,getMenuText(TYPE_SKETCH),TYPE_SKETCH,0,0,
+  NM_SUB,getMenuText(TYPE_SLIDER),TYPE_SLIDER,0,0,
+  NM_SUB,getMenuText(TYPE_SPACE),TYPE_SPACE,0,0,
+  NM_SUB,getMenuText(TYPE_SPEEDBAR),TYPE_SPEEDBAR,0,0,
+  NM_SUB,getMenuText(TYPE_STRING),TYPE_STRING,0,0,
+  NM_SUB,getMenuText(TYPE_TABS),TYPE_TABS,0,0,
+  NM_SUB,getMenuText(TYPE_TAPEDECK),TYPE_TAPEDECK,0,0,
+  NM_SUB,getMenuText(TYPE_TEXTEDITOR),TYPE_TEXTEDITOR,0,0,
+  NM_SUB,getMenuText(TYPE_TEXTFIELD),TYPE_TEXTFIELD,0,0,
+  NM_SUB,getMenuText(TYPE_VIRTUAL),TYPE_VIRTUAL,0,0,
   NM_ITEM,'Add Image',-1,0,0,
-  NM_SUB,'Bevel',TYPE_BEVEL,0,0,
-  NM_SUB,'BitMap',TYPE_BITMAP,0,0,
-  NM_SUB,'BoingBall',TYPE_BOINGBALL,0,0,
-  NM_SUB,'DrawList',TYPE_DRAWLIST,0,0,
-  NM_SUB,'Glyph',TYPE_GLYPH,0,0,
-  NM_SUB,'Label',TYPE_LABEL,0,0,
-  NM_SUB,'LED',TYPE_LED,0,0,
-  NM_SUB,'PenMap',TYPE_PENMAP,0,0,
-  NM_ITEM,'Add Window',-1,0,'W',
+  NM_SUB,getMenuText(TYPE_BEVEL),TYPE_BEVEL,0,0,
+  NM_SUB,getMenuText(TYPE_BITMAP),TYPE_BITMAP,0,0,
+  NM_SUB,getMenuText(TYPE_BOINGBALL),TYPE_BOINGBALL,0,0,
+  NM_SUB,getMenuText(TYPE_DRAWLIST),TYPE_DRAWLIST,0,0,
+  NM_SUB,getMenuText(TYPE_GLYPH),TYPE_GLYPH,0,0,
+  NM_SUB,getMenuText(TYPE_LABEL),TYPE_LABEL,0,0,
+  NM_SUB,getMenuText(TYPE_LED),TYPE_LED,0,0,
+  NM_SUB,getMenuText(TYPE_PENMAP),TYPE_PENMAP,0,0,
+  NM_ITEM,getMenuText(TYPE_WINDOW),-1,0,'W',
   NM_ITEM,'Add HLayout (quick)',-1,0,'H',
   NM_ITEM,'Add VLayout (quick)',-1,0,'V',
   NM_ITEM,NM_BARLABEL,0,0,0,
-  NM_ITEM,'Edit',0,0,'E',
+  NM_ITEM,'Edit...',0,0,'E',
   NM_ITEM,'Delete',0,0,'D',
   NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Move',0,0,0,
@@ -2967,7 +3134,7 @@ PROC remakePreviewMenus()
   NM_SUB,'Into HLayout',0,MIF_SHIFTCOMMSEQ,'H',
   NM_SUB,'Into VLayout',0,MIF_SHIFTCOMMSEQ,'V',
   NM_ITEM,NM_BARLABEL,0,0,0,
-  NM_ITEM,'Edit Lists',0,0,'L',
+  NM_ITEM,'Edit Lists...',0,0,'L',
   NM_ITEM,NM_BARLABEL,0,0,0,
   NM_ITEM,'Show Buffer',0,(CHECKIT OR (IF bufferLayout THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
   NM_ITEM,'Show Settings On Add',0,(CHECKIT OR (IF systemOptions.showSettingsOnAdd THEN CHECKED ELSE 0 ) OR MENUTOGGLE),0,
